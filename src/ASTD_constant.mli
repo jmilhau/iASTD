@@ -8,6 +8,16 @@ type set_name = string
 module Set_of : Set.S with type elt = t
 type set = Set_of.t
 
+
+type value = | Range of (int * int)
+             | Val of t
+
+type domain = value list
+
+
+
+
+
 (** {2 Constant} *)
 (** {3 Constructor of constant} *)
 
@@ -62,4 +72,33 @@ val print_set : set -> unit
 
 val string_of_set_name : set_name -> set_name
 val string_of_set : set -> string
+
+
+
+
+
+
+(**                                                                             *)
+
+val range_of : int -> int -> value 
+
+val int_of : t -> int
+val string_of : t -> string
+
+val value_of : t -> value
+
+val insert : value -> domain -> domain
+val insert_range : domain -> int -> int -> domain
+
+val remove : value -> domain -> domain
+val remove_range : domain -> int -> int -> domain
+
+
+
+val fusion : domain -> domain -> domain
+val remove_domain_from : domain -> domain -> domain
+val order : domain -> domain
+
+val is_included : t -> domain -> bool
+
 

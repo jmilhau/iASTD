@@ -432,27 +432,62 @@ let rec possible_evolutions astd state event environment = match state with
   |_ -> (Mult[],false)
 
 and q_poss_c astd event var list_val environment = match list_val with
-            | h::t -> let bind_env=ASTD_environment.bind var h
+            | (ASTD_constant.Val(h))::t -> 
+                      let bind_env=ASTD_environment.bind var (ASTD_term.Const h)
                       in let (a,b)= q_poss_c astd event var t environment
                       in let (c,d)=possible_evolutions astd 
                                                        (ASTD_state.init astd) 
                                                        event 
                                                        (ASTD_environment.add_binding bind_env environment)
-          in (  clear_cons (complete_possibilities (ASTD_state.qchoice_s_of (ASTD_state.Val(h)) ASTD_state.NotDefined) c) a,
+          in (  clear_cons (complete_possibilities 
+                                   (ASTD_state.qchoice_s_of (ASTD_state.Val(ASTD_term.Const h)) ASTD_state.NotDefined) 
+                                   c) 
+                           a,
                 b||d
              ) 
+            | (ASTD_constant.Range(h,e))::t -> 
+
+if e=h+1 then
+                      let bind_env=ASTD_environment.bind var (ASTD_term.Const (ASTD_constant.Integer h))
+                      in let (a,b)= q_poss_c astd event var ((ASTD_constant.Val(ASTD_constant.Integer h))::t) environment
+                      in let (c,d)=possible_evolutions astd 
+                                                       (ASTD_state.init astd) 
+                                                       event 
+                                                       (ASTD_environment.add_binding bind_env environment)
+          in (  clear_cons (complete_possibilities (ASTD_state.qchoice_s_of 
+                                        (ASTD_state.Val(ASTD_term.Const(ASTD_constant.Integer h))) ASTD_state.NotDefined) c) a,
+                b||d
+             ) 
+         else   
+                      let bind_env=ASTD_environment.bind var (ASTD_term.Const (ASTD_constant.Integer h))
+                      in let (a,b)= q_poss_c astd event var ((ASTD_constant.Range(h+1,e))::t) environment
+                      in let (c,d)=possible_evolutions astd 
+                                                       (ASTD_state.init astd) 
+                                                       event 
+                                                       (ASTD_environment.add_binding bind_env environment)
+          in (  clear_cons (complete_possibilities (ASTD_state.qchoice_s_of 
+                                        (ASTD_state.Val(ASTD_term.Const(ASTD_constant.Integer h))) ASTD_state.NotDefined) c) a,
+                b||d
+             ) 
+
             | []-> (Mult[],false) 
 
 and kappa_indirect_q_poss_c astd event params c_list var list_val environment = match (params,c_list) with
          |(a::b,h::t)-> begin 
                         if a=(ASTD_term.Var var)
-                        then let bind_env=ASTD_environment.bind var (ASTD_term.Const h)
-                             in let (c,d)=possible_evolutions astd 
+                        then
+                           if (ASTD_constant.is_included h list_val)
+                             then
+                               let bind_env=ASTD_environment.bind var (ASTD_term.Const h)
+                               in let (c,d)=possible_evolutions astd 
                                                                (ASTD_state.init astd) 
                                                                event 
                                                                (ASTD_environment.add_binding bind_env environment)
-                           in let list_poss=(ASTD_state.qchoice_s_of (ASTD_state.Val(ASTD_term.Const h)) ASTD_state.NotDefined)
-                           in (Mult[complete_possibilities list_poss c],d)
+                               in let list_poss=(ASTD_state.qchoice_s_of 
+                                                     (ASTD_state.Val(ASTD_term.Const h)) 
+                                                     ASTD_state.NotDefined)
+                               in (Mult[complete_possibilities list_poss c],d)
+                             else (Mult[],false)
                         else kappa_indirect_q_poss_c astd event b t var list_val environment
           
                         end

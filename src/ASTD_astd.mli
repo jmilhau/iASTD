@@ -11,7 +11,7 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
        | Choice of astd_name * t * t 
        | Kleene of astd_name * t
        | Synchronisation of astd_name * ASTD_transition.t list * t * t
-       | QChoice of astd_name * ASTD_variable.t * ASTD_term.t list * t
+       | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t
        | QSynchronisation of astd_name * ASTD_variable.t * ASTD_term.t list * ASTD_transition.t list * t 
        | Guard of astd_name * ASTD_predicate.t list * t
        | Call of astd_name *astd_name * (ASTD_variable.t *ASTD_term.t) list 
@@ -35,7 +35,7 @@ val kleene_of : astd_name -> t -> t
 
 val synchronisation_of : astd_name -> ASTD_transition.t list -> t -> t -> t
 
-val qchoice_of : astd_name -> ASTD_variable.t -> ASTD_term.t list -> t -> t
+val qchoice_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> t -> t
 
 val qsynchronisation_of : astd_name -> ASTD_variable.t -> ASTD_term.t list -> ASTD_transition.t list -> t -> t
 
@@ -65,7 +65,8 @@ val get_trans_synchronised : t -> ASTD_transition.t list
 val get_synchro_astd1 : t -> t
 val get_synchro_astd2 : t -> t
 val get_qvar : t -> ASTD_variable.t
-val get_qvalues : t -> ASTD_term.t list
+val get_qvalues_c : t -> ASTD_constant.domain
+val get_qvalues_s : t -> ASTD_term.t list
 val get_qastd : t -> t
 val get_guard_pred : t -> ASTD_predicate.t list
 val get_guard_astd : t -> t
@@ -87,7 +88,7 @@ val get_data_synchronisation :t -> (astd_name * ASTD_transition.t list * t *t)
 
 val get_data_guard :t -> (astd_name * ASTD_predicate.t list * t)
 
-val get_data_qchoice :t -> (astd_name * ASTD_variable.t * ASTD_term.t list * t)
+val get_data_qchoice :t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * t)
 
 val get_data_qsynchronisation :t -> (astd_name * ASTD_variable.t * ASTD_term.t list * ASTD_transition.t list * t)
 

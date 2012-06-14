@@ -7,7 +7,7 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
        | Choice of astd_name * t * t 
        | Kleene of astd_name * t
        | Synchronisation of astd_name * ASTD_transition.t list * t * t
-       | QChoice of astd_name * ASTD_variable.t * ASTD_term.t list * t
+       | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t
        | QSynchronisation of astd_name * ASTD_variable.t * ASTD_term.t list * ASTD_transition.t list * t 
        | Guard of astd_name * ASTD_predicate.t list * t
        | Call of astd_name * astd_name * (ASTD_variable.t *ASTD_term.t) list 
@@ -139,11 +139,16 @@ let get_qvar a = match a with
   | _ -> failwith "unappropriate request"
 ;;
 
-let get_qvalues a = match a with
+let get_qvalues_c a = match a with
   |QChoice (_,_,val_list,_) -> val_list
+  | _ -> failwith "unappropriate request"
+;;
+
+let get_qvalues_s a = match a with
   |QSynchronisation (_,_,val_list,_,_) -> val_list
   | _ -> failwith "unappropriate request"
 ;;
+
 
 
 let get_qastd a = match a with
