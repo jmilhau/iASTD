@@ -28,6 +28,22 @@ let evaluate p env =
     with ASTD_term.ASTD_not_a_constant term
          -> raise (ASTD_free_variable (term,(name,params)))
 
+let estimate p env =
+    let name = get_name p
+    and params = get_params p 
+    in try  
+        let pred = get name 
+        and evaluate = ASTD_environment.reduce 
+        in let evaluated_params = List.map (evaluate env) params
+        in begin 
+           let e = (ASTD_term.extract_constants_from_params evaluated_params)
+           in if (ASTD_constant.contain_free e) then true
+                                                else pred e
+           end
+    with ASTD_term.ASTD_not_a_constant term
+         -> raise (ASTD_free_variable (term,(name,params)))
+
+
 let print_name n = print_string n
 let print p = let name = get_name p
               and params = get_params p

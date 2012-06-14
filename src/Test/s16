@@ -11,9 +11,9 @@
                                  (A5->elem)
                                };
                                { ((local,A1,A2),Transun,{},False),
-                                 ((local,A2,A3),Transdeux,{},True),
-                                 ((local,A3,A4),Transtrois,{},True),
-                                 ((local,A4,A5),Transquatre,{},True),
+                                 ((local,A2,A3),Transdeux,{},False),
+                                 ((local,A3,A4),Transtrois,{},False),
+                                 ((local,A4,A5),Transquatre,{},False),
                                  ((local,A5,A1),Reinit,{},True)
                                };
                                { 
@@ -25,10 +25,10 @@
                      (A7->elem)
                    };
                    {
-                     ((local,A6,NIV1),First,{},True),
+                     ((local,A6,NIV1),First,{},False),
                      ((local,NIV1,A7),Fromsubgen,{},True),
                      ((local,A7,A6),Restart,{},True),
-                     ((from_sub,A3,A7,NIV1),Fromsub,{},True),
+                     ((from_sub,A3,A7,NIV1),Fromsub,{},False),
                      ((to_sub,A7,H1,NIV1),Toshallowhist,{},True)
                    };
                    {
@@ -40,7 +40,7 @@
           (A9->elem)
          };
          {
-                     ((local,A8,NIV2),Firstbis,{},True),
+                     ((local,A8,NIV2),Firstbis,{},False),
                      ((local,NIV2,A9),Fromsubgenbis,{},False),
                      ((local,A9,A8),Restartbis,{},True),
                      ((from_sub,NIV1,A9,NIV2),Fromsubbis,{},True),

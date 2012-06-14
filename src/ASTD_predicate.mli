@@ -20,6 +20,8 @@ val get_params : t -> ASTD_term.params
 (** {3 Evaluation of a predicate} *)
 
 val evaluate : t -> ASTD_environment.t -> bool         
+val estimate : t -> ASTD_environment.t -> bool  
+
 
 (** {3 Print and conversion in string} *)
 

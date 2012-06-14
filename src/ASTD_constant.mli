@@ -13,8 +13,11 @@ type value = | Range of (int * int)
              | Val of t
              | FreeVal
 
-type domain = value list
 
+
+
+module Domain : Set.S with type elt = value
+type domain=Domain.t
 
 
 
@@ -91,19 +94,36 @@ val value_of : t -> value
 val int_of_val : value ->int
 val string_of_val : value ->string
 
-val insert : value -> domain -> domain
-val insert_range : domain -> int -> int -> domain
 
-val remove : value -> domain -> domain
-val remove_range : domain -> int -> int -> domain
+
 
 val kind_of_val : t -> bool
 
 
-val fusion : domain -> domain -> domain
-val remove_domain_from : domain -> domain -> domain
-val order : domain -> domain
+
+val contain_free : t list -> bool
+
+(**                                                                             *)
+
+val head_tail : domain -> (t*domain)
 
 val is_included : t -> domain -> bool
 
-val head_tail : domain -> (t*domain)
+val print_dom : domain -> string
+
+val remove_domain_from : domain -> domain -> domain
+
+val fusion : domain -> domain -> domain
+
+val insert : value -> domain -> domain
+
+val remove : value -> domain -> domain
+
+val empty_dom : domain
+
+val is_empty_dom : domain->bool
+
+val create_dom_from_val : value -> domain 
+
+
+

@@ -39,47 +39,48 @@ let tsub_arrow from_state to_state through_state transition predicates from_fina
 
 
 
-let get_from a = match a with
-     | Local ( f,_,_,_,_ ) -> f
-     | From_sub ( f,_,_,_,_,_ ) -> f
-     | To_sub ( f,_,_,_,_,_ ) -> f
-let get_to a = match a with
-     | Local ( _,t,_,_,_ ) -> t
-     | From_sub ( _,t,_,_,_,_ ) -> t
-     | To_sub ( _,t,_,_,_,_ ) -> t
-let get_through a = match a with
-     | From_sub ( _,_,t,_,_,_ ) -> t
-     | To_sub ( _,_,t,_,_,_ ) -> t
+let get_from arrow = match arrow with
+     | Local ( from,_,_,_,_ ) -> from
+     | From_sub ( from,_,_,_,_,_ ) -> from
+     | To_sub ( from,_,_,_,_,_ ) -> from
+let get_to arrow = match arrow with
+     | Local ( _,dest,_,_,_ ) -> dest
+     | From_sub ( _,dest,_,_,_,_ ) -> dest
+     | To_sub ( _,dest,_,_,_,_ ) -> dest
+let get_through arrow = match arrow with
+     | From_sub ( _,_,through,_,_,_ ) -> through
+     | To_sub ( _,_,through,_,_,_ ) -> through
      | _ -> failwith "no throught for local transitions"
-let get_transition a = match a with
-     | Local ( _,_,e,_,_ ) -> e
-     | From_sub ( _,_,_,e,_,_ ) -> e
-     | To_sub ( _,_,_,e,_,_ ) -> e
-let get_predicates a = match a with
-     | Local ( _,_,_,p,_ ) -> p
-     | From_sub ( _,_,_,_,p,_ ) -> p
-     | To_sub ( _,_,_,_,p,_ ) -> p
-let get_from_final_state a = match a with
-     | Local ( _,_,_,_,f ) -> f
-     | From_sub ( _,_,_,_,_,f ) -> f
-     | To_sub ( _,_,_,_,_,f ) -> f
-
-
-let get_label_transition a =   ASTD_transition.get_label(get_transition a)
-     
+let get_transition arrow = match arrow with
+     | Local ( _,_,transitions,_,_ ) -> transitions
+     | From_sub ( _,_,_,transitions,_,_ ) -> transitions
+     | To_sub ( _,_,_,transitions,_,_ ) -> transitions
+let get_predicates arrow = match arrow with
+     | Local ( _,_,_,predicates,_ ) -> predicates
+     | From_sub ( _,_,_,_,predicates,_ ) -> predicates
+     | To_sub ( _,_,_,_,predicates,_ ) -> predicates
+let get_from_final_state arrow = match arrow with
+     | Local ( _,_,_,_,should_be_final ) -> should_be_final
+     | From_sub ( _,_,_,_,_,should_be_final ) -> should_be_final
+     | To_sub ( _,_,_,_,_,should_be_final ) -> should_be_final
+let get_label_transition arrow =   ASTD_transition.get_label(get_transition arrow)
 
 
 
 
-let register_transition t = match t with
-     |ASTD_transition.Transition(label,params) ->  Hashtbl.add _ASTD_transition_table_ label params
-;;
-
-let get_transition_params label =  Hashtbl.find _ASTD_transition_table_ label
-;;
 
 
+let register_transition name transition = match transition with
+     |ASTD_transition.Transition(label,params) ->  Hashtbl.add _ASTD_transition_table_ (name,label) params
 
+let rec register_transitions_from_list name transition_list = match transition_list with
+     |(ASTD_transition.Transition(label,params))::t ->begin
+                                                      Hashtbl.add _ASTD_transition_table_ (name,label) params;
+                                                      register_transitions_from_list name t
+                                                      end
+     |_->print_endline ("transitions registered for "^name)
+
+let get_transition_params name label =  Hashtbl.find_all _ASTD_transition_table_ (name,label)
 
 
 
@@ -87,13 +88,13 @@ let get_transition_params label =  Hashtbl.find _ASTD_transition_table_ label
 
 let register = Hashtbl.add _ASTD_arrow_table_ 
 
-let register_arrow a = match a with
-     | Local ( from,to_state,transition,pred,final ) ->register_transition transition ;
-                                                       register (from,ASTD_transition.get_label transition,final) a
-     | From_sub ( from,to_state,through,transition,pred,final ) ->register_transition transition ;
-                                                                  register (from,ASTD_transition.get_label transition,final) a
-     | To_sub ( from,to_state,through,transition,pred,final ) -> register_transition transition ;
-                                                                 register (from,ASTD_transition.get_label transition,final) a
+let register_arrow arrow = match arrow with
+     | Local ( from,to_state,transition,pred,final ) ->
+                                               register (from,ASTD_transition.get_label transition,final) arrow
+     | From_sub ( from,to_state,through,transition,pred,final ) ->
+                                               register (from,ASTD_transition.get_label transition,final) arrow
+     | To_sub ( from,to_state,through,transition,pred,final ) -> 
+                                               register (from,ASTD_transition.get_label transition,final) arrow
 
 let get from event from_final= Hashtbl.find_all _ASTD_arrow_table_ (from,(ASTD_event.get_label event),from_final)
 
@@ -102,21 +103,29 @@ let get from event from_final= Hashtbl.find_all _ASTD_arrow_table_ (from,(ASTD_e
 
 
 
-let rec evaluate_guard env pred_list = 
+let rec evaluate_guard env predicate_list = 
 begin 
-    match pred_list with
-    |pred::q -> begin 
-                 ((evaluate_guard env q) && (ASTD_predicate.evaluate pred env)) 
+    match predicate_list with
+    |predicate::tail -> begin 
+                 ((evaluate_guard env tail) && (ASTD_predicate.evaluate predicate env)) 
+                end
+    |[] -> true
+end
+
+
+let rec estimate_guard env predicate_list = 
+begin 
+    match predicate_list with
+    |predicate::tail -> begin 
+                 ((estimate_guard env tail) && (ASTD_predicate.estimate predicate env)) 
                 end
     |[] -> true
 end
 
 
 
-
-let string_of_bool a = if a then "true" else "false"
-
-let valid_arrow event env arrow = let a =(
+let valid_arrow event env arrow = let is_valid =
+                                     (
                                       (begin let c= (ASTD_event.compare_action_with_event2 env (get_transition arrow) event)
                                              in begin 
                                                       c
@@ -128,16 +137,11 @@ let valid_arrow event env arrow = let a =(
                                                       b
                                                 end 
                                        end)
-                                         )
-                                  in begin 
-                                         a
-                                     end
-
+                                     )
+                                  in is_valid
 ;;
 
 
 
-let may_be_the_right label arrow = let a =(ASTD_transition.get_label(get_transition arrow))
-                           in (a=label)
-;;
+
 

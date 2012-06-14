@@ -2,14 +2,14 @@
         (AUT0,<|[]|:;
                x;
                [1,4]-{3};
-               { };
+               {  };
                (AUT1 , <aut;
                         { (A1->elem),
                           (A2->elem),
                           (A3->elem)
                         };
                         { ((local,A1,A2),Emprunter(x),{[isGreaterThanOne (x)]},False),
-                          ((local,A2,A3),Rendre(x),{[isGreaterThanOne (x)]},True),
+                          ((local,A2,A3),Rendre(x),{[isGreaterThanOne (x)]},False),
                           ((local,A3,A1),Reinit,{},True)
                         };
                         { 

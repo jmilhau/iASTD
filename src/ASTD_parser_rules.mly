@@ -323,9 +323,9 @@ complex_val_construction :
     |val_construction
       { $1 }
     |string_val_construction
-      { ASTD_constant.order $1 }
+      { $1 }
     |val_construction REMOVE val_construction
-      { astd_parser_msg "Suppression from domain" ; ASTD_constant.remove_domain_from $1 $3 }       
+      { astd_parser_msg "Suppression from domain" ; ASTD_constant.remove_domain_from $3 $1 }       
     ;
 
 
@@ -344,43 +344,43 @@ val_construction :
 val_construction_range :
     | LINT C_INT COMMA C_INT RINT
       { astd_parser_msg "Construction from range" ; 
-        [ASTD_constant.range_of $2 $4] }
+        Domain.add (ASTD_constant.range_of $2 $4) (Domain.empty) }
     ;
 
 
 val_construction_explicit :
     | LSET list_val_content RSET 
       { astd_parser_msg "Explicit construction" ; 
-        ASTD_constant.order $2 }
+        $2 }
     ;
 
 
 list_val_content :
     | C_INT COMMA list_val_content
-      { (ASTD_constant.value_of(ASTD_constant.of_int $1))::$3 }
+      { Domain.add (ASTD_constant.value_of(ASTD_constant.of_int $1)) $3 }
     | C_INT 
-      { (ASTD_constant.value_of(ASTD_constant.of_int $1))::[] }
+      { Domain.add (ASTD_constant.value_of(ASTD_constant.of_int $1)) (Domain.empty) }
     ;
 
 string_val_construction :
     | LSET string_list_content RSET 
       { astd_parser_msg "Explicit construction" ; 
-        ASTD_constant.order $2 }
+        $2 }
     ;
 
 
 string_list_content :
     | VAL COMMA string_list_content
-      { (ASTD_constant.value_of(ASTD_constant.Symbol ($1)))::$3 }
+      { Domain.add (ASTD_constant.value_of(ASTD_constant.Symbol ($1))) $3 }
     | VAL
-      { (ASTD_constant.value_of(ASTD_constant.Symbol ($1)))::[] }
+      { Domain.add (ASTD_constant.value_of(ASTD_constant.Symbol ($1))) (Domain.empty) }
     ;
 
 
 
 astd_qsynchro :
     | BEGIN_ASTD LSYNCHRO RSYNCHRO COLON SCOLON VAR SCOLON complex_val_construction SCOLON list_of_transitions SCOLON astd END_ASTD
-      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 $12  }
+      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 $12 [] [] []  }
     ;
 
 

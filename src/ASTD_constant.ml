@@ -19,6 +19,13 @@ module Set_of = Set.Make( struct type t = a_constant (*** constant = t *)
 type set_name = string 
 type set = Set_of.t
 
+
+
+
+
+
+
+
 let of_int n = Integer n
 
 let int_of n = match n with
@@ -110,7 +117,23 @@ type value = | Range of (int * int)
              | Val of t
              | FreeVal
 
-type domain = value list
+
+let compare_val c1 c2 = match (c1,c2) with
+    | (Val(Integer n1), Val(Integer n2)) -> compare n1 n2
+    | (Val(Symbol s1), Val(Symbol s2)) -> compare s1 s2
+    | (Range(a,b),Range(c,d))-> if a=c then compare b d
+                                       else compare a c
+    | (Val(Integer n1), Range(a,b))->if n1=a then compare n1 (a+1)
+                                             else compare n1 a
+    | (Range(a,b),Val(Integer n1))->compare a n1
+    | _ -> -1
+
+module Domain = Set.Make( struct type t = value
+                                 let compare = compare_val
+                          end) 
+
+type domain=Domain.t
+
 
 
 let val_to_int a = match a with
@@ -134,147 +157,11 @@ let value_of a= match a with
 ;;
 
 
-let rec insert e l = match l with
-   |(Val c)::t -> if e < (Val c) then e::l
-                                 else if (e = Val c) then l
-                                                     else (Val c)::(insert e t) 
-   |(Range(a,b))::t -> let v=val_to_int e 
-                       in if (v < a) then e::l
-                                     else if (v > b) then (Range(a,b))::(insert e t)
-                                                     else l
-   |[]->[e]
-   |_->failwith "freeval should be alone"
-;;
-
-
-let rec insert_range l fst lst = match l with
-   |(Val c)::t -> let e=Val c
-                  in let v=val_to_int e 
-                  in if (v < fst) then e::(insert_range t fst lst)
-                                  else if (v > lst) then (Range(fst,lst))::l
-                                                    else  insert_range t fst lst
-   |(Range(a,b))::t -> if lst < a then (Range(fst,lst))::l
-                                  else if fst > b then (Range(a,b))::(insert_range t fst lst)
-                                                  else (Range((min fst a ),(max lst b)))::t
-   |[]->[Range(fst,lst)]
-   |_->failwith "freeval should be alone"
-;;
 
 
 
 
 
-
-
-let rec remove e l =begin 
-                    match l with
-   |(Val c)::t -> if ((val_to_int e)<(val_to_int (Val c))) 
-                       then l
-                       else if ((val_to_int e)=(val_to_int (Val c))) 
-                               then t
-                               else (Val c)::(remove e t)
-   |( Range(c,d) )::t -> let v = (val_to_int e)
-                          in if v<c 
-                                then l
-                                else if v>d 
-                                        then (Range (c,d))::(remove e t)
-                                        else if v=c 
-                                                then if (c+1) = d
-                                                        then (Val (Integer d))::t
-                                                        else (Range (c+1,d))::t
-                                                else if v=c+1 
-                                                        then if c+1=d then
-                                                                         (Val(Integer c))::t
-                                                                     else
-                                                                       if c+2 =d 
-                                                                       then (Val(Integer c))::((Val(Integer d))::t)
-                                                                       else (Val(Integer c))::((Range(c+2,d))::t)
-                                                        else if v = d-1
-                                                                then (Range(c,v-1))::((Val(Integer d))::t)
-                                                                else if v=d
-                                                                        then (Range(c,v-1))::t
-                                                                        else (Range(c,v-1))::t
-   |[] -> []
-   |_->failwith "freeval should be alone"
-                   end
-;;
-
-
-let rec remove_range l fst snd = match l with 
-   |(Val c)::t -> let v= (val_to_int (Val c))
-                  in if v<fst
-                        then (Val c)::(remove_range t fst snd)
-                        else if v > snd then t
-                                        else (remove_range t fst snd)
-   |( Range(c,d) )::t -> if c < fst 
-                             then if d > snd 
-                                     then if fst = (c +1)
-                                             then if snd =(d -1)
-                                                     then (Val(Integer c))::( (Val(Integer d)) ::t)
-                                                     else (Val(Integer c))::( (Range(snd+1,d)) ::t)
-                                             else if snd =(d -1)
-                                                     then (Range(c,fst-1))::( (Val(Integer d)) ::t)
-                                                     else (Range(c,fst-1))::( (Range(snd+1,d)) ::t)
-                                     else if fst=(c+1)
-                                             then (Val(Integer c))::(remove_range t fst snd)
-                                             else (Range(c,fst-1))::(remove_range t fst snd)
-                             else if c > snd
-                                     then l
-                                     else if d > snd
-                                             then if snd =(d-1)
-                                                     then (Val(Integer d))::t
-                                                     else (Range(snd+1,d))::t
-                                             else remove_range t fst snd
-   |[] -> []
-   |_->failwith "freeval should be alone"
-;;
-
-
-
-let rec fusion a b = match a with 
-   |(Val c)::t -> fusion t (insert (Val c) b)
-   |( Range(c,d) )::t -> fusion t (insert_range b c d)
-   |[] -> b
-   |_->failwith "freeval should be alone"
-;;
-
-let rec remove_domain_from a b = match b with 
-   |(Val c)::t -> begin remove_domain_from (remove (Val c) a) t end
-   |( Range(c,d) )::t -> remove_domain_from (remove_range a c d) t
-   |[] -> a
-   |_->failwith "freeval should be alone"
-;;
-
-
-
-let order a = match a with
-     |a::t -> fusion t [a]
-     |[] -> []
-;;
-
-let rec is_included a list_val = match list_val with
-    |(Val (Integer b))::t -> if (int_of a)=b then begin true end  
-                                    else if ((int_of a)>(b)) then is_included a t
-                                                             else false
-    |(Val (Symbol b))::t -> if (string_of a)=b then  true 
-                                   else if ((string_of a)>(b)) then is_included a t
-                                                               else false
-    |(Range(b,c))::t -> let v=int_of a in if v<b then false
-                                                 else if v>c then is_included a t
-                                                             else begin 
-                                                                        true 
-                                                                  end
-
-    |[] -> false
-    |_->failwith "freeval should be alone"
-;;
-
-
-let head_tail l = match l with
-   |Val(a)::t -> (a,t)
-   |Range(a,b)::t -> if (b = a+1) then (Integer a, Val(Integer b)::t)
-                                  else (Integer a,Range(a+1,b)::t) 
-   |_-> failwith "impossible to execute with an empty list or with FreeVal"
 
 let int_of_val a=match a with
 |Val(Integer a)->a
@@ -289,3 +176,278 @@ let kind_of_val a = match a with
 |Integer b -> true
 |Symbol b -> false
 |_->failwith "whatever the value"
+
+
+
+let rec contain_free l =match l with
+|FreeConst::t->true
+|a::t->contain_free t
+|[]->false
+
+
+(**                                                                *)
+
+
+
+
+
+let empty_dom = Domain.empty
+
+let is_empty_dom = Domain.is_empty 
+
+let create_dom_from_val value= Domain.add value empty_dom
+
+
+let get_first_tail dom = if is_empty_dom dom
+                         then failwith "first_tail impossible : empty dom"
+                         else let first = Domain.min_elt dom 
+                              in (first,Domain.remove first dom)
+
+
+
+
+let suppression_from_max_of_inf to_modify elem = match (to_modify,elem) with
+  |(Range(a,b),Val(Integer i))-> 
+                    if b<i
+                    then (Domain.add (Range(a,b)) (Domain.empty))
+                    else if i=b 
+                         then if a=b-1 
+                              then (Domain.add (Val(Integer a)) (Domain.empty))
+                              else (Domain.add (Range(a,b-1)) (Domain.empty))
+                         else if i=b-1 
+                              then if a=i-1 
+                                   then (Domain.add (Val(Integer a)) (Domain.add (Val(Integer b)) (Domain.empty)))
+                                   else (Domain.add (Range(a,i-1)) (Domain.add (Val(Integer b)) (Domain.empty)))
+                              else if a+1=i 
+                                   then (Domain.add (Val(Integer a)) (Domain.add (Range(i+1,b)) (Domain.empty)))
+                                   else (Domain.add (Range(a,i-1)) (Domain.add (Range(i+1,b)) (Domain.empty)))
+(*Nb, le cas i=a n'est pas à envisager puisque range<val ici et que si i=a, on a range>val *)
+
+  |(Range(a,b),Range(c,d))->
+          if  a=c 
+          then (*cas b<d*) (Domain.empty)
+          else (*a<c*) if b<c 
+                       then (Domain.add (Range(a,b)) (Domain.empty))
+                       else if d<b 
+                            then if c=a+1
+                                 then if d=b-1
+                                      then (Domain.add (Val(Integer a)) (Domain.add (Val(Integer b)) (Domain.empty)))
+                                      else (Domain.add (Val(Integer a)) (Domain.add (Range(d+1,b)) (Domain.empty)))
+                                 else if d=b-1
+                                      then (Domain.add (Range(a,c-1)) (Domain.add (Val(Integer b)) (Domain.empty)))
+                                      else (Domain.add (Range(a,c-1)) (Domain.add (Range(d+1,b)) (Domain.empty)))
+                            else if c=a+1
+                                 then (Domain.add (Val(Integer a)) (Domain.empty))
+                                 else (Domain.add (Range(a,c-1)) (Domain.empty))
+
+
+
+  |(Val(Integer i),Val(Integer j))-> (Domain.add (Val(Integer i)) (Domain.empty))
+
+  |(Val(Integer i),Range(a,b))-> if i<a 
+                                    then (Domain.add (Val(Integer i)) (Domain.empty))
+                                    else (*cas i=a*) if a+1=b 
+                                                     then (Domain.add (Val(Integer b)) (Domain.empty))
+                                                     else (Domain.add (Range(a+1,b)) (Domain.empty))
+
+  |(Val(Symbol s),Val(Symbol t))-> (Domain.add (Val(Symbol s)) (Domain.empty))
+  |_->failwith "supression from max of inferior impossible"
+;;
+
+
+
+
+let suppression_from_min_of_sup to_modify elem = match (elem,to_modify) with 
+  |(Range(a,b),Val(Integer i))-> (*cas i>a*) if i<=b then (Domain.empty,false)
+                                                     else ((Domain.add (Val(Integer i)) (Domain.empty)),true)
+
+  |(Range(a,b),Range(c,d))-> (*cas c >= a*)if c > b 
+                                           then (Domain.add (Range(c,d)) (Domain.empty),true)
+                                           else if d>b
+                                                then if d=b+1 
+                                                     then (Domain.add (Val(Integer d)) (Domain.empty),true)
+                                                     else (Domain.add (Range(b+1,d)) (Domain.empty),true)
+                                                else (Domain.empty,false)
+  |(Val(Integer i),Val(Integer j))-> ((Domain.add (Val(Integer j)) (Domain.empty)),true)
+  |(Val(Integer i),Range(a,b))-> (*cas i<=a*) if i=a then if b=a+1 then (Domain.add (Val(Integer b)) (Domain.empty),true)
+                                                                   else (Domain.add (Range(a+1,b)) (Domain.empty),true)
+                                                     else (Domain.add (Range(a,b)) (Domain.empty),true)
+  |(Val(Symbol s),Val(Symbol t))-> ((Domain.add (Val(Symbol t)) (Domain.empty)),true)
+  |_->failwith "supression from min of superior impossible"
+;;
+
+
+
+let rec suppression_from_sup superior elem =
+if (is_empty_dom superior)
+   then empty_dom
+   else let to_modify=Domain.min_elt superior
+        in let sup=(Domain.remove to_modify superior)
+        in let (value,removed)=suppression_from_min_of_sup to_modify elem
+        in if removed then (Domain.union value sup)
+                      else (suppression_from_sup sup elem) 
+
+
+
+let rec remove_domain_from elem_list dom = begin 
+                                   let (elem,tail)=get_first_tail elem_list
+                                   in let (inferior,is_included,superior)=(Domain.split elem dom)
+                                   in if is_included 
+                                      then if Domain.is_empty tail 
+                                           then (Domain.union inferior superior)
+                                           else remove_domain_from tail (Domain.union inferior superior)
+                                      else let new_inf = begin 
+                                                    if Domain.is_empty inferior 
+                                                    then Domain.empty 
+                                                    else let to_modify=Domain.max_elt inferior
+                                                         in let inf=(Domain.remove to_modify inferior)
+                                                         in (Domain.union inf (suppression_from_max_of_inf to_modify elem))
+                                                         end
+                                           and new_sup = suppression_from_sup superior elem
+                                           in if Domain.is_empty tail 
+                                              then (Domain.union new_inf new_sup)
+                                              else remove_domain_from tail (Domain.union new_inf new_sup)
+                                           end
+
+
+let remove elem dom = 
+             remove_domain_from ( create_dom_from_val elem ) dom;;
+
+
+
+let fusion_with_max_of_inf to_modify elem = match (to_modify,elem) with
+  |(Range(a,b),Val(Integer i))-> (*cas i>a*) if i>b+1 
+                                             then (elem,false)
+                                             else if i=b+1
+                                                  then (Range(a,i),true)
+                                                  else (Range(a,b),true)
+  |(Range(a,b),Range(c,d))-> (*cas c >= a*) if c > b+1 
+                                            then (elem,false)
+                                            else if d>b
+                                                 then (Range(a,d),true)
+                                                 else (Range(a,b),true)
+  |(Val(Integer i),Val(Integer j))-> (*cas i<j*) if j=i+1 then (Range(i,j),true)
+                                                          else(elem,false)
+  |(Val(Integer i),Range(a,b))-> (*cas i<=a*) if i>=a-1 then (Range(i,b),true)
+                                                     else (elem,false)
+  |(Val(Symbol s),Val(Symbol t))-> (*cas s<t*) (elem,false)
+  |_->failwith "fusion with max of inferior impossible"
+;;
+
+
+let fusion_with_min_of_sup to_modify elem = match (elem,to_modify) with
+  |(Range(a,b),Val(Integer i))-> (*cas i>a*) if i>b+1 
+                                             then (elem,false)
+                                             else if i=b+1
+                                                  then (Range(a,i),true)
+                                                  else (Range(a,b),true)
+  |(Range(a,b),Range(c,d))-> (*cas c >= a*) if c > b+1 
+                                            then (elem,false)
+                                            else if d>b
+                                                 then (Range(a,d),true)
+                                                 else (Range(a,b),true)
+  |(Val(Integer i),Val(Integer j))-> (*cas i<j*) if j=i+1 then (Range(i,j),true)
+                                                          else(elem,false)
+  |(Val(Integer i),Range(a,b))-> (*cas i<=a*) if i>=a-1 then (Range(i,b),true)
+                                                     else (elem,false)
+  |(Val(Symbol s),Val(Symbol t))-> (*cas s<t*) (elem,false)
+  |_->failwith "fusion with min of superior impossible"
+;;
+
+
+
+
+
+let rec fusion_with_sup superior elem =
+if is_empty_dom superior
+   then create_dom_from_val elem
+   else let to_modify=Domain.min_elt superior
+        in let (new_elem,modified)=fusion_with_min_of_sup to_modify elem
+        in if modified
+           then (fusion_with_sup (Domain.remove to_modify superior) new_elem) 
+           else (Domain.union (Domain.add new_elem (Domain.empty)) superior)
+
+
+
+
+
+
+
+let rec fusion elem_list dom =
+                let (elem,tail)=get_first_tail elem_list
+                in let (inferior,is_included,superior)=(Domain.split elem dom)
+                in if is_included 
+                   then if Domain.is_empty tail then dom
+                                                else fusion tail dom
+                   else if Domain.is_empty inferior
+                        then fusion_with_sup superior elem
+                        else let to_modify=Domain.max_elt inferior
+                             in let (new_val,modified)=fusion_with_max_of_inf to_modify elem
+                             in let new_sup=fusion_with_sup superior new_val
+                             in if modified 
+                                then if Domain.is_empty tail 
+                                     then Domain.union (Domain.remove to_modify inferior) (new_sup)
+                                     else fusion tail (Domain.union (Domain.remove to_modify inferior) (new_sup))
+                                else if Domain.is_empty tail 
+                                     then Domain.union inferior (new_sup)
+                                     else fusion tail (Domain.union inferior (new_sup))
+                                                
+
+
+let insert elem dom = 
+             fusion ( create_dom_from_val elem ) dom;;
+
+
+
+
+let head_tail d =if (is_empty_dom d)
+                    then failwith "head_tail impossible : empty dom"
+                    else let v =Domain.min_elt d 
+                         in match v with 
+                          |Val(a) -> (a,Domain.remove v d)
+                          |Range(a,b)->(Integer a,remove (Val(Integer a)) d )
+                          |FreeVal->failwith"head_tail is impossible to use with freeval"
+
+
+let is_included_elem elem value = match value with
+  |Range(a,b)-> ((int_of elem)>=a)&&((int_of elem)<=b)
+  |_->false
+
+
+let print_value v s = match v with
+ |Val(Integer i)->s^"/"^("Value "^(string_of_int i))
+ |Val(Symbol s)-> s^"/"^("Value "^(s))
+ |Val(FreeConst)-> s^"/"^("FreeConst")
+ |Range(a,b)-> s^"/"^("Range "^(string_of_int a)^"-"^(string_of_int b))
+ |FreeVal->s^"FreeValue"
+;;
+
+
+let print_dom d = if is_empty_dom d then "empty domain"
+                                    else Domain.fold (print_value) d ""
+
+
+
+
+
+let rec is_included elem dom =  
+               begin 
+                let value=Val(elem) 
+                in let (inf,is_in,sup)=Domain.split value dom
+                in if is_in 
+                   then true
+                   else if (is_empty_dom inf)
+                        then if (is_empty_dom sup)
+                             then false
+                             else begin 
+                                    (is_included_elem elem (Domain.min_elt sup)) 
+                                  end
+                        else if (is_empty_dom sup)
+                             then (is_included_elem elem (Domain.max_elt inf))
+                             else (is_included_elem elem (Domain.max_elt inf))||(is_included_elem elem (Domain.min_elt sup))
+               end
+
+
+
+
+

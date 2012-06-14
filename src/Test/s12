@@ -8,7 +8,7 @@
                           (A3->elem)
                         };
                         { ((local,A1,A2),Emprunter(x),{},False),
-                          ((local,A2,A3),Rendre(x),{},True),
+                          ((local,A2,A3),Rendre(x),{},False),
                           ((local,A3,A1),Reinit(x),{},True)
                         };
                         { 
