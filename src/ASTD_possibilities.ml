@@ -1,4 +1,4 @@
-type t = Possibility of (ASTD_state.t * ASTD_arrow.t) | Mult of t list | Synch of t list
+type t = Possibility of (ASTD_state.t * ASTD_arrow.t) | Mult of t list | Synch of (ASTD_term.t*t) list
 ;;
 
 
@@ -87,7 +87,7 @@ let rec print a s= match a with
   |Mult([])->print_endline (s^"end of mult")
   |Synch([])->print_endline (s^"end of synch")
   |Mult(a::q)->print_endline(s^"Mult");(print a (s^"  "));(print (Mult q) s)
-  |Synch(a::q)->print_endline(s^"Synch");(print a (s^"  "));(print (Synch q) s)
+  |Synch((b,c)::q)->print_endline(s^"Synch");(print c (s^"  "));(print (Synch q) s)
 
 
 
@@ -115,7 +115,7 @@ let rec create_possibilities environment event arrow_list = match arrow_list wit
 let rec complete_synch_side side seq = 
 match seq with
     | Mult (a::q) -> clear_cons (Mult[complete_synch_side side a]) (complete_synch_side side (Mult q))
-    | Synch (a::q) -> clear_cons (Synch [complete_synch_side side a]) (complete_synch_side side (Synch q))
+    | Synch ((a,b)::q) -> clear_cons (Synch [(a,complete_synch_side side b)]) (complete_synch_side side (Synch q))
     | Mult[]->Mult[]
     | Synch[]->Synch[]
     | Possibility(state,arrow) -> if side then Possibility((ASTD_state.synchronisation_s_of ASTD_state.NotDefined state) ,arrow)
@@ -129,15 +129,17 @@ match seq with
 
 
 let rec complete_synch_poss seq = match seq with
-   |Synch [Mult(h::t);c] -> let mem = get_synch_data (complete_synch_poss (Synch [Mult t;c])) 
-                            in let a = (get_mult_data (List.hd mem))
-                               and b = List.hd (List.tl mem)
-                                   in Synch [Mult((complete_synch_side false h)::a);b]
-   |Synch [Mult[];Mult(h::t)] -> let mem = get_synch_data (complete_synch_poss (Synch ([Mult [];Mult t]))) 
-                                 in let a = (List.hd mem)
-                                    and b = get_mult_data(List.hd (List.tl mem))
-                                                  in Synch [a;Mult((complete_synch_side true h)::b)]
-   |Synch [Mult []; Mult []] -> Synch [Mult []; Mult []]
+   |Synch [(v1,Mult(h::t));(v2,c)] -> let mem = get_synch_data (complete_synch_poss (Synch [(v1,Mult t);(v2,c)])) 
+                            in let (v,l1)=(List.hd mem) and (vbis,l2)=(List.hd (List.tl mem))
+                            in let (a) = (get_mult_data (l1))
+                               and (b) = l2
+                                   in Synch [(v1,Mult((complete_synch_side false h)::a));(v2,b)]
+   |Synch [(v1,Mult[]);(v2,Mult(h::t))] -> let mem = get_synch_data (complete_synch_poss (Synch ([(v1,Mult []);(v2,Mult t)]))) 
+                                 in let (v,l1)=(List.hd mem) and (vbis,l2)=(List.hd (List.tl mem))
+                                 in let a = (l1)
+                                    and b = get_mult_data(l2)
+                                                  in Synch [(v1,a);(v2,Mult((complete_synch_side true h)::b))]
+   |Synch [(v1,Mult []); (v2,Mult [])] -> Synch [(v1,Mult []);(v2, Mult [])]
    |_-> failwith "complete_synch not appropriate"
 ;;
 
@@ -170,7 +172,7 @@ begin
   match sequence with
   |Mult (seq::q) -> (clear_cons (Mult([complete_possibilities state seq])) (complete_possibilities state (Mult q )))
   |Mult[] -> Mult[]
-  |Synch (seq::q) -> (clear_cons (Synch([complete_possibilities state seq])) (complete_possibilities state (Synch q)))
+  |Synch ((v,seq)::q) -> (clear_cons (Synch([(v,complete_possibilities state seq)])) (complete_possibilities state (Synch q)))
   |Synch[] -> Synch[]
   |a -> (complete_single_possibilities state a)
 end
@@ -203,13 +205,13 @@ let rec possible l = match l with
   |Mult(a::q)-> (possible a) || (possible (Mult q))
   |Possibility(a,b)->true
   |Synch([])->false
-  |Synch(a::q)->(possible a) || (possible (Mult q))
+  |Synch((v,a)::q)->(possible a) || (possible (Synch q))
 ;;
 
 
 
 let rec never_empty l = match l with
-  |Synch(a::q)->(possible a) && (never_empty (Mult q))
+  |Synch((v,a)::q)->(possible a) && (never_empty (Synch q))
   |Synch([])->true
   |_-> failwith "should be called with synch"
 ;;
@@ -334,9 +336,13 @@ let rec possible_evolutions astd state event environment = match state with
                          and (lb,fb)= possible_evolutions astd2 state2 event environment
                       in if ASTD_transition.is_included (ASTD_event.get_label event) transition_list
                                then if (possible la) && (possible lb)
-                                        then (Mult[Synch [Mult[la];Mult[lb]]],fa && fb)
+                                        then (Mult[Synch [((ASTD_term.Const(ASTD_constant.Integer 1)),Mult[la]);
+                                                          ((ASTD_term.Const(ASTD_constant.Integer 2)),Mult[lb])]],
+                                              fa && fb)
                                         else (Mult([]),fa && fb)  
-                               else (Mult[Synch [Mult[la];Mult[lb]]],fa && fb)
+                               else (Mult[Synch [((ASTD_term.Const(ASTD_constant.Integer 1)),Mult[la]);
+                                                 ((ASTD_term.Const(ASTD_constant.Integer 2)),Mult[lb])]],
+                                              fa && fb)
                       
 
   |ASTD_state.Guard_s (started,state2) -> 
@@ -395,9 +401,9 @@ let rec possible_evolutions astd state event environment = match state with
 
 
 
-  |ASTD_state.QSynchronisation_s (state_list) -> 
+  |ASTD_state.QSynchronisation_s (init,unused,state_list) -> 
                 let (name,var,val_list,trans_list,astd2)=ASTD_astd.get_data_qsynchronisation astd
-                in let (l2,f2)= q_poss_s astd2 event var state_list val_list environment
+                in let (l2,f2)= q_poss_s astd2 event var state_list val_list environment init unused
                 in if (ASTD_transition.is_included (ASTD_event.get_label event) trans_list)
                    then if (never_empty l2)
                            then let list_poss= l2
@@ -447,7 +453,7 @@ and q_poss_c astd event var list_val environment = match list_val with
              ) 
             | (ASTD_constant.Range(h,e))::t -> 
 
-if e=h+1 then
+             if e=h+1 then
                       let bind_env=ASTD_environment.bind var (ASTD_term.Const (ASTD_constant.Integer h))
                       in let (a,b)= q_poss_c astd event var ((ASTD_constant.Val(ASTD_constant.Integer h))::t) environment
                       in let (c,d)=possible_evolutions astd 
@@ -458,7 +464,7 @@ if e=h+1 then
                                         (ASTD_state.Val(ASTD_term.Const(ASTD_constant.Integer h))) ASTD_state.NotDefined) c) a,
                 b||d
              ) 
-         else   
+                      else   
                       let bind_env=ASTD_environment.bind var (ASTD_term.Const (ASTD_constant.Integer h))
                       in let (a,b)= q_poss_c astd event var ((ASTD_constant.Range(h+1,e))::t) environment
                       in let (c,d)=possible_evolutions astd 
@@ -496,20 +502,69 @@ and kappa_indirect_q_poss_c astd event params c_list var list_val environment = 
 
          |_->failwith "kappa_c, the event has an incorrect number of parameters" 
 
-and  q_poss_s astd event var state_list list_val environment = match (state_list,list_val) with
-            |((v,state)::b,(c::d))-> 
-                     if v=c then begin 
-                               let bind_env =ASTD_environment.bind var c 
+and  q_poss_s astd event var state_list list_val environment init unused = match (state_list,unused) with
+            |([],e::f)->begin  
+                               let (c,d)=ASTD_constant.head_tail list_val and (g,h)=ASTD_constant.head_tail unused
+                               in begin 
+                                print_endline ((ASTD_constant.string_of g)^"  "^(ASTD_term.string_of(ASTD_term.Const c))) ;
+                                 if g=c
+                                 then
+                                 let bind_env =ASTD_environment.bind var (ASTD_term.Const(c))
+                                 in let (l2,f2)=possible_evolutions astd 
+                                                                    init 
+                                                                    event
+                                                                    (ASTD_environment.add_binding bind_env environment)
+                                    and (list_poss,final)= q_poss_s astd event var state_list d environment init h
+                                 in (clear_cons (Synch [((ASTD_term.Const(c)),Mult[l2])]) (list_poss),f2 && final)
+                                 else begin print_endline (ASTD_constant.string_of(c)^"  "^ASTD_constant.string_of(g)) ; 
+                                           failwith ("mistake in possibilities of qsynch 1 ")
+                                      end
+                                  end
+                        end
+            |((v,state)::b,e::f)-> 
+                   let (c,d)=ASTD_constant.head_tail list_val
+                   in if v=ASTD_term.Const(c)
+                            then begin print_endline ((ASTD_term.string_of(v))^"  "^(ASTD_term.string_of(ASTD_term.Const c))) ;
+                               let bind_env =ASTD_environment.bind var v 
                                in let (l2,f2)=possible_evolutions astd 
                                                                   state 
                                                                   event
                                                                   (ASTD_environment.add_binding bind_env environment)
-                                  and (list_poss,final)= q_poss_s astd event var b d environment
-                               in (clear_cons (Synch [Mult[l2]]) (list_poss),f2 && final)
+                                  and (list_poss,final)= q_poss_s astd event var b d environment init unused
+                               in (clear_cons (Synch [(v,Mult[l2])]) (list_poss),f2 && final)
                                  end
-                            else failwith "mistake"
+                            else begin  
+                                 begin 
+                                 let (g,h)=ASTD_constant.head_tail unused
+                                 in if g=c
+                                 then
+                                 let bind_env =ASTD_environment.bind var (ASTD_term.Const(c))
+                                 in let (l2,f2)=possible_evolutions astd 
+                                                                    init 
+                                                                    event
+                                                                    (ASTD_environment.add_binding bind_env environment)
+                                    and (list_poss,final)= q_poss_s astd event var state_list d environment init h
+                                 in (clear_cons (Synch [((ASTD_term.Const(c)),Mult[l2])]) (list_poss),f2 && final)
+                                 else failwith ("mistake in possibilities of qsynch 2")
+                                 end
+                                 end
+            |((v,state)::b,[])-> let (c,d)=ASTD_constant.head_tail list_val
+                                 in begin 
+                                     print_endline ((ASTD_term.string_of(v))^"  "^(ASTD_term.string_of(ASTD_term.Const c))) ;
+                                     if v=ASTD_term.Const(c)
+                                then begin 
+                                    let bind_env =ASTD_environment.bind var v 
+                                    in let (l2,f2)=possible_evolutions astd 
+                                                                       state 
+                                                                       event
+                                                                       (ASTD_environment.add_binding bind_env environment)
+                                       and (list_poss,final)= q_poss_s astd event var b d environment init unused
+                                       in (clear_cons (Synch [(v,Mult[l2])]) (list_poss),f2 && final)
+                                    end
+                               else failwith ("mistake in possibilities of qsynch 3 ")
+                              end
             |([],[])-> (Synch [],true)
-            |_-> failwith "mistake"
+
 
 
 

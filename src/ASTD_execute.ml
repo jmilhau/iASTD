@@ -1,18 +1,9 @@
-type path = int list
+type path = (ASTD_term.t) list
 
-
-
-let string_of_val a = match a with
-  |0->"zero"
-  |1->"un"
-  |2->"deux"
-  |3->"trois"
-  |_->"plus"
-;;
 
 
 let rec string_of_list a = match a with
-  |h::t-> (string_of_int h)^(string_of_list t)
+  |h::t-> (ASTD_term.string_of h)^(string_of_list t)
   |[]->""
 ;;
 
@@ -92,11 +83,11 @@ let rec apply_local astd arrow state2 state pos =
 
         |(ASTD_state.Synchronisation_s (s1,s2),a) ->  
 
-                  if (List.hd pos)=1 
+                  if (List.hd pos)=(ASTD_term.Const(ASTD_constant.Integer 1))
                      then ASTD_state.synchronisation_s_of 
                                            (apply_local (ASTD_astd.get_synchro_astd1 astd) arrow a s1 (List.tl pos))
                                             s2
-                     else if (List.hd pos)=2 
+                     else if (List.hd pos)=(ASTD_term.Const(ASTD_constant.Integer 2))
                              then ASTD_state.synchronisation_s_of s1
                                                     (apply_local (ASTD_astd.get_synchro_astd2 astd) arrow a s2 (List.tl pos))
                                                                
@@ -112,8 +103,18 @@ let rec apply_local astd arrow state2 state pos =
         |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> 
                       ASTD_state.qchoice_s_of val_used (apply_local (ASTD_astd.get_qastd astd) arrow next_state s pos)
 
-        |(ASTD_state.QSynchronisation_s (s_list),s) ->
-                      ASTD_state.qsynchronisation_s_of (apply_local_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos ) 
+        |(ASTD_state.QSynchronisation_s (init,unused,s_list),s) ->
+                     let a = ASTD_term.to_const (List.hd pos)
+                     in if ASTD_constant.is_included a unused 
+                          then (ASTD_state.qsynchronisation_s_of 
+                                     init
+                                     (ASTD_constant.remove (ASTD_constant.value_of a) unused)
+                               (ASTD_state.insert 
+                                      (List.hd pos,apply_local (ASTD_astd.get_qastd astd) arrow init s (List.tl pos)) 
+                                       s_list)
+                               )                       
+                          else
+           ASTD_state.qsynchronisation_s_of init unused (apply_local_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos) 
 
 
         |(_,ASTD_state.Call_s (false,state)) -> failwith "impossible call execution"
@@ -131,8 +132,9 @@ let rec apply_local astd arrow state2 state pos =
         |_-> failwith "impossible execution"
 
 and apply_local_qsynchro_s astd arrow s_list s pos = match (pos,s_list) with
-    |(1::q,(value,a)::b) ->  (value,(apply_local astd arrow s a q))::(b)
-    |(h::q,(value,a)::b) -> (value,a)::(apply_local_qsynchro_s astd arrow b s ((h-1)::q) )
+    |(v::q,(value,a)::b) ->if (value=v) then  (value,(apply_local astd arrow s a q))::(b)
+                                                            else (value,a)::(apply_local_qsynchro_s astd arrow b s pos)
+
     |_ -> failwith "qsynchro_s impossible to apply, out of the loop"
 
 ;;
@@ -220,13 +222,15 @@ let rec apply_tsub astd arrow state2 state pos =
         |(_,ASTD_state.Kleene_s (false,next_state)) -> failwith "impossible kleene state in execution"
 
         |(ASTD_state.Synchronisation_s (s1,s2),a) -> 
-                     if (List.hd pos)=1 
-                        then ASTD_state.synchronisation_s_of (apply_tsub (ASTD_astd.get_synchro_astd1 astd) arrow a s1 (List.tl pos))
-                                                             s2
-                        else if (List.hd pos)=2 
-                                then ASTD_state.synchronisation_s_of s1
-                                                                (apply_tsub (ASTD_astd.get_synchro_astd2 astd) arrow a s2 (List.tl pos))
-                                else failwith "impossible synchro state in execution" 
+                  if (List.hd pos)=(ASTD_term.Const(ASTD_constant.Integer 1))
+                     then ASTD_state.synchronisation_s_of 
+                                           (apply_tsub (ASTD_astd.get_synchro_astd1 astd) arrow a s1 (List.tl pos))
+                                            s2
+                     else if (List.hd pos)=(ASTD_term.Const(ASTD_constant.Integer 2))
+                             then ASTD_state.synchronisation_s_of s1
+                                                    (apply_tsub (ASTD_astd.get_synchro_astd2 astd) arrow a s2 (List.tl pos))
+                                                               
+                             else failwith "impossible synchro state in execution" 
 
         |(ASTD_state.Guard_s(_,s),ASTD_state.Guard_s(true,next_state)) -> 
                        ASTD_state.guard_s_of true (apply_tsub (ASTD_astd.get_guard_astd astd) arrow next_state s pos )
@@ -238,8 +242,18 @@ let rec apply_tsub astd arrow state2 state pos =
         |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> 
                       ASTD_state.qchoice_s_of val_used (apply_tsub (ASTD_astd.get_qastd astd) arrow next_state s pos)
 
-        |(ASTD_state.QSynchronisation_s (s_list),s) ->
-                      ASTD_state.qsynchronisation_s_of (apply_tsub_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos) 
+        |(ASTD_state.QSynchronisation_s (init,unused,s_list),s) ->
+                      let a = ASTD_term.to_const (List.hd pos)
+                     in if ASTD_constant.is_included a unused 
+                           then (ASTD_state.qsynchronisation_s_of 
+                                     init
+                                     (ASTD_constant.remove (ASTD_constant.value_of a) unused)
+                               (ASTD_state.insert 
+                                      (List.hd pos,apply_tsub (ASTD_astd.get_qastd astd) arrow init s (List.tl pos)) 
+                                       s_list)        
+                                )         
+                          else
+           ASTD_state.qsynchronisation_s_of init unused (apply_tsub_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos) 
 
 
         |(_,ASTD_state.Call_s (false,state)) -> failwith "impossible call execution"
@@ -259,9 +273,11 @@ let rec apply_tsub astd arrow state2 state pos =
 
 
 and apply_tsub_qsynchro_s astd arrow s_list s pos = match (pos,s_list) with
-    |(1::q,(value,a)::b) ->  (value,(apply_tsub astd arrow s a q))::(b)
-    |(h::q,(value,a)::b) -> (value,a)::(apply_tsub_qsynchro_s astd arrow b s ((h-1)::q) )
+    |(v::q,(value,a)::b) ->if (value=v) then  (value,(apply_tsub astd arrow s a q))::(b)
+                                                            else (value,a)::(apply_tsub_qsynchro_s astd arrow b s pos)
+
     |_ -> failwith "qsynchro_s impossible to apply, out of the loop"
+
 
 ;;
 
@@ -333,13 +349,15 @@ let rec apply_fsub astd arrow state2 state pos =
         |(_,ASTD_state.Kleene_s (false,next_state)) -> failwith "impossible kleene state in execution"
 
         |(ASTD_state.Synchronisation_s (s1,s2),a) -> 
-                     if (List.hd pos)=1 
-                   then ASTD_state.synchronisation_s_of (apply_fsub (ASTD_astd.get_synchro_astd1 astd) arrow a s1 (List.tl pos))
-                                                        s2
-                   else if (List.hd pos)=2 
-                           then ASTD_state.synchronisation_s_of s1
+                  if (List.hd pos)=(ASTD_term.Const(ASTD_constant.Integer 1))
+                     then ASTD_state.synchronisation_s_of 
+                                           (apply_fsub (ASTD_astd.get_synchro_astd1 astd) arrow a s1 (List.tl pos))
+                                            s2
+                     else if (List.hd pos)=(ASTD_term.Const(ASTD_constant.Integer 2))
+                             then ASTD_state.synchronisation_s_of s1
                                                     (apply_fsub (ASTD_astd.get_synchro_astd2 astd) arrow a s2 (List.tl pos))
-                                else failwith "impossible synchro state in execution" 
+                                                               
+                             else failwith "impossible synchro state in execution" 
 
         |(ASTD_state.Guard_s(_,s),ASTD_state.Guard_s(true,next_state)) -> 
                        ASTD_state.guard_s_of true (apply_fsub (ASTD_astd.get_guard_astd astd) arrow next_state s pos)
@@ -351,8 +369,19 @@ let rec apply_fsub astd arrow state2 state pos =
         |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> print_endline"coucou";
                       ASTD_state.qchoice_s_of val_used (apply_fsub (ASTD_astd.get_qastd astd) arrow next_state s pos)
 
-        |(ASTD_state.QSynchronisation_s (s_list),s) ->
-                      ASTD_state.qsynchronisation_s_of (apply_fsub_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos) 
+        |(ASTD_state.QSynchronisation_s (init,unused,s_list),s) ->
+                      let a = ASTD_term.to_const (List.hd pos)
+                     in if ASTD_constant.is_included a unused 
+                           then (ASTD_state.qsynchronisation_s_of 
+                                     init
+                                     (ASTD_constant.remove (ASTD_constant.value_of a) unused)
+                               (ASTD_state.insert 
+                                      (List.hd pos,apply_fsub (ASTD_astd.get_qastd astd) arrow init s (List.tl pos)) 
+                                       s_list)         
+                               )          
+                          else
+           ASTD_state.qsynchronisation_s_of init unused (apply_fsub_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos) 
+
                       
         |(_,ASTD_state.Call_s (false,state)) -> failwith "impossible call execution"
 
@@ -382,9 +411,11 @@ let rec apply_fsub astd arrow state2 state pos =
 
 
 and apply_fsub_qsynchro_s astd arrow s_list s pos = match (pos,s_list) with
-    |(1::q,(value,a)::b) ->  (value,(apply_local astd arrow s a q))::(b)
-    |(h::q,(value,a)::b) -> (value,a)::(apply_fsub_qsynchro_s astd arrow b s ((h-1)::q) )
+    |(v::q,(value,a)::b) ->if (value=v) then  (value,(apply_fsub astd arrow s a q))::(b)
+                                                            else (value,a)::(apply_fsub_qsynchro_s astd arrow b s pos)
+
     |_ -> failwith "qsynchro_s impossible to apply, out of the loop"
+
 
 ;;
 
@@ -392,7 +423,7 @@ and apply_fsub_qsynchro_s astd arrow s_list s pos = match (pos,s_list) with
 
 
 
-let apply astd arrow state state2 l = print_endline(string_of_list l);
+let apply astd arrow state state2 l = 
    match arrow with
      | ASTD_arrow.Local(_,_,_,_,_ ) -> apply_local astd arrow state2 state l
      | ASTD_arrow.From_sub (_,_,_,_,_,_ ) -> apply_fsub astd arrow state2 state l
@@ -412,20 +443,20 @@ let rec execute_possibilities astd state list_poss path1 = match (list_poss) wit
                    print_endline ("   ...execution en cours de "^(ASTD_transition.get_label(ASTD_arrow.get_transition arrow)));
                    apply astd arrow state state2 path1
             end
-                           | ASTD_possibilities.Synch (a) ->synchronize astd state (ASTD_possibilities.Synch a) path1 1 
+                           | ASTD_possibilities.Synch (a) ->synchronize astd state (ASTD_possibilities.Synch a) path1 
 
 
 
-and synchronize astd state synchro_list path1 pos = match synchro_list with
+and synchronize astd state synchro_list path1 = match synchro_list with
 
-   |ASTD_possibilities.Synch (a::q) -> 
-                    let state2 = synchronize astd state (ASTD_possibilities.Synch q) path1 (pos+1)
+   |ASTD_possibilities.Synch ((v,a)::q) -> 
+                    let state2 = synchronize astd state (ASTD_possibilities.Synch q) path1 
                     in if (ASTD_possibilities.no_possibilities a) 
                                                then begin 
                                                          state2
                                                     end 
                                                else begin 
-                                                        (execute_possibilities astd state2 a (path1@[pos]))  
+                                                        (execute_possibilities astd state2 a (path1@[v]))  
                                                     end
 
    |ASTD_possibilities.Synch [] -> state

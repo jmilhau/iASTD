@@ -13,7 +13,7 @@ type t = Automata_s of position * ((astd_name * t) list) * t
         |Kleene_s of bool * t
         |Synchronisation_s of t * t
         |QChoice_s of qchoice * t
-        |QSynchronisation_s  of (ASTD_term.t *t) list
+        |QSynchronisation_s  of t*(ASTD_constant.domain)*((ASTD_term.t *t) list)
         |Guard_s of bool * t
         |Call_s of bool * t
         |NotDefined
@@ -30,7 +30,7 @@ let choice_s_of side current = Choice_s (side,current);;
 let kleene_s_of started current = Kleene_s (started,current);;
 let synchronisation_s_of first second = Synchronisation_s (first,second);;
 let qchoice_s_of choice current = QChoice_s (choice,current);;
-let qsynchronisation_s_of list_synchronised = QSynchronisation_s (list_synchronised);;
+let qsynchronisation_s_of init_state unused list_synchronised = QSynchronisation_s (init_state,unused,list_synchronised);;
 let guard_s_of condition current = Guard_s (condition,current);;
 let call_s_of called current = Call_s (called,current);;
 let not_defined_state () = NotDefined;;
@@ -64,7 +64,7 @@ let is_qsynchro state = match state with
 
 
 let get_data_from_qsynchro state = match state with
-  |QSynchronisation_s(q) -> q
+  |QSynchronisation_s(o,p,q) -> (o,p,q)
   |_-> failwith "not appropriate use of get_data_from_qsynchro" 
 
 let get_data_automata_s state = match state with
@@ -98,13 +98,8 @@ let rec init astd = match astd with
 
    |ASTD_astd.QChoice (a,b,c,d) -> qchoice_s_of ChoiceNotMade (init d)
 
-   |ASTD_astd.QSynchronisation (a,b,[],d,e)->  QSynchronisation_s ([])
-
-   |ASTD_astd.QSynchronisation (a,b,value::c,d,e)-> 
-                      let s =init (ASTD_astd.qsynchronisation_of a b c d e)
-                            in if is_qsynchro s then let q=get_data_from_qsynchro s
-                                                       in qsynchronisation_s_of ((value,init e)::q)
-                                                else failwith "incomprehensible problem"
+   |ASTD_astd.QSynchronisation (a,b,val_list,d,e)-> 
+                   qsynchronisation_s_of (init e) val_list []
 
    |ASTD_astd.Call (a,b,c) -> call_s_of false NotDefined
 
@@ -178,6 +173,19 @@ let string_of_qchoice a=match a with
 
 
 
+let rec insert a b = match (a,b) with
+  |((ASTD_term.Const(ASTD_constant.Integer  v1 ),_),(ASTD_term.Const(ASTD_constant.Integer  v2 ),h)::t)->
+                               if v1<v2 then a::b
+                                        else if v1=v2 then failwith "already inserted"
+                                                      else (ASTD_term.Const(ASTD_constant.Integer  v2 ),h)::(insert a t)
+  |((ASTD_term.Const(ASTD_constant.Symbol  v1 ),_), (ASTD_term.Const(ASTD_constant.Symbol  v2 ),h)::t)->
+                               if v1<v2 then a::b
+                                        else if v1=v2 then failwith "already inserted"
+                                                      else (ASTD_term.Const(ASTD_constant.Symbol v2 ),h)::(insert a t)
+  |((v,s),[])->[a]
+  |_-> failwith "cannot mix integers with strings"
+;;
+
 
 let rec print state s = match state with
         |Automata_s (a,b,c) ->print_newline();
@@ -192,7 +200,7 @@ let rec print state s = match state with
         |Synchronisation_s (a,b) ->print_newline();print_endline(s^"Synchronisation_s ,");print a (s^"   ");print b (s^"   ")
         |QChoice_s (a,b) ->print_newline();print_endline(s^"QChoice_s ,");
                                            print_endline(s^"chosen value : "^(string_of_qchoice a));print b (s^"   ")
-        |QSynchronisation_s (a) -> print_newline();print_endline(s^"QSynchronisation_s ,");print_qsynch a s
+        |QSynchronisation_s (c,b,a) -> print_newline();print_endline(s^"QSynchronisation_s ,");print_qsynch a s
         |Guard_s (a,b) ->print_newline();print_endline(s^"Guard_s ,");print_endline(s^"started ? : "^(string_of_bool a));print b (s^"   ")
         |Call_s (a,b) ->print_newline();print_endline(s^"Call_s ,");print_endline(s^"started ? : "^(string_of_bool a));print b (s^"   ")
         |NotDefined ->print_endline (s^"End of the state")

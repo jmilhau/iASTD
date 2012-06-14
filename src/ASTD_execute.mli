@@ -1,6 +1,6 @@
-type path = int list
+type path = ASTD_term.t list
 
-val string_of_val : int -> string
+
 val string_of_list : path -> string
 
 
@@ -8,7 +8,7 @@ val execute : ASTD_astd.t -> ASTD_state.t -> ASTD_event.t -> ASTD_state.t
 
 val execute_possibilities : ASTD_astd.t -> ASTD_state.t -> ASTD_possibilities.t -> path -> ASTD_state.t 
 
-val synchronize : ASTD_astd.t -> ASTD_state.t -> ASTD_possibilities.t -> path -> int -> ASTD_state.t
+val synchronize : ASTD_astd.t -> ASTD_state.t -> ASTD_possibilities.t -> path -> ASTD_state.t
 
 val apply : ASTD_astd.t -> ASTD_arrow.t -> ASTD_state.t -> ASTD_state.t -> path -> ASTD_state.t
 

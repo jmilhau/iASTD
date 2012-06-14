@@ -14,7 +14,7 @@ type t = Automata_s of position * ((astd_name * t) list) * t
         |Kleene_s of bool * t
         |Synchronisation_s of t * t
         |QChoice_s of qchoice * t
-        |QSynchronisation_s  of (ASTD_term.t *t) list
+        |QSynchronisation_s  of t*(ASTD_constant.domain)*((ASTD_term.t *t) list)
         |Guard_s of bool * t
         |Call_s of bool * t
         |NotDefined
@@ -31,7 +31,7 @@ val choice_s_of : side -> t -> t
 val kleene_s_of : bool -> t -> t
 val synchronisation_s_of : t -> t -> t
 val qchoice_s_of : qchoice -> t -> t
-val qsynchronisation_s_of :(ASTD_term.t * t) list -> t
+val qsynchronisation_s_of :t->(ASTD_constant.domain)->((ASTD_term.t *t) list) -> t
 val guard_s_of : bool -> t -> t
 val call_s_of : bool -> t -> t
 val not_defined_state :  unit -> t
@@ -55,7 +55,7 @@ val is_automata : t -> bool
 
 val is_qsynchro : t -> bool
 
-val get_data_from_qsynchro : t -> (ASTD_term.t * t) list
+val get_data_from_qsynchro : t -> t*(ASTD_constant.domain)*((ASTD_term.t *t) list)
 
 val get_data_automata_s : t-> (position * ((astd_name * t) list) * t)
 
@@ -72,7 +72,7 @@ val get_deep : ((astd_name * t) list) -> astd_name -> t
 val get_shallow : ((astd_name * t) list) -> astd_name -> astd_name
 
 
-
+val insert : (ASTD_term.t *t) -> (ASTD_term.t *t) list -> (ASTD_term.t *t) list
 
 
 val get_val : qchoice -> ASTD_term.t

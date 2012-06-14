@@ -1,6 +1,6 @@
 (** ASTD possibilities module *)
 
-type t = Possibility of (ASTD_state.t * ASTD_arrow.t) | Mult of t list | Synch of t list
+type t = Possibility of (ASTD_state.t * ASTD_arrow.t) | Mult of t list | Synch of (ASTD_term.t*t) list
 ;;
 
 
@@ -62,7 +62,7 @@ val kappa_indirect_q_poss_c :
                                      ASTD_constant.domain-> ASTD_environment.t -> (t*bool)
 
 
-val q_poss_s : ASTD_astd.t -> ASTD_event.t -> ASTD_variable.t -> ((ASTD_term.t * ASTD_state.t) list) -> ASTD_term.t list -> ASTD_environment.t -> (t*bool)
+val q_poss_s : ASTD_astd.t -> ASTD_event.t -> ASTD_variable.t -> ((ASTD_term.t * ASTD_state.t) list) -> ASTD_constant.domain -> ASTD_environment.t -> ASTD_state.t -> ASTD_constant.domain -> (t*bool)
 
 val print : t -> string -> unit
 

@@ -379,56 +379,12 @@ string_list_content :
 
 
 astd_qsynchro :
-    | BEGIN_ASTD LSYNCHRO RSYNCHRO COLON SCOLON VAR SCOLON complex_value_set_construction SCOLON list_of_transitions SCOLON astd END_ASTD
-      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 (ASTD_term.parameters_of_constants $8) $10 $12  }
+    | BEGIN_ASTD LSYNCHRO RSYNCHRO COLON SCOLON VAR SCOLON complex_val_construction SCOLON list_of_transitions SCOLON astd END_ASTD
+      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 $12  }
     ;
 
 
 
-complex_value_set_construction :
-    |value_set_construction
-      { $1 }
-    |value_set_construction REMOVE value_set_construction
-      { ASTD_constant.remove_list_from $1 $3 }       
-    ;
-
-
-value_set_construction : 
-    | value_set_construction_range
-      { $1 }
-    | value_set_construction_explicit 
-      { $1 }
-    | value_set_construction_range PLUS value_set_construction
-      { ASTD_constant.add_list_to $1 $3 }
-    | value_set_construction_explicit PLUS value_set_construction
-      { ASTD_constant.add_list_to $1 $3 }
-    ;
-
-
-value_set_construction_range :
-    | LINT C_INT COMMA C_INT RINT
-      { astd_parser_msg "Construction from range" ; 
-        ASTD_constant.const_list_of_range $2 $4 }
-    ;
-
-
-value_set_construction_explicit :
-    | LSET list_of_value_content RSET 
-      { astd_parser_msg "Explicit construction" ; 
-        $2 }
-    ;
-
-
-list_of_value_content :
-    | C_INT COMMA list_of_value_content
-      { (ASTD_constant.of_int $1)::$3 }
-    | C_INT 
-      { (ASTD_constant.of_int $1)::[] }
-    | VAL COMMA list_of_value_content
-      { (ASTD_constant.Symbol ($1))::$3 }
-    | VAL
-      { (ASTD_constant.Symbol ($1))::[] }
-    ;
 
 
 astd_guard :
@@ -504,5 +460,17 @@ list_of_int:
   |LPAR list_of_value_content RPAR
       {$2}
 ;
+
+
+list_of_value_content :
+    | C_INT COMMA list_of_value_content
+      { (ASTD_constant.of_int $1)::$3 }
+    | C_INT 
+      { (ASTD_constant.of_int $1)::[] }
+    | VAL COMMA list_of_value_content
+      { (ASTD_constant.Symbol ($1))::$3 }
+    | VAL
+      { (ASTD_constant.Symbol ($1))::[] }
+    ;
 
 

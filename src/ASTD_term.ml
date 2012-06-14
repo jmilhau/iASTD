@@ -75,3 +75,13 @@ let print t = print_string (string_of t)
 let print_params = create_print_list print
 
 
+
+(**                               *)
+let to_const a = match a with
+|Const a -> a
+|_-> failwith "not appropriate use of to_const"
+;;
+
+
+
+

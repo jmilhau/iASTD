@@ -101,4 +101,4 @@ val order : domain -> domain
 
 val is_included : t -> domain -> bool
 
-
+val head_tail : domain -> (t*domain)

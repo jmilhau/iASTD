@@ -251,7 +251,11 @@ let rec is_included a list_val = match list_val with
 ;;
 
 
-
+let head_tail l = match l with
+   |Val(a)::t -> (a,t)
+   |Range(a,b)::t -> if (b = a+1) then (Integer a, Val(Integer b)::t)
+                                  else (Integer a,Range(a+1,b)::t) 
+   |_-> failwith "impossible to execute with an empty list"
 
 
 
