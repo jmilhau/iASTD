@@ -56,14 +56,6 @@ val no_possibilities : t -> bool
 
 val possible_evolutions : ASTD_astd.t -> ASTD_state.t -> ASTD_event.t -> ASTD_environment.t -> (t * bool) 
 
-val q_poss_c : ASTD_astd.t -> ASTD_event.t -> ASTD_variable.t -> ASTD_constant.domain -> ASTD_environment.t -> (t*bool)
-
-val kappa_indirect_q_poss_c : 
-                 ASTD_astd.t -> ASTD_event.t -> ASTD_term.params -> ASTD_constant.t list -> ASTD_variable.t ->
-                                     ASTD_constant.domain-> ASTD_environment.t -> (t*bool)
-
-
-val q_poss_s : ASTD_astd.t -> ASTD_event.t -> ASTD_variable.t -> ((ASTD_term.t * ASTD_state.t) list) -> ASTD_constant.domain -> ASTD_environment.t -> ASTD_state.t -> ASTD_constant.domain -> (t*bool)
 
 val print : t -> string -> unit
 

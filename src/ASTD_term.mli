@@ -42,7 +42,7 @@ val compare_params_with_consts : params -> ASTD_constant.t list -> bool
 val extract_constant_from_term : t -> ASTD_constant.t
 val extract_constants_from_params : params -> ASTD_constant.t list
 val check_constants_from : params -> bool
-val to_const : t -> ASTD_constant.t
+
 
 (** {3 Iterator over parameters} *)
 
@@ -79,4 +79,14 @@ val print_params : params -> unit
 (** {3 Conversion in string} *)
 
 val string_of_params : params -> string
+
+
+
+
+(**                                *)
+
+val to_const : t -> ASTD_constant.t
+
+val remove_from : params -> t -> params
+
 

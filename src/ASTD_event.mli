@@ -25,6 +25,6 @@ val print_event_ln : t -> unit
 
 val string_of_event : t -> string
 
-
+val get_const : t -> ASTD_constant.t list
 val get_data : t -> (ASTD_label.t * ASTD_constant.t list)
 val get_label : t -> ASTD_label.t

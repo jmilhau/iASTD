@@ -317,7 +317,7 @@ let rec possible_evolutions astd state event environment = match state with
              end
 
 
-  |ASTD_state.Kleene_s (started,state2) -> 
+  |ASTD_state.Kleene_s (started,state2) ->  
                         begin let (name,astd2)=ASTD_astd.get_data_kleene astd
                                in let (l1,final)=possible_evolutions astd2 state2 event environment
                                in let list_poss1=complete_possibilities (ASTD_state.kleene_s_of true state2) l1
@@ -350,12 +350,13 @@ let rec possible_evolutions astd state event environment = match state with
 
   |ASTD_state.Guard_s (started,state2) -> 
                 let (name,pred_list,astd2)=ASTD_astd.get_data_guard astd
-                in begin  
+                in begin   
                 if started 
                       then let (l,f)=possible_evolutions astd2 state2 event environment 
                            in let list_poss=complete_possibilities state l
                            in (Mult[list_poss],f)
-                      else if (ASTD_arrow.evaluate_guard environment pred_list) 
+                      else let boolean= (ASTD_arrow.evaluate_guard environment pred_list)
+                           in if boolean  
                               then begin 
                                    let (l,f)=possible_evolutions astd2 state2 event environment 
                                    in begin 
@@ -379,7 +380,7 @@ let rec possible_evolutions astd state event environment = match state with
                       if val_used=ASTD_state.ChoiceNotMade
                       then let (label,c_list)=ASTD_event.get_data event
                            in let params=ASTD_arrow.get_transition_params (label)
-                           in let (list_poss,f)= kappa_indirect_q_poss_c astd2 event params c_list var list_val environment 
+                           in let (list_poss,f)= kappa_direct_q_poss_c astd2 event params c_list var list_val environment 
                            in (Mult[list_poss],f)
                        else let bind_env = ASTD_environment.bind var (ASTD_state.get_val val_used)
                             in let (l,f)=
@@ -391,13 +392,13 @@ let rec possible_evolutions astd state event environment = match state with
 
 
 
-  |ASTD_state.QSynchronisation_s (init,unused,state_list) -> 
-
+  |ASTD_state.QSynchronisation_s (init,unused,state_list,l,f) -> 
     let (name,var,val_list,trans_list,astd2)=ASTD_astd.get_data_qsynchronisation astd
-    in let (label,c_list)=ASTD_event.get_data event 
+    in begin   
+              let (label,c_list)=ASTD_event.get_data event 
     in let params=ASTD_arrow.get_transition_params (label)
-    in let (l2,f2)= kappa_indirect_q_poss_s 
-                                astd2 event trans_list label params c_list var state_list val_list environment init unused
+    in let (l2,f2)= kappa_direct_q_poss_s 
+                                astd2 event trans_list label params c_list var state_list val_list environment init unused l
     in if (ASTD_transition.is_included (ASTD_event.get_label event) trans_list)
           then if (never_empty l2)
                   then let list_poss= l2
@@ -405,7 +406,7 @@ let rec possible_evolutions astd state event environment = match state with
                   else (Mult[],f2)
           else let list_poss = l2
                    in (Mult[list_poss],f2)
-
+           end
 
 
   |ASTD_state.Call_s (called,state2) -> 
@@ -471,8 +472,9 @@ and q_poss_c astd event var list_val environment = match list_val with
              ) 
 
             | []-> (Mult[],false) 
+            |_->failwith "freeval should not be used in research of possibilities"
 
-and kappa_indirect_q_poss_c astd event params c_list var list_val environment = match (params,c_list) with
+and kappa_direct_q_poss_c astd event params c_list var list_val environment = match (params,c_list) with
          |(a::b,h::t)-> begin 
                         if a=(ASTD_term.Var var)
                         then
@@ -488,7 +490,7 @@ and kappa_indirect_q_poss_c astd event params c_list var list_val environment = 
                                                      ASTD_state.NotDefined)
                                in (Mult[complete_possibilities list_poss c],d)
                              else (Mult[],false)
-                        else kappa_indirect_q_poss_c astd event b t var list_val environment
+                        else kappa_direct_q_poss_c astd event b t var list_val environment
           
                         end
 
@@ -499,7 +501,7 @@ and kappa_indirect_q_poss_c astd event params c_list var list_val environment = 
          |_->failwith "kappa_c, the event has an incorrect number of parameters" 
 
 
-and kappa_indirect_q_poss_s astd event trans_list label params c_list var state_list list_val environment init unused = 
+and kappa_direct_q_poss_s astd event trans_list label params c_list var state_list list_val environment init unused l= 
     match (params,c_list) with
          |(a::b,h::t)-> begin 
                         if a=(ASTD_term.Var var)
@@ -507,7 +509,8 @@ and kappa_indirect_q_poss_s astd event trans_list label params c_list var state_
                             if (label_appartient trans_list label)
                                then (Mult[],false)
                                else if (ASTD_constant.is_included h list_val)
-                                       then if (ASTD_constant.is_included h unused)
+                                       then begin 
+                                            if (ASTD_constant.is_included h unused)
                                                then let bind_env=ASTD_environment.bind var (ASTD_term.Const h)
                                                     in let (c,d)=possible_evolutions astd 
                                                                            (ASTD_state.init astd) 
@@ -521,22 +524,28 @@ and kappa_indirect_q_poss_s astd event trans_list label params c_list var state_
                                                                            event 
                                                                            (ASTD_environment.add_binding bind_env environment)
                                                        in (Synch[((ASTD_term.Const h),c)],false)
-
+                                             end
                                        else (Mult[],false)
-                        else
-                        kappa_indirect_q_poss_s astd event trans_list label b t var state_list list_val environment init unused
+                        else begin 
+                        kappa_direct_q_poss_s astd event trans_list label b t var state_list list_val environment init unused l
                         end
-
-         |([],[])-> if (ASTD_astd.find_transitions label astd)
-                       then q_poss_s astd event var state_list list_val environment init unused
-                       else (Mult[],false)
+                        end
+         |([],[])->begin  
+                       let a= ASTD_state.get_val_arrow l event
+                       in begin 
+                             q_poss_s astd event var state_list a environment init unused
+                          end
+                   end 
          |_->failwith "kappa_c, the event has an incorrect number of parameters" 
 
 
 
-and  q_poss_s astd event var state_list list_val environment init unused = match (state_list,unused) with
-            |([],e::f)->begin  
-                               let (c,d)=ASTD_constant.head_tail list_val and (g,h)=ASTD_constant.head_tail unused
+and  q_poss_s astd event var state_list list_val environment init unused = match (list_val,state_list,unused) with
+            |([],_,_)->begin 
+                      (Synch [],true)
+                       end
+            |(h::t,[],e::f)->begin    
+                             let (c,d)=ASTD_constant.head_tail list_val and (g,h)=ASTD_constant.head_tail unused
                                in begin 
                                  if g=c
                                  then
@@ -548,11 +557,19 @@ and  q_poss_s astd event var state_list list_val environment init unused = match
                                     and (list_poss,final)= q_poss_s astd event var state_list d environment init h
                                  in (clear_cons (Synch [((ASTD_term.Const(c)),Mult[l2])]) (list_poss),f2 && final)
                                  else begin 
-                                           failwith ("mistake in possibilities of qsynch 1 ")
+                              if ASTD_constant.kind_of_val c
+                                  then
+                                           if (ASTD_constant.int_of_val e)>(ASTD_constant.int_of c)
+                                           then failwith ("mistake in possibilities of qsynch 1 ")
+                                           else q_poss_s astd event var state_list list_val environment init f
+                                  else
+                                           if (ASTD_constant.string_of_val e)>(ASTD_constant.string_of c)
+                                           then failwith ("mistake in possibilities of qsynch 1bis ")
+                                           else q_poss_s astd event var state_list list_val environment init f
                                       end
                                   end
                         end
-            |((v,state)::b,e::f)-> 
+            |((h::t),(v,state)::b,e::f)-> begin  
                    let (c,d)=ASTD_constant.head_tail list_val
                    in if v=ASTD_term.Const(c)
                             then begin 
@@ -569,18 +586,34 @@ and  q_poss_s astd event var state_list list_val environment init unused = match
                                  let (g,h)=ASTD_constant.head_tail unused
                                  in if g=c
                                  then
-                                 let bind_env =ASTD_environment.bind var (ASTD_term.Const(c))
-                                 in let (l2,f2)=possible_evolutions astd 
-                                                                    init 
-                                                                    event
-                                                                    (ASTD_environment.add_binding bind_env environment)
-                                    and (list_poss,final)= q_poss_s astd event var state_list d environment init h
-                                 in (clear_cons (Synch [((ASTD_term.Const(c)),Mult[l2])]) (list_poss),f2 && final)
-                                 else failwith ("mistake in possibilities of qsynch 2")
+                                    let bind_env =ASTD_environment.bind var (ASTD_term.Const(c))
+                                    in let (l2,f2)=possible_evolutions astd 
+                                                                       init 
+                                                                       event
+                                                                       (ASTD_environment.add_binding bind_env environment)
+                                       and (list_poss,final)= q_poss_s astd event var state_list d environment init h
+                                    in (clear_cons (Synch [((ASTD_term.Const(c)),Mult[l2])]) (list_poss),f2 && final)
+                                 else 
+                                    if ASTD_constant.kind_of_val c
+                                    then 
+                                         if (ASTD_constant.int_of(ASTD_term.to_const v))>(ASTD_constant.int_of c)
+                                         then if (ASTD_constant.int_of_val e)>(ASTD_constant.int_of c)
+                                                then failwith ("mistake in possibilities of qsynch 2")
+                                                else q_poss_s astd event var state_list list_val environment init f
+                                         else q_poss_s astd event var b list_val environment init unused
+                                    else 
+                                         if (ASTD_constant.string_of(ASTD_term.to_const v))>(ASTD_constant.string_of c)
+                                         then if (ASTD_constant.string_of_val e)>(ASTD_constant.string_of c)
+                                                then failwith ("mistake in possibilities of qsynch 2bis")
+                                                else q_poss_s astd event var state_list list_val environment init f
+                                         else q_poss_s astd event var b list_val environment init unused
                                  end
                                  end
-            |((v,state)::b,[])-> let (c,d)=ASTD_constant.head_tail list_val
+ end
+            |((h::t),(v,state)::b,[])->begin  
+                                let (c,d)=ASTD_constant.head_tail list_val
                                  in begin 
+    
                                      if v=ASTD_term.Const(c)
                                 then begin 
                                     let bind_env =ASTD_environment.bind var v 
@@ -591,9 +624,23 @@ and  q_poss_s astd event var state_list list_val environment init unused = match
                                        and (list_poss,final)= q_poss_s astd event var b d environment init unused
                                        in (clear_cons (Synch [(v,Mult[l2])]) (list_poss),f2 && final)
                                     end
-                               else failwith ("mistake in possibilities of qsynch 3 ")
+                               else
+                                    if ASTD_constant.kind_of_val c
+                                    then
+                                          if (ASTD_constant.int_of(ASTD_term.to_const v))>(ASTD_constant.int_of c)
+                                          then failwith ("mistake in possibilities of qsynch 3 ")
+                                          else q_poss_s astd event var b list_val environment init unused
+                                    else
+                                          if (ASTD_constant.string_of(ASTD_term.to_const v))>(ASTD_constant.string_of c)
+                                          then failwith ("mistake in possibilities of qsynch 3bis ")
+                                          else q_poss_s astd event var b list_val environment init unused
                               end
-            |([],[])-> (Synch [],true)
+                              end
+
+
+
+            |_-> failwith "error in value retrieval"
+
 
 
 ;;

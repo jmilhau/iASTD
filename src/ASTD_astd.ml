@@ -3,15 +3,15 @@ type label = string;;
 
 
 type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * astd_name
-       | Sequence of  astd_name * t * t
-       | Choice of astd_name * t * t 
-       | Kleene of astd_name * t
-       | Synchronisation of astd_name * ASTD_transition.t list * t * t
-       | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t
-       | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
-       | Guard of astd_name * ASTD_predicate.t list * t
-       | Call of astd_name * astd_name * (ASTD_variable.t *ASTD_term.t) list 
-       | Elem of astd_name
+    | Sequence of  astd_name * t * t
+    | Choice of astd_name * t * t 
+    | Kleene of astd_name * t
+    | Synchronisation of astd_name * ASTD_transition.t list * t * t
+    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t
+    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
+    | Guard of astd_name * ASTD_predicate.t list * t
+    | Call of astd_name * astd_name * (ASTD_variable.t *ASTD_term.t) list 
+    | Elem of astd_name
 ;; 
 
 
@@ -26,7 +26,7 @@ let give_name=
 ;;
 
 
-let automata_of name astd_l arrow_l final_states init = Automata (name,astd_l,arrow_l,final_states,init);;
+let automata_of name astd_l arrow_l final_states init  = Automata (name,astd_l,arrow_l,final_states,init);;
 
 let sequence_of name astd_l astd_r = Sequence (name,astd_l,astd_r);;
 
@@ -36,9 +36,10 @@ let kleene_of name a = Kleene (name,a);;
 
 let synchronisation_of name transition_list a1 a2 = Synchronisation (name,transition_list,a1,a2);;
 
-let qchoice_of name var val_list a = QChoice (name,var,val_list,a);;
+let qchoice_of name var val_list a  = QChoice (name,var,val_list,a);;
 
-let qsynchronisation_of name var val_list transition_list a = QSynchronisation (name,var,val_list,transition_list,a);;
+let qsynchronisation_of name var val_list transition_list a  = 
+                                          QSynchronisation (name,var,val_list,transition_list,a);;
 
 let guard_of name predicate_list a = Guard(name,predicate_list,a);;
 
@@ -362,7 +363,7 @@ let rec print astd st = match astd with
 
    |QChoice (a,b,c,d) -> print_endline (st^"QChoice ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name d)));print_newline(); print d (st^"   ") 
 
-   |QSynchronisation (a,b,c,d,e)-> print_endline (st^"Sequence ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name e)));print_newline(); print e (st^"   ") 
+   |QSynchronisation (a,b,c,d,e)-> print_endline (st^"QSynchronisation ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name e)));print_newline(); print e (st^"   ") 
 
    |Call (a,b,c) -> print_endline (st^"Call ; Name : "^(string_of a)^"; Called : "^(string_of b));print_newline()
 
@@ -374,6 +375,9 @@ and print_sons astd_list start= match astd_list with
     |h::q -> print h (start^"   ");print_sons q start 
     |[]-> print_newline()
 ;;
+
+
+
 
 
 

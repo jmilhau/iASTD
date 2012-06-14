@@ -2,7 +2,7 @@
         (AUT0,<|[]|:;
                x;
                [1,4]-{3};
-               {Reinit};
+               { };
                (AUT1 , <aut;
                         { (A1->elem),
                           (A2->elem),

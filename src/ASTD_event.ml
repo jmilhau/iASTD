@@ -33,7 +33,8 @@ let string_of_event event =
          in label_s ^ consts_s
 
 
-
+let get_const ev = match ev with
+ | Event (label,consts) -> consts
  
 let get_data ev = match ev with
  |Event (label,consts) -> (label,consts)

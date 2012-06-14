@@ -2,7 +2,7 @@
 (** ASTD constant module 
 rajout de const_list_of_range et de remove_list_from remove_elem_from add_list_to  *)
 
-type t = Integer of int | Symbol of string (* HIDDEN *)
+type t = Integer of int | Symbol of string | FreeConst (* HIDDEN *)
 type set_name = string
 
 module Set_of : Set.S with type elt = t
@@ -11,6 +11,7 @@ type set = Set_of.t
 
 type value = | Range of (int * int)
              | Val of t
+             | FreeVal
 
 type domain = value list
 
@@ -87,12 +88,16 @@ val string_of : t -> string
 
 val value_of : t -> value
 
+val int_of_val : value ->int
+val string_of_val : value ->string
+
 val insert : value -> domain -> domain
 val insert_range : domain -> int -> int -> domain
 
 val remove : value -> domain -> domain
 val remove_range : domain -> int -> int -> domain
 
+val kind_of_val : t -> bool
 
 
 val fusion : domain -> domain -> domain

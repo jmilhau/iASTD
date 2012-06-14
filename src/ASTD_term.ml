@@ -83,5 +83,10 @@ let to_const a = match a with
 ;;
 
 
+let rec remove_from params var = match params with
+  |h::t->if h=var then t else h::(remove_from t var)
+  |[]->[]
+;;
+
 
 

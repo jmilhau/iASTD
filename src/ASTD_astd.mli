@@ -7,17 +7,16 @@ type label = string;;
 
 
 type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * astd_name
-       | Sequence of  astd_name * t * t
-       | Choice of astd_name * t * t 
-       | Kleene of astd_name * t
-       | Synchronisation of astd_name * ASTD_transition.t list * t * t
-       | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t
-       | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
-       | Guard of astd_name * ASTD_predicate.t list * t
-       | Call of astd_name *astd_name * (ASTD_variable.t *ASTD_term.t) list 
-       | Elem of astd_name
+    | Sequence of  astd_name * t * t
+    | Choice of astd_name * t * t 
+    | Kleene of astd_name * t
+    | Synchronisation of astd_name * ASTD_transition.t list * t * t
+    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t 
+    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
+    | Guard of astd_name * ASTD_predicate.t list * t
+    | Call of astd_name * astd_name * (ASTD_variable.t *ASTD_term.t) list 
+    | Elem of astd_name
 ;; 
-
 
 
 (** {Constructor} *)
@@ -37,7 +36,8 @@ val synchronisation_of : astd_name -> ASTD_transition.t list -> t -> t -> t
 
 val qchoice_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> t -> t
 
-val qsynchronisation_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> ASTD_transition.t list -> t -> t
+val qsynchronisation_of : 
+          astd_name -> ASTD_variable.t -> ASTD_constant.domain -> ASTD_transition.t list -> t -> t
 
 val guard_of : astd_name -> ASTD_predicate.t list -> t -> t
 
@@ -90,7 +90,8 @@ val get_data_guard :t -> (astd_name * ASTD_predicate.t list * t)
 
 val get_data_qchoice :t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * t)
 
-val get_data_qsynchronisation :t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t)
+val get_data_qsynchronisation :
+               t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t )
 
 val get_data_call : t -> (astd_name * astd_name * ((ASTD_variable.t *ASTD_term.t) list))
 
@@ -123,10 +124,10 @@ val register : t -> unit
 val get_astd : astd_name -> t 
 
 
-
-
 val global_save_astd : t-> unit
 
 val string_of : astd_name -> string
 
 val print : t->string-> unit
+
+

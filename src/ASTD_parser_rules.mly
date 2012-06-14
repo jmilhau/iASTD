@@ -325,7 +325,7 @@ complex_val_construction :
     |string_val_construction
       { ASTD_constant.order $1 }
     |val_construction REMOVE val_construction
-      { ASTD_constant.remove_domain_from $1 $3 }       
+      { astd_parser_msg "Suppression from domain" ; ASTD_constant.remove_domain_from $1 $3 }       
     ;
 
 

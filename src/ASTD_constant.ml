@@ -2,6 +2,7 @@ open Functions
 
 type t = | Integer of int
          | Symbol of string
+         | FreeConst
 
 
 
@@ -58,6 +59,7 @@ let is_empty = Set_of.is_empty
 let print = function
     | Integer n -> print_int n
     | Symbol s -> print_string s
+    | FreeConst -> print_string "Free value"
 
 let print_list = create_print_list print
 
@@ -68,6 +70,7 @@ let print_set = create_print_set iteration_over_set print
 let string_of = function
     | Integer n -> string_of_int n
     | Symbol s -> s
+    | FreeConst -> "Free value"
 
 let string_of_list = create_string_of_list string_of
 
@@ -105,6 +108,7 @@ let rec add_list_to l1 l2 = match l2 with
 (**                                                                                      *)
 type value = | Range of (int * int)
              | Val of t
+             | FreeVal
 
 type domain = value list
 
@@ -126,6 +130,7 @@ let range_of a b = if a<b then Range(a,b)
 let value_of a= match a with
      |Symbol b -> Val a
      |Integer b -> Val a
+     |FreeConst -> FreeVal
 ;;
 
 
@@ -138,6 +143,7 @@ let rec insert e l = match l with
                                      else if (v > b) then (Range(a,b))::(insert e t)
                                                      else l
    |[]->[e]
+   |_->failwith "freeval should be alone"
 ;;
 
 
@@ -151,6 +157,7 @@ let rec insert_range l fst lst = match l with
                                   else if fst > b then (Range(a,b))::(insert_range t fst lst)
                                                   else (Range((min fst a ),(max lst b)))::t
    |[]->[Range(fst,lst)]
+   |_->failwith "freeval should be alone"
 ;;
 
 
@@ -159,7 +166,8 @@ let rec insert_range l fst lst = match l with
 
 
 
-let rec remove e l = match l with
+let rec remove e l =begin 
+                    match l with
    |(Val c)::t -> if ((val_to_int e)<(val_to_int (Val c))) 
                        then l
                        else if ((val_to_int e)=(val_to_int (Val c))) 
@@ -175,15 +183,20 @@ let rec remove e l = match l with
                                                         then (Val (Integer d))::t
                                                         else (Range (c+1,d))::t
                                                 else if v=c+1 
-                                                        then if c+2 =d 
-                                                                then (Val(Integer c))::((Val(Integer d))::t)
-                                                                else (Val(Integer c))::((Range(c+2,d)) ::t)
+                                                        then if c+1=d then
+                                                                         (Val(Integer c))::t
+                                                                     else
+                                                                       if c+2 =d 
+                                                                       then (Val(Integer c))::((Val(Integer d))::t)
+                                                                       else (Val(Integer c))::((Range(c+2,d))::t)
                                                         else if v = d-1
-                                                                then (Range(c,v))::((Val(Integer d))::t)
+                                                                then (Range(c,v-1))::((Val(Integer d))::t)
                                                                 else if v=d
-                                                                        then (Range(c,v))::t
-                                                                        else (Range(c,v-1))::((Range(v+1,d))::t)
+                                                                        then (Range(c,v-1))::t
+                                                                        else (Range(c,v-1))::t
    |[] -> []
+   |_->failwith "freeval should be alone"
+                   end
 ;;
 
 
@@ -213,6 +226,7 @@ let rec remove_range l fst snd = match l with
                                                      else (Range(snd+1,d))::t
                                              else remove_range t fst snd
    |[] -> []
+   |_->failwith "freeval should be alone"
 ;;
 
 
@@ -221,12 +235,14 @@ let rec fusion a b = match a with
    |(Val c)::t -> fusion t (insert (Val c) b)
    |( Range(c,d) )::t -> fusion t (insert_range b c d)
    |[] -> b
+   |_->failwith "freeval should be alone"
 ;;
 
 let rec remove_domain_from a b = match b with 
-   |(Val c)::t -> remove_domain_from (remove (Val c) a) t
+   |(Val c)::t -> begin remove_domain_from (remove (Val c) a) t end
    |( Range(c,d) )::t -> remove_domain_from (remove_range a c d) t
    |[] -> a
+   |_->failwith "freeval should be alone"
 ;;
 
 
@@ -237,17 +253,20 @@ let order a = match a with
 ;;
 
 let rec is_included a list_val = match list_val with
-    |(Val (Integer b))::t -> if (int_of a)=b then true 
+    |(Val (Integer b))::t -> if (int_of a)=b then begin true end  
                                     else if ((int_of a)>(b)) then is_included a t
                                                              else false
-    |(Val (Symbol b))::t -> if (string_of a)=b then true 
+    |(Val (Symbol b))::t -> if (string_of a)=b then  true 
                                    else if ((string_of a)>(b)) then is_included a t
                                                                else false
     |(Range(b,c))::t -> let v=int_of a in if v<b then false
                                                  else if v>c then is_included a t
-                                                             else true
+                                                             else begin 
+                                                                        true 
+                                                                  end
 
     |[] -> false
+    |_->failwith "freeval should be alone"
 ;;
 
 
@@ -255,7 +274,18 @@ let head_tail l = match l with
    |Val(a)::t -> (a,t)
    |Range(a,b)::t -> if (b = a+1) then (Integer a, Val(Integer b)::t)
                                   else (Integer a,Range(a+1,b)::t) 
-   |_-> failwith "impossible to execute with an empty list"
+   |_-> failwith "impossible to execute with an empty list or with FreeVal"
+
+let int_of_val a=match a with
+|Val(Integer a)->a
+|_->failwith "not appropriate use of int_of_val"
+
+let string_of_val a=match a with
+|Val(Symbol a)-> a
+|_->failwith "not appropriate use of int_of_val"
 
 
-
+let kind_of_val a = match a with
+|Integer b -> true
+|Symbol b -> false
+|_->failwith "whatever the value"
