@@ -115,6 +115,11 @@ and init_history astd_list = match astd_list with
     |[]-> []
 ;;
 
+let rec find_synch value synch_list = match synch_list with
+   |(t,state)::b -> if value = t then state
+                                 else (find_synch value b)
+   |[]->failwith "not found in synchro"
+;;
 
 let rec modify_h hist name new_state= match hist with
     |(a,b)::q -> if a=name then (name,new_state)::q

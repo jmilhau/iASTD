@@ -137,5 +137,7 @@ let valid_arrow event env arrow = let a =(
 
 
 
-
+let may_be_the_right label arrow = let a =(ASTD_transition.get_label(get_transition arrow))
+                           in (a=label)
+;;
 

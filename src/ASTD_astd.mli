@@ -109,7 +109,7 @@ val find_substate : astd_name -> t list -> t
 
 val remember_transitions : t -> unit
 
-
+val find_transitions : ASTD_label.t -> t -> bool 
 
 
 (**Hash Table :  _ASTD_astd_table_  *)

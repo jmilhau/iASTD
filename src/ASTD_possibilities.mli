@@ -46,6 +46,7 @@ val choice_is : 'a list -> int -> 'a
 
 val choose_next : 'a list -> 'a
 
+val label_appartient : ASTD_transition.t list -> ASTD_label.t -> bool
 
 val possible : t -> bool 
 

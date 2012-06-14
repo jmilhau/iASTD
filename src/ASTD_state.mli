@@ -74,6 +74,9 @@ val get_shallow : ((astd_name * t) list) -> astd_name -> astd_name
 
 val insert : (ASTD_term.t *t) -> (ASTD_term.t *t) list -> (ASTD_term.t *t) list
 
+val find_synch : ASTD_term.t ->((ASTD_term.t *t) list) -> t
+
+
 
 val get_val : qchoice -> ASTD_term.t
 

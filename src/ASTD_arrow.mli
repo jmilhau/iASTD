@@ -52,6 +52,6 @@ val evaluate_guard : ASTD_environment.t -> ASTD_predicate.t list -> bool
 
 val valid_arrow : ASTD_event.t -> ASTD_environment.t -> t -> bool
 
-
+val may_be_the_right : ASTD_label.t -> t -> bool
 
 

@@ -262,6 +262,36 @@ let rec remember_transitions astd = match astd with
    |Elem (a) -> ()
 ;;
 
+
+
+
+let rec find_transitions label astd = match astd with
+   |Automata (a,[],[],d,e) -> false
+
+   |Automata (a,b::l,[],d,e)-> ((find_transitions label b)||(find_transitions label (Automata(a,l,[],d,e))))
+
+   |Automata (a,b,c::l,d,e)-> ( (ASTD_arrow.may_be_the_right label c) || (find_transitions label (Automata(a,b,l,d,e))) )
+
+   |Sequence (a,b,c) -> (find_transitions label b) || (find_transitions label c)
+
+   |Choice (a,b,c) -> (find_transitions label b) || (find_transitions label c)
+
+   |Kleene (a,b) -> find_transitions label b
+
+   |Synchronisation (a,b,c,d) -> (find_transitions label c) || (find_transitions label d)
+
+   |Guard (a,b,c) -> find_transitions label c
+
+   |QChoice (a,b,c,d) -> find_transitions label d
+
+   |QSynchronisation (a,b,c,d,e)-> find_transitions label e
+
+   |Call (a,b,c) -> let astd2=(get_astd b) in find_transitions label astd2
+
+   |Elem (a) -> false
+;;
+
+
 let get_data_automata astd = match astd with
   |Automata(a,b,c,d,e) -> (a,b,c,d,e)
   |_-> failwith "not appropriate"
