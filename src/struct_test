@@ -1,0 +1,182 @@
+(MAIN,
+     <|[]|;
+      {CreateE1,DelE1,CreateA1,DelA1};
+(E1,<|[]|:;
+       x1;
+       [1,100000];
+       {};
+    (E1KLEENE,<*;
+      (E1AUT,<  
+             aut;  
+             { (SE11->elem),  
+               (SE12->
+               <*;
+                          (A1QCHOICE,<|:;
+                                     x2;
+                                     [1,100000];
+     ( A11,<  
+             aut;  
+             { (SA111->elem),  
+               (SA112->elem),  
+               (SA113->elem)  
+             };  
+             { ((local,SA111,SA112),CreateA1(x1,x2),{},False),  
+               ((local,SA112,SA113),DelA1(x1),{},False)  
+             };  
+             {   
+               SA113  
+             };  
+             {   
+             };  
+             SA111  
+           > ) 
+                                    >)
+                         >
+               ),  
+               (SE13->elem)  
+             };  
+             { ((local,SE11,SE12),CreateE1(x1),{},False),  
+               ((local,SE12,SE13),DelE1(x1),{},False)  
+             };  
+             {   
+               SE13  
+             };  
+             {   
+             };  
+             SE11  
+           >  
+           )  
+        >)
+  >)
+      ;
+(SYNCH2,
+     <|[]|;
+      {CreateE2,DelE2,CreateA2,DelA2};
+(E2,<|[]|:;
+       x2;
+       [1,100000];
+       {};
+    (E2KLEENE,<*;
+      (E2AUT,<  
+             aut;  
+             { (SE21->elem),  
+               (SE22->
+                      <|[]|;
+                      {};
+                      (ASTD21,
+               <|[]|:;
+                x1;
+                [1,100000];
+                {};
+                (AIM12KLEENE,<*;
+     ( A12,<  
+             aut;  
+             { (SA121->elem),  
+               (SA122->elem),  
+               (SA123->elem)  
+             };  
+             { ((local,SA121,SA122),CreateA1(x1,x2),{},False),  
+               ((local,SA122,SA123),DelA1(x1),{},False)  
+             };  
+             {   
+               SA123  
+             };  
+             {   
+             };  
+             SA121  
+           > ) 
+                         >)
+               >
+                      );
+                      (ASTD22,
+               <*;
+                          (AI2QCHOICE,<|:;
+                                     x3;
+                                     [1,100000];
+     ( A22,<  
+             aut;  
+             { (SA221->elem),  
+               (SA222->elem),  
+               (SA223->elem)  
+             };  
+             { ((local,SA221,SA222),CreateA2(x2,x3),{},False),  
+               ((local,SA222,SA223),DelA2(x2),{},False)  
+             };  
+             {   
+               SA223  
+             };  
+             {   
+             };  
+             SA221  
+           > ) 
+                                    >)
+                         >
+                      )
+                     >
+               ),  
+               (SE23->elem)  
+             };  
+             { ((local,SE21,SE22),CreateE2(x2),{},False),  
+               ((local,SE22,SE23),DelE2(x2),{},False)  
+             };  
+             {   
+               SE23  
+             };  
+             {   
+             };  
+             SE21  
+           >  
+           )  
+        >)
+  >)
+      ;
+(E3,<|[]|:;
+       x3;
+       [1,100000];
+       {};
+    (E3KLEENE,<*;
+      (E3AUT,<  
+             aut;  
+             { (SE31->elem),  
+               (SE32->
+               <|[]|:;
+                x2;
+                [1,100000];
+                {};
+                (ANKLEENE,<*;
+     ( A23,<  
+             aut;  
+             { (SA231->elem),  
+               (SA232->elem),  
+               (SA233->elem)  
+             };  
+             { ((local,SA231,SA232),CreateA2(x2,x3),{},False),  
+               ((local,SA232,SA233),DelA2(x2),{},False)  
+             };  
+             {   
+               SA233  
+             };  
+             {   
+             };  
+             SA231  
+           > ) 
+                         >)
+               >
+               ),  
+               (SE33->elem)  
+             };  
+             { ((local,SE31,SE32),CreateE3(x3),{},False),  
+               ((local,SE32,SE33),DelE3(x3),{},False)  
+             };  
+             {   
+               SE33  
+             };  
+             {   
+             };  
+             SE31  
+           >  
+           )  
+        >)
+  >)
+>)
+>)

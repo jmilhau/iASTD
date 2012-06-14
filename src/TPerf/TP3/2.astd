@@ -270,7 +270,7 @@ bId->[0,100000]
                (A14->elem)
              };
              { ((local,A13,A14),Take(mId,bId,_),{},False),
-               ((local,A14,A15),Sale(mId,bId,_),{},False)
+               ((local,A13,A14),Sale(mId,bId,_),{},False)
              };
              { 
                A14

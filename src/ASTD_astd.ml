@@ -24,6 +24,7 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
 
 
 
+
 let give_name=
   let n= ref 0 
       in function () -> 

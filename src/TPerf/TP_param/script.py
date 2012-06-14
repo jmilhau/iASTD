@@ -14,8 +14,8 @@ def printAi(i,s1,s2,j):
 	print ("               (SA"+str(i)+""+str(j)+"2->elem),  ");
 	print ("               (SA"+str(i)+""+str(j)+"3->elem)  ");
 	print ("             };  ");
-	print ("             { ((local,SA"+str(i)+""+str(j)+"1,SA"+str(i)+""+str(j)+"2),CreateA"+str(i)+"(x,y),{},False),  ");
-	print ("               ((local,SA"+str(i)+""+str(j)+"2,SA"+str(i)+""+str(j)+"3),DelA"+str(i)+"(x),{},False)  ");
+	print ("             { ((local,SA"+str(i)+""+str(j)+"1,SA"+str(i)+""+str(j)+"2),CreateA"+str(i)+"("+s1+","+s2+"),{},False),  ");
+	print ("               ((local,SA"+str(i)+""+str(j)+"2,SA"+str(i)+""+str(j)+"3),DelA"+str(i)+"("+s1+"),{},False)  ");
 	print ("             };  ");
 	print ("             {   ");
 	print ("               SA"+str(i)+""+str(j)+"3  ");
@@ -33,7 +33,7 @@ def printAi(i,s1,s2,j):
 def printE1():
 
 	print ("(E1,<|[]|:;");
-	print ("       x;");
+	print ("       x1;");
 	print ("       [1,100000];");
 	print ("       {};");
 	print ("    (E1KLEENE,<*;");
@@ -46,9 +46,9 @@ def printE1():
 
 	print ("               <*;");
 	print ("                          (A1QCHOICE,<|:;");
-	print ("                                     y;");
+	print ("                                     x2;");
 	print ("                                     [1,100000];");
-	printAi(1,"x","y",1);
+	printAi(1,"x1","x2",1);
 	print ("                                    >)");
 	print ("                         >");
 
@@ -58,8 +58,8 @@ def printE1():
 	print ("               ),  ");
 	print ("               (SE13->elem)  ");
 	print ("             };  ");
-	print ("             { ((local,SE11,SE12),CreateE1(x),{},False),  ");
-	print ("               ((local,SE12,SE13),DelE1(x),{},False)  ");
+	print ("             { ((local,SE11,SE12),CreateE1(x1),{},False),  ");
+	print ("               ((local,SE12,SE13),DelE1(x1),{},False)  ");
 	print ("             };  ");
 	print ("             {   ");
 	print ("               SE13  ");
@@ -76,7 +76,7 @@ def printE1():
 #En
 def printEn(n):
 	print ("(E"+str(n)+",<|[]|:;");
-	print ("       x;");
+	print ("       x"+str(n)+";");
 	print ("       [1,100000];");
 	print ("       {};");
 	print ("    (E"+str(n)+"KLEENE,<*;");
@@ -88,11 +88,11 @@ def printEn(n):
 
 
 	print ("               <|[]|:;");
-	print ("                y;");
+	print ("                x"+str(n-1)+";");
 	print ("                [1,100000];");
 	print ("                {};");
 	print ("                (ANKLEENE,<*;");
-	printAi((n-1),"y","x",n);
+	printAi((n-1),("x"+str(n-1)),("x"+str(n)),n);
 	print ("                         >)");
 	print ("               >");
 
@@ -101,8 +101,8 @@ def printEn(n):
 	print ("               ),  ");
 	print ("               (SE"+str(n)+"3->elem)  ");
 	print ("             };  ");
-	print ("             { ((local,SE"+str(n)+"1,SE"+str(n)+"2),CreateE"+str(n)+"(x),{},False),  ");
-	print ("               ((local,SE"+str(n)+"2,SE"+str(n)+"3),DelE"+str(n)+"(x),{},False)  ");
+	print ("             { ((local,SE"+str(n)+"1,SE"+str(n)+"2),CreateE"+str(n)+"(x"+str(n)+"),{},False),  ");
+	print ("               ((local,SE"+str(n)+"2,SE"+str(n)+"3),DelE"+str(n)+"(x"+str(n)+"),{},False)  ");
 	print ("             };  ");
 	print ("             {   ");
 	print ("               SE"+str(n)+"3  ");
@@ -121,7 +121,7 @@ def printEn(n):
 #Ei
 def printEi(i):
 	print ("(E"+str(i)+",<|[]|:;");
-	print ("       x;");
+	print ("       x"+str(i)+";");
 	print ("       [1,100000];");
 	print ("       {};");
 	print ("    (E"+str(i)+"KLEENE,<*;");
@@ -138,11 +138,11 @@ def printEi(i):
 
 
 	print ("               <|[]|:;");
-	print ("                y;");
+	print ("                x"+str(i-1)+";");
 	print ("                [1,100000];");
 	print ("                {};");
 	print ("                (AIM1"+str(i)+"KLEENE,<*;");
-	printAi((i-1),"y","x",i);
+	printAi((i-1),("x"+str(i-1)),("x"+str(i)),i);
 	print ("                         >)");
 	print ("               >");
 	print ("                      );");
@@ -152,9 +152,9 @@ def printEi(i):
 	print ("                      (ASTD"+str(i)+"2,");
 	print ("               <*;");
 	print ("                          (AI"+str(i)+"QCHOICE,<|:;");
-	print ("                                     y;");
+	print ("                                     x"+str(i+1)+";");
 	print ("                                     [1,100000];");
-	printAi(i,"x","y",i);
+	printAi(i,("x"+str(i)),("x"+str(i+1)),i);
 	print ("                                    >)");
 	print ("                         >");
 	print ("                      )");
@@ -165,8 +165,8 @@ def printEi(i):
 	print ("               ),  ");
 	print ("               (SE"+str(i)+"3->elem)  ");
 	print ("             };  ");
-	print ("             { ((local,SE"+str(i)+"1,SE"+str(i)+"2),CreateE"+str(i)+"(x),{},False),  ");
-	print ("               ((local,SE"+str(i)+"2,SE"+str(i)+"3),DelE"+str(i)+"(x),{},False)  ");
+	print ("             { ((local,SE"+str(i)+"1,SE"+str(i)+"2),CreateE"+str(i)+"(x"+str(i)+"),{},False),  ");
+	print ("               ((local,SE"+str(i)+"2,SE"+str(i)+"3),DelE"+str(i)+"(x"+str(i)+"),{},False)  ");
 	print ("             };  ");
 	print ("             {   ");
 	print ("               SE"+str(i)+"3  ");
@@ -190,7 +190,7 @@ def Synch (syn,i):
 	else :  
 		print ("(SYNCH"+str(i)+",");
 		print ("     <|[]|;");
-		print ("      {CreateE"+str(i)+",DelE"+str(i)+",CreateA"+str(i)+",DelA"+str(i)+"};");
+		print ("      {CreateA"+str(i)+",DelA"+str(i)+"};");
 		printEi(i);
 		print ("      ;");
 		Synch(syn-1,i+1);
@@ -229,8 +229,8 @@ def Main(i):
 		print ("               ),  ");
 		print ("               (SE13->elem)  ");
 		print ("             };  ");
-		print ("             { ((local,SE11,SE12),CreateE1,{},False),  ");
-		print ("               ((local,SE12,SE13),DelE1,{},False)  ");
+		print ("             { ((local,SE11,SE12),CreateE1(x),{},False),  ");
+		print ("               ((local,SE12,SE13),DelE1(x),{},False)  ");
 		print ("             };  ");
 		print ("             {   ");
 		print ("               SE13  ");
@@ -248,14 +248,14 @@ def Main(i):
 	else : 
 		print ("(MAIN,");
 		print ("     <|[]|;");
-		print ("      {CreateE1,DelE1,CreateA1,DelA1};");
+		print ("      {CreateA1,DelA1};");
 		printE1();
 		print ("      ;");
 		Synch(i-2,2);#il en reste i-2 synchro a creer, et on doit commencer par i=2 pour l astd
 		print (">)")
 
 
-Main(3)
+Main(100)
 
 
 
