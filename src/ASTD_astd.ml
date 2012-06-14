@@ -1,18 +1,15 @@
 type astd_name = string;;
 
-type path=string list
+type path = astd_name list
 
-type dependancy_path = Dependant of (ASTD_variable.t*(ASTD_variable.t list * ASTD_variable.t * path)*(ASTD_label.t list)*(dependancy_path list))
-		| Direct of ASTD_variable.t
 
-type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * astd_name
+type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * astd_name list * astd_name
     | Sequence of  astd_name * t * t
     | Choice of astd_name * t * t 
     | Kleene of astd_name * t
-    | Synchronisation of astd_name * ASTD_transition.t list * t * t
-    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t * ((ASTD_label.t list)*(ASTD_variable.t list)) list
-    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
-								* ((ASTD_label.t)*(ASTD_variable.t list)*(dependancy_path list)) list
+    | Synchronisation of astd_name * ASTD_label.t list * t * t
+    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_optimisation.dependency list * t
+    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_label.t list * ASTD_optimisation.optimisation list * t 
     | Guard of astd_name * ASTD_predicate.t list * t
     | Call of astd_name * astd_name * (ASTD_variable.t *ASTD_term.t) list 
     | Elem of astd_name
@@ -30,7 +27,7 @@ let give_name=
 ;;
 
 
-let automata_of name astd_l arrow_l final_states init  = Automata (name,astd_l,arrow_l,final_states,init);;
+let automata_of name astd_l arrow_l shallow_final_states deep_final_states init  = Automata (name,astd_l,arrow_l,shallow_final_states,deep_final_states,init);;
 
 let sequence_of name astd_l astd_r = Sequence (name,astd_l,astd_r);;
 
@@ -40,10 +37,10 @@ let kleene_of name a = Kleene (name,a);;
 
 let synchronisation_of name transition_list a1 a2 = Synchronisation (name,transition_list,a1,a2);;
 
-let qchoice_of name var val_list sub_astd prod_list  = QChoice (name,var,val_list,sub_astd,prod_list);;
+let qchoice_of name var val_list dep a  = QChoice (name,var,val_list,dep,a);;
 
-let qsynchronisation_of name var val_list transition_list sub_astd users= 
-                                          QSynchronisation (name,var,val_list,transition_list,sub_astd,users);;
+let qsynchronisation_of name var val_list transition_list opt a   = 
+                                          QSynchronisation (name,var,val_list,transition_list,opt,a);;
 
 let guard_of name predicate_list a = Guard(name,predicate_list,a);;
 
@@ -56,7 +53,7 @@ let elem_of name = Elem (name) ;;
 
 
 let get_name a = match a with
-  | Automata (name,_,_,_,_) -> name 
+  | Automata (name,_,_,_,_,_) -> name 
   | Sequence (name,_,_) -> name
   | Choice (name,_,_) -> name
   | Kleene (name,_) -> name
@@ -70,23 +67,28 @@ let get_name a = match a with
 
 
 let get_sub a = match a with
-  |Automata (_,l,_,_,_) -> l
+  |Automata (_,l,_,_,_,_) -> l
   | _ -> failwith "unappropriate request aut sub"
 ;;
 
 
 let get_arrows a = match a with
-  |Automata (_,_,arrows,_,_) -> arrows 
+  |Automata (_,_,arrows,_,_,_) -> arrows 
   | _ -> failwith "unappropriate request get_arrows"
 ;;
 
-let get_final a = match a with
-  |Automata (_,_,_,final,_) -> final
+let get_deep_final a = match a with
+  |Automata (_,_,_,_,final,_) -> final
+  | _ -> failwith "unappropriate request get_final"
+;;
+
+let get_shallow_final a = match a with
+  |Automata (_,_,_,final,_,_) -> final
   | _ -> failwith "unappropriate request get_final"
 ;;
 
 let get_init a = match a with
-  |Automata (_,_,_,_,init) -> init
+  |Automata (_,_,_,_,_,init) -> init
   | _ -> failwith "unappropriate request get_init"
 ;;
 
@@ -157,8 +159,8 @@ let get_qvalues_s a = match a with
 
 
 let get_qastd a = match a with
-  |QChoice (_,_,_,astd,_) -> astd
-  |QSynchronisation (_,_,_,_,astd,_) -> astd
+  |QChoice (_,_,_,_,astd) -> astd
+  |QSynchronisation (_,_,_,_,_,astd) -> astd
   | _ -> failwith "unappropriate request get_qastd"
 
 ;;
@@ -187,7 +189,7 @@ let get_called_values a = match a with
 
 
 let rename_astd astd_to_rename namebis = match astd_to_rename with
-   |Automata (a,b,c,d,e) -> Automata (namebis,b,c,d,e)
+   |Automata (a,b,c,d,e,f) -> Automata (namebis,b,c,d,e,f)
    |Sequence (a,b,c) -> Sequence (namebis,b,c)
    |Choice (a,b,c) -> Choice (namebis,b,c)
    |Kleene (a,b) -> Kleene (namebis,b)
@@ -200,12 +202,6 @@ let rename_astd astd_to_rename namebis = match astd_to_rename with
 ;;
 
 
-
-let rec is_astd_final_in_automata astd state_name = match astd with
-   | Automata (a,b,c,d::q,e) -> if d=state_name then true else (is_astd_final_in_automata (Automata (a,b,c,q,e)) state_name)
-   | Automata (_,_,_,[],_)-> false
-   | _ -> failwith "not an automata"
-;;
 
 
 let is_elem a = match a with
@@ -221,7 +217,14 @@ let is_qsynchro a = match a with
   | QSynchronisation(_) ->true
   | _ -> false
 ;;
-
+let is_qchoice a = match a with
+  | QChoice(_) ->true
+  | _ -> false
+;;
+let is_automata a = match a with
+  | Automata(_) ->true
+  | _ -> false
+;;
 
 let rec find_subastd name astd_list = match astd_list with
   |(a::b) ->begin 
@@ -249,112 +252,183 @@ let get_astd name = Hashtbl.find _ASTD_astd_table_ name
 
 
 
-let rec find_transitions astd = match astd with
 
-   |Automata (a,[],[],d,e) ->  []
+let save_transitions name l = begin ASTD_arrow.register_transitions_from_list name l; l end 
 
-   |Automata (a,[],h::c,d,e) ->let next=(automata_of a [] c d e ) in (ASTD_arrow.get_transition h)::(find_transitions next)
 
-   |Automata (a,h::b,c,d,e) ->  (find_transitions h)@(find_transitions (automata_of a b c d e))
+let rec replace_sub_astd sub_astd name astd_list = match astd_list with 
+	|astd::tail->if (get_name astd)=name
+			then sub_astd::tail
+			else astd::(replace_sub_astd sub_astd name tail)
+	|[]->failwith "replace impossible: doesn't exist"
 
-   |Sequence (a,b,c) -> (find_transitions b) @ (find_transitions c)
 
-   |Choice (a,b,c) -> (find_transitions b) @ (find_transitions c)
+let rec get_sub_transitions call_path astd  = match astd with
 
-   |Kleene (a,b) -> find_transitions b
+   |Automata (a,b,c,d,e,f) -> begin let l= List.map (get_sub_transitions call_path) b
+				in (List.map (ASTD_arrow.get_transition) c)@(List.concat l)
+			end
 
-   |Synchronisation (a,b,c,d) -> (find_transitions c)@(find_transitions d)
+   |Sequence (a,b,c) -> (get_sub_transitions call_path b)@(get_sub_transitions call_path c)
 
-   |Guard (a,b,c) -> find_transitions c
+   |Choice (a,b,c) -> (get_sub_transitions call_path b)@(get_sub_transitions call_path c)
 
-   |QChoice (a,b,c,d,e) -> find_transitions d
+   |Kleene (a,b) -> (get_sub_transitions call_path b)
 
-   |QSynchronisation (a,b,c,d,e,f)-> find_transitions e
+   |Synchronisation (a,b,c,d) -> (get_sub_transitions call_path c)@(get_sub_transitions call_path d)
 
-   |Call (a,b,c) -> (find_transitions (get_astd b)) 
+   |Guard (a,b,c) -> (get_sub_transitions call_path c)
+
+   |QChoice (a,b,c,dep,d) -> (get_sub_transitions call_path d)
+
+   |QSynchronisation (a,b,c,d,opt,e)-> (get_sub_transitions call_path e)
+                                   
+   |Call (a,b,c) -> if (List.mem a call_path) then [] else (get_sub_transitions (a::call_path) (get_astd b))
 
    |Elem (a) -> []
 ;;
 
 
+let rec get_sub_names call_path astd = match astd with
+   |Automata (a,b,c,d,e,f) -> a::(List.concat (List.map (get_sub_names call_path) b))
 
-let rec remember_transitions astd = match astd with
+   |Sequence (a,b,c) -> a::((get_sub_names call_path b)@(get_sub_names call_path c))
 
-   |Automata (a,b,c,d,e) ->  List.iter ASTD_arrow.register_arrow c;
-                             List.iter remember_transitions b
+   |Choice (a,b,c) -> a::((get_sub_names call_path b)@(get_sub_names call_path c))
 
-   |Sequence (a,b,c) -> remember_transitions b ;remember_transitions c
+   |Kleene (a,b) -> a::(get_sub_names call_path b)
 
-   |Choice (a,b,c) -> remember_transitions b ; remember_transitions c
+   |Synchronisation (a,b,c,d) -> a::((get_sub_names call_path c)@(get_sub_names call_path d))
 
-   |Kleene (a,b) -> remember_transitions b
+   |Guard (a,b,c) -> a::(get_sub_names call_path c)
 
-   |Synchronisation (a,b,c,d) -> remember_transitions c ;remember_transitions d
+   |QChoice (a,b,c,dep,d) -> a::(get_sub_names call_path d)
 
-   |Guard (a,b,c) -> remember_transitions c
-
-   |QChoice (a,b,c,d,e) -> begin
-                         let l= find_transitions d in 
-                         ASTD_arrow.register_transitions_from_list a l;
-                         remember_transitions d 
-                         end
-
-   |QSynchronisation (a,b,c,d,e,f)-> begin
-                                   let l= find_transitions e in 
-                                   ASTD_arrow.register_transitions_from_list a l;
-                                   remember_transitions e 
-                                   end
+   |QSynchronisation (a,b,c,d,opt,e)-> a::(get_sub_names call_path e)
                                    
+   |Call (a,b,c) -> if (List.mem a call_path) then [] else a::(get_sub_names (a::call_path) (get_astd b))
 
-   |Call (a,b,c) -> () 
+   |Elem (a) -> [a]
+;;
 
-   |Elem (a) -> ()
+
+
+let rec get_sub_arrows call_path astd  = match astd with
+
+   |Automata (a,b,c,d,e,f) -> begin let l= List.map (get_sub_arrows call_path) b
+				in  c@(List.concat l)
+			end
+
+   |Sequence (a,b,c) -> (get_sub_arrows call_path b)@(get_sub_arrows call_path c)
+
+   |Choice (a,b,c) -> (get_sub_arrows call_path b)@(get_sub_arrows call_path c)
+
+   |Kleene (a,b) -> (get_sub_arrows call_path b)
+
+   |Synchronisation (a,b,c,d) -> (get_sub_arrows call_path c)@(get_sub_arrows call_path d)
+
+   |Guard (a,b,c) -> (get_sub_arrows call_path c)
+
+   |QChoice (a,b,c,dep,d) -> (get_sub_arrows call_path d)
+
+   |QSynchronisation (a,b,c,d,opt,e)-> (get_sub_arrows call_path e)
+                                   
+   |Call (a,b,c) -> if (List.mem a call_path) then [] else (get_sub_arrows (a::call_path) (get_astd b))
+
+   |Elem (a) -> []
+;;
+
+let rec is_init_final astd call_path = match astd with
+   |Automata (name,sub_astd,trans,sf,df,init) -> 
+		begin if List.mem init sf
+			then "true"
+			else if List.mem init df
+				then is_init_final (find_subastd init sub_astd) call_path
+				else "false"
+		end
+
+   |Sequence (name,l,r) -> 
+		let final_l = is_init_final l call_path
+		in if (final_l)="true"
+			then is_init_final r call_path
+			else final_l
+
+   |Choice (name,l,r) -> 
+		let final_l = is_init_final l call_path
+		in if (final_l)="true"
+			then final_l
+			else if final_l = "false"
+				then is_init_final r call_path
+				else let final_r=is_init_final r call_path
+					in if final_r="true"
+						then "true"
+						else "unknown"
+
+   |Kleene (name,sub_astd) -> "true"
+
+   |Synchronisation (name,synch_trans,l,r) -> 
+		let final_l = is_init_final l call_path
+		in if (final_l)="true"
+			then is_init_final r call_path
+			else if final_l = "false"
+				then "false"
+				else if is_init_final r call_path="false"
+					then "false"
+					else "unknown"
+
+   |Guard (a,b,c) -> "unknown"   (*peut etre amélioré pour être utilisé avec l'environnement au moment de l'appel => cad avec un try bla with et si l'environnement est pas suffisant, echec = unknown sinon, sa valeur*)
+
+   |QChoice (name,var,dom,dep,sub_astd) -> is_init_final sub_astd call_path
+
+   |QSynchronisation (name,var,dom,synch_trans,opt,sub_astd)-> is_init_final sub_astd call_path
+                                   
+   |Call (name,called_name,fct_vec) -> 
+		if List.mem called_name call_path 
+			then "false"
+			else is_init_final (get_astd called_name) (called_name::call_path)
+
+   |Elem (a) -> "true"
 ;;
 
 
 
 
-
-
-
-
-
 let get_data_automata astd = match astd with
-  |Automata(a,b,c,d,e) -> (a,b,c,d,e)
-  |_-> failwith "not appropriate"
+  |Automata(a,b,c,d,e,f) -> (a,b,c,d,e,f)
+  |_-> failwith "not appropriate data automata"
 
 
 let get_data_sequence astd = match astd with
   |Sequence(a,b,c) -> (a,b,c)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data seq "
 
 let get_data_choice astd = match astd with
   |Choice(a,b,c) -> (a,b,c)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data choice"
 
 let get_data_kleene astd = match astd with
   |Kleene(a,b) -> (a,b)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data kleene"
 
 let get_data_synchronisation astd = match astd with
   |Synchronisation(a,b,c,d) -> (a,b,c,d)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data synch"
 
 let get_data_guard astd = match astd with
   |Guard(a,b,c) -> (a,b,c)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data guard"
 
 let get_data_qchoice astd = match astd with
   |QChoice(a,b,c,d,e) -> (a,b,c,d,e)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data qchoice"
 
 let get_data_qsynchronisation astd = match astd with
   |QSynchronisation(a,b,c,d,e,f) -> (a,b,c,d,e,f)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data qsynch"
 
 let get_data_call astd = match astd with
   |Call(a,b,c) -> (a,b,c)
-  |_-> failwith "not appropriate"
+  |_-> failwith "not appropriate data call"
 
 
 
@@ -363,7 +437,7 @@ let string_of name = name
 ;;
 
 
-let global_save_astd a = (register a); (remember_transitions a)
+let global_save_astd a = (register a)
 ;;
 
 
@@ -374,7 +448,7 @@ let rec string_of_sons sons_list = match sons_list with
 
 
 let rec print astd st = match astd with
-   |Automata (a,b,c,d,e) -> let s=string_of_sons b in print_endline (st^" Automata ; Name : "^a^"; Sons : "^s  );print_newline(); 
+   |Automata (a,b,c,d,e,f) -> let s=string_of_sons b in print_endline (st^" Automata ; Name : "^a^"; Sons : "^s  );print_newline(); 
                                 print_sons b st;
 
    |Sequence (a,b,c) -> print_endline (st^" Sequence ; Name : "^a^"; Son 1 : "^(string_of(get_name b))^"; Son 2 : "^(string_of(get_name c)));print_newline();print b (st^"   "); print c (st^"   ")
@@ -387,9 +461,9 @@ let rec print astd st = match astd with
 
    |Guard (a,b,c) -> print_endline (st^"Guard ; Name : "^a^"; Son : "^(string_of(get_name c)));print_newline();print c (st^"   ")
 
-   |QChoice (a,b,c,d,e) -> print_endline (st^"QChoice ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name d)));print_newline(); print d (st^"   ") 
+   |QChoice (a,b,c,dep,d) -> print_endline (st^"QChoice ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name d)));print_newline(); print d (st^"   ") 
 
-   |QSynchronisation (a,b,c,d,e,f)-> print_endline (st^"QSynchronisation ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name e)));print_newline(); print e (st^"   ") 
+   |QSynchronisation (a,b,c,d,opt,e)-> print_endline (st^"QSynchronisation ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name e)));print_newline(); print e (st^"   ") 
 
    |Call (a,b,c) -> print_endline (st^"Call ; Name : "^(string_of a)^"; Called : "^(string_of b));print_newline()
 
@@ -401,6 +475,8 @@ and print_sons astd_list start= match astd_list with
     |h::q -> print h (start^"   ");print_sons q start 
     |[]-> print_newline()
 ;;
+
+
 
 
 

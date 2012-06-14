@@ -60,7 +60,7 @@ let check_constants_from =
     in for_all check_one  
 
 let rec string_of = function 
-    | Var v   -> ASTD_variable.string_of v
+    | Var v   -> v
     | Const c -> ASTD_constant.string_of c
     | Addition(t1,t2) -> string_of_binary_complex_term " + " t1 t2
     | Multiplication(t1,t2) -> string_of_binary_complex_term " * " t1 t2 

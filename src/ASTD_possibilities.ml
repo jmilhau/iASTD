@@ -310,7 +310,7 @@ let rec possible_evolutions astd state event environment call_path= match state 
                          in let list_poss=(clear_concat list_poss1 list_poss2)
                          in let is_f =(ASTD_astd.is_astd_final_in_automata astd name)
                          in begin 
-                                let final2=(final||((ASTD_astd.is_elem astd2)&&(is_f)))
+                                let final2=(final||((ASTD_astd.is_elem astd2)))
                                 in if (final2)
                                           then  begin
                                                 let l3=(ASTD_arrow.get name event true)
@@ -436,7 +436,7 @@ let rec possible_evolutions astd state event environment call_path= match state 
 
   |ASTD_state.QChoice_s (val_used,state2) -> 
 
-              let (name,var,list_val,astd2,prods )=ASTD_astd.get_data_qchoice astd
+              let (name,var,list_val,astd2)=ASTD_astd.get_data_qchoice astd
                 in begin 
                       if val_used=ASTD_state.ChoiceNotMade
                       then begin 
@@ -465,59 +465,18 @@ let rec possible_evolutions astd state event environment call_path= match state 
 
 
   |ASTD_state.QSynchronisation_s (trans,fin_dom,not_init_dom,init) -> 
-	let (name,var,val_list,trans_list,astd2,users)=ASTD_astd.get_data_qsynchronisation astd
-	in begin 
-		let (label,c_list)=ASTD_event.get_data event 
-		in let params=ASTD_arrow.get_transition_params name label
-		in if params=[]
-			then let l2= kappa_direct_q_poss_s 
-						astd2 event trans_list label [] [] var val_list environment trans name not_init_dom init call_path
-					in (Mult[l2],ASTD_constant.is_empty_dom fin_dom)
-
-			else begin 
-				let (possible_kappa_indirect,kappa_indirect_value) = 
-					ASTD_kappa_indirect.get_val_if_user var event (List.hd params) users environment 
-				in if possible_kappa_indirect
-					then begin 
-						 if (ASTD_constant.is_included kappa_indirect_value val_list)&&
-							(not((ASTD_transition.is_included label trans_list)))
-						then begin 
-							let bind_env=ASTD_environment.bind var (ASTD_term.Const kappa_indirect_value)
- 							in let env2=(ASTD_environment.add_binding bind_env environment)
-							in let state=(ASTD_state.get_synch_state not_init_dom init name 	
-											(kappa_indirect_value) env2 call_path )	
-							in begin
-								let (poss,final)=possible_evolutions astd2 
-										state
-										event 
-										env2
-										call_path
-								in if (possible poss) 
- 									then begin
-									(Mult[Synch[((ASTD_term.Const kappa_indirect_value),poss)]],
-													ASTD_constant.is_empty_dom fin_dom) 	
-										end
-									else begin 
-									(Mult[Synch[((ASTD_term.Const kappa_indirect_value),poss)]],
-													ASTD_constant.is_empty_dom fin_dom)	
-										end
-							end
-						end
-						else begin
-						(Mult[],ASTD_constant.is_empty_dom fin_dom)
-						end
-						end
- 
-					else begin print_endline "here now";
-						let l2= kappa_direct_q_poss_s 
-						astd2 event trans_list label params c_list var val_list environment trans name not_init_dom init call_path
-						in (Mult[l2],ASTD_constant.is_empty_dom fin_dom)
-						end
-
-				end
-
-
-	end
+    let (name,var,val_list,trans_list,astd2,prod,users,cons)=ASTD_astd.get_data_qsynchronisation astd
+    in begin 
+              let (label,c_list)=ASTD_event.get_data event 
+              in let params=ASTD_arrow.get_transition_params name label
+              in if params=[] 
+                     then let l2= kappa_direct_q_poss_s 
+                                astd2 event trans_list label [] [] var val_list environment trans name not_init_dom init call_path
+                          in (Mult[l2],ASTD_constant.is_empty_dom fin_dom)
+                     else let l2= kappa_direct_q_poss_s 
+                                astd2 event trans_list label params c_list var val_list environment trans name not_init_dom init call_path
+                          in (Mult[l2],ASTD_constant.is_empty_dom fin_dom)
+           end
 
 
   |ASTD_state.Call_s (called,state2) -> 
@@ -529,7 +488,7 @@ let rec possible_evolutions astd state event environment call_path= match state 
                                                             state2 
                                                             event 
                                                             (ASTD_environment.increase_call environment fct_vec)
-                                                            (name::call_path)
+                                                            (called_name::call_path)
                           in let list_poss=complete_possibilities (ASTD_state.call_s_of called state2) l
                           in (Mult[list_poss],final)
                           end
@@ -538,7 +497,7 @@ let rec possible_evolutions astd state event environment call_path= match state 
                                                             (ASTD_state.init astd2) 
                                                             event 
                                                             (ASTD_environment.increase_call environment fct_vec)
-                                                            (name::call_path)
+                                                            (called_name::call_path)
                           in let list_poss=complete_possibilities (ASTD_state.call_s_of true state2) l
                           in (Mult[list_poss],final)
                           end
@@ -608,19 +567,19 @@ and kappa_direct_q_poss_c astd event params c_list var list_val environment call
 
 and kappa_direct_q_poss_s astd2 event trans_list label params c_list var list_val environment trans name not_init_dom init call_path= 
     match (params,c_list) with
-         |((head_param::tail_param)::remaining,head_event_val::tail)-> begin print_endline"coucou1";
+         |((head_param::tail_param)::remaining,head_event_val::tail)-> begin 
                         if head_param=(ASTD_term.Var var)
                         then if (ASTD_transition.is_included label trans_list)
                                 then begin 
                                         (Mult[])
                                      end
                                 else if (ASTD_constant.is_included head_event_val list_val)
-                                        then begin print_endline "coucou11";
+                                        then begin 
                                              let bind_env=ASTD_environment.bind var (ASTD_term.Const head_event_val)
                                              in let env2=(ASTD_environment.add_binding bind_env environment)
-                                             in begin print_endline "coucou111";
-                                             let state=(ASTD_state.get_synch_state not_init_dom init name (head_event_val) env2 call_path )
-                                             in let (poss,final)=possible_evolutions astd2 
+                                             in let state=(ASTD_state.get_synch_state not_init_dom init name (head_event_val) env2 call_path )
+                                             in begin
+                                             let (poss,final)=possible_evolutions astd2 
                                                                             state
                                                                             event 
                                                                             env2
@@ -632,7 +591,7 @@ and kappa_direct_q_poss_s astd2 event trans_list label params c_list var list_va
                                                                            (Synch[((ASTD_term.Const head_event_val),poss)]) end
                                                 end
                                              end 
-                                        else begin 
+                                        else begin
                                                (Mult[])
                                              end
                         else begin 

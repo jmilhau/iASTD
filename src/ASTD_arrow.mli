@@ -36,17 +36,12 @@ val get_predicates : t-> ASTD_predicate.t list
 val get_from_final_state : t-> from_final_state
 val get_label_transition : t -> ASTD_label.t
 
+val is_from_sub : t-> bool
+val is_to_sub : t-> bool
+val is_local : t-> bool
 
+(** {3 Registration of transitions} *)
 
-(** {3 Registration of arrows and transitions} *)
-
-
-
-(** _ASTD_arrow_table_ stores arrows from structure, using the name of the beginning of the arrow, the label of transition and a boolean indicating if the first state should be final or not. *)
-
-val register : (from_state * ASTD_label.t * from_final_state ) -> t -> unit
-val register_arrow : t -> unit
-val get : from_state -> ASTD_event.t -> from_final_state -> t list 
 
 
 

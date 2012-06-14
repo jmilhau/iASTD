@@ -34,7 +34,15 @@ let tsub_arrow from_state to_state through_state transition predicates from_fina
                                     To_sub(from_state,to_state,through_state,transition,predicates,from_final_state)
 
 
-
+let is_from_sub a = match a with
+  | From_sub(_) ->true
+  | _ -> false
+let is_to_sub a = match a with
+  | To_sub(_) ->true
+  | _ -> false
+let is_local a = match a with
+  | Local(_) ->true
+  | _ -> false
 
 
 
@@ -88,16 +96,16 @@ let get_transition_params name label =  Hashtbl.find_all _ASTD_transition_table_
 
 let register = Hashtbl.add _ASTD_arrow_table_ 
 
-let register_arrow arrow = match arrow with
+(*let register_arrow arrow name= match arrow with
      | Local ( from,to_state,transition,pred,final ) ->
-                                               register (from,ASTD_transition.get_label transition,final) arrow
+                                               register (from,name,ASTD_transition.get_label transition,final) arrow
      | From_sub ( from,to_state,through,transition,pred,final ) ->
-                                               register (from,ASTD_transition.get_label transition,final) arrow
+                                               register (through,name,ASTD_transition.get_label transition,final) arrow
      | To_sub ( from,to_state,through,transition,pred,final ) -> 
-                                               register (from,ASTD_transition.get_label transition,final) arrow
+                                               register (through,name,ASTD_transition.get_label transition,final) arrow
 
-let get from event from_final= Hashtbl.find_all _ASTD_arrow_table_ (from,(ASTD_event.get_label event),from_final)
-
+let get from event from_final name= Hashtbl.find_all _ASTD_arrow_table_ (from,name,(ASTD_event.get_label event),from_final)
+*)
 
 
 

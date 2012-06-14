@@ -11,7 +11,9 @@
 	             ((local,A3,A1),Reinit,{},True)
 	           };
 	           { 
-	              A3
+	              
+	           };
+	           { 
 	           };
 	           A1
 	         >),
@@ -27,12 +29,16 @@
 	           { 
 	             A6
 	           };
+	           { 
+	           };
 	           A4
  	         >)
         };
         { ((from_sub,A1,AUT2,AUT1),Sortir,{},False),
           ((to_sub,AUT2,A3,AUT1),Entrer,{},True),
           ((local,AUT1,AUT2),Transition,{},True)
+        };
+        { 
         };
         { 
         };

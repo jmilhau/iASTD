@@ -10,6 +10,8 @@
       { 
         A3
       };
+      { 
+      };
       A1
    >
 )
@@ -32,12 +34,16 @@
 	           { 
 	             A6
 	           };
+	           { 
+	           };
 	           A4
  	         >)
         };
         { 
           ((local,AUT1,AUT2),Ext,{},True),
           ((local,AUT2,AUT1),Extbis,{},False)
+        };
+        { 
         };
         { 
         };

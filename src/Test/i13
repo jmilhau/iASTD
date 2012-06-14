@@ -1,5 +1,9 @@
+Emprunter(1);
 Emprunter(2);
 Rendre(2);
 Emprunter(4);
+Emprunter(2);
 Rendre(4);
+Emprunter(7);
+Rendre(7);
 Reinit

@@ -1,4 +1,12 @@
-Emprunter(2);
-Rendre(2)
+Emprunter;
+Rendre(1);
+Rendre(2);
+Rendre(4);
+Rendre(1);
+Rendre(2);
+Rendre(4);
+Emprunter;
+Rendre(1);
+Reinit(1)
 
 

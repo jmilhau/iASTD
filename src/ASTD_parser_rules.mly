@@ -13,7 +13,7 @@
 	open ASTD_arrow;;
 	open ASTD_astd;; 
 
-    let astd_parser_debug = true ;;
+    let astd_parser_debug = false ;;
     let astd_parser_msg m = if (astd_parser_debug) 
                             then (print_endline m )
                             else (ignore m);;
@@ -55,20 +55,16 @@ structure:
      |structure SCOLON astd
       { astd_parser_msg ("structure 1st choice");
         print_endline "========================================" ;
-	let new_astd=(ASTD_kappa_indirect.static_analysis $3)
-	in begin ASTD_astd.global_save_astd new_astd ;
-        print_endline ("Registered: "^(ASTD_astd.get_name new_astd)) ;
-	new_astd
-	end
+        ASTD_astd.global_save_astd $3 ;
+        print_endline ("Registered: "^(ASTD_astd.get_name $3)) ;
+        $3 
       }
      |astd
       { astd_parser_msg ("structure 2nd choice");
         print_endline "========================================" ;
-	let new_astd=(ASTD_kappa_indirect.static_analysis $1)
-        in begin ASTD_astd.global_save_astd new_astd ;
-        print_endline ("Registered: "^(ASTD_astd.get_name new_astd)) ;
-        new_astd
-	end
+        ASTD_astd.global_save_astd $1 ;
+        print_endline ("Registered: "^(ASTD_astd.get_name $1)) ;
+        $1
       }
   ;
 
@@ -107,25 +103,27 @@ type_astd:
 
 
 astd_automata:
-    | BEGIN_ASTD AUTOMATA SCOLON list_of_meanings SCOLON list_of_arrows SCOLON list_of_names SCOLON IDENTITY_NAME END_ASTD
-      { let (a,b)=$4 in ASTD_astd.automata_of (ASTD_astd.give_name ()) b $6 $8 $10 }
+    | BEGIN_ASTD AUTOMATA SCOLON list_of_meanings SCOLON list_of_arrows SCOLON list_of_names SCOLON list_of_names SCOLON IDENTITY_NAME END_ASTD
+      { ASTD_astd.automata_of (ASTD_astd.give_name ()) $4 $6 $8 $10 $12 }
     ;
 
 
-list_of_transitions :
+list_of_labels :
     | LSET RSET
       { [] }
-    | LSET list_of_transitions_content RSET
+    | LSET list_of_labels_content RSET
       { $2 }
 ;
 
 
-list_of_transitions_content:
-    | transition COMMA list_of_transitions_content
+list_of_labels_content:
+    | IDENTITY_NAME COMMA list_of_labels_content
       { $1::$3 }
-    | transition
+    | IDENTITY_NAME
       { $1::[] }
     ;
+
+
 
 
 transition :
@@ -199,15 +197,15 @@ list_of_meanings :
 
 list_of_meanings_content :
     | name_astd_link COMMA list_of_meanings_content
-      { let (a,b)=$1 and (c,d)=$3 in (a::c,b::d) }
+      { $1::$3}
     | name_astd_link
-      { let (a,b)=$1 in (a::[],b::[]) }
+      { $1::[] }
     ;
 
 
 name_astd_link :
     | LPAR IDENTITY_NAME LINK astd RPAR
-      { ($2,ASTD_astd.rename_astd $4 $2) }
+      { (ASTD_astd.rename_astd $4 $2) }
     ;
 
 
@@ -310,14 +308,14 @@ astd_kleene :
 
 
 astd_synchronisation :
-    | BEGIN_ASTD LSYNCHRO RSYNCHRO SCOLON list_of_transitions SCOLON astd SCOLON astd END_ASTD
+    | BEGIN_ASTD LSYNCHRO RSYNCHRO SCOLON list_of_labels SCOLON astd SCOLON astd END_ASTD
       { ASTD_astd.synchronisation_of (ASTD_astd.give_name ()) $5 $7 $9 }
     ;
 
 
 astd_qchoice :
     | BEGIN_ASTD CHOICE COLON SCOLON IDENTITY_NAME SCOLON complex_val_construction SCOLON astd END_ASTD
-      { ASTD_astd.qchoice_of (ASTD_astd.give_name ()) (ASTD_variable.of_string $5) ($7) $9 [] }
+      { ASTD_astd.qchoice_of (ASTD_astd.give_name ()) (ASTD_variable.of_string $5) ($7) [] $9  }
     ;
 
 
@@ -381,8 +379,8 @@ string_list_content :
 
 
 astd_qsynchro :
-    | BEGIN_ASTD LSYNCHRO RSYNCHRO COLON SCOLON IDENTITY_NAME SCOLON complex_val_construction SCOLON list_of_transitions SCOLON astd END_ASTD
-      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 $12 []  }
+    | BEGIN_ASTD LSYNCHRO RSYNCHRO COLON SCOLON IDENTITY_NAME SCOLON complex_val_construction SCOLON list_of_labels SCOLON astd END_ASTD
+      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 [] $12 }
     ;
 
 
@@ -438,8 +436,8 @@ fct_assoc :
 
 
 apply_event:
-  | apply_event SCOLON event_to_apply
-     {$1@[$3]}
+  | event_to_apply SCOLON apply_event
+     {$1::$3}
   | event_to_apply
      {$1::[]}
 ;

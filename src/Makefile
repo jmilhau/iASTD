@@ -22,11 +22,12 @@ BASE = functions \
 	ASTD_transition \
 	ASTD_event \
 	ASTD_arrow \
+	ASTD_optimisation \
 	ASTD_astd \
 	ASTD_state \
+	ASTD_static_kappa_indirect \
 	ASTD_kappa_indirect \
-	ASTD_possibilities \
-	ASTD_execute
+	ASTD_exec_first
 	
 
 PARSER = ASTD_parser
