@@ -1,6 +1,6 @@
 type position = string
-type step = Left | Right
-type side = Undef | Fst | Snd
+type step = Fst | Snd
+type side = Undef | Left | Right
 type qchoice = Val of ASTD_term.t | ChoiceNotMade
 type astd_name = string
 type called_path =astd_name list
@@ -40,11 +40,11 @@ let elem_state () =Elem;;
 
 
 let undef_choice_of () = Undef;;
-let fst_choice_of () = Fst;;
-let snd_choice_of () = Snd;;
+let left_choice_of () = Left;;
+let right_choice_of () = Right;;
 
-let left_sequence_of () =Left;;
-let right_sequence_of () =Right;;
+let first_sequence_of () =Fst;;
+let second_sequence_of () =Snd;;
 
 let qchoice_notmade_of () = ChoiceNotMade
 
@@ -163,7 +163,7 @@ let rec save_data to_save = match to_save with
 let rec init astd = match astd with
    |ASTD_astd.Automata (a,b,c,d,e,f) -> automata_s_of f (init_history b) (init (ASTD_astd.find_subastd f b))
 
-   |ASTD_astd.Sequence (a,b,c) -> sequence_s_of Left (init b)
+   |ASTD_astd.Sequence (a,b,c) -> sequence_s_of Fst (init b)
 
    |ASTD_astd.Choice (a,b,c) -> choice_s_of (undef_choice_of()) (not_defined_state())
 
@@ -230,7 +230,7 @@ let rec is_final astd state env call_path = match state with
 
 	|Sequence_s (step,sub_state) -> 
 		let (name,left_astd,right_astd)=ASTD_astd.get_data_sequence astd
-		in if step=Left
+		in if step=Fst
 			then let (new_state,final1)=(is_final left_astd sub_state env call_path)
 				and (_,final2)=(is_final right_astd (init right_astd) env call_path)
 				in (Sequence_s (step,new_state),final1 && final2)
@@ -239,12 +239,12 @@ let rec is_final astd state env call_path = match state with
 
 	|Choice_s (side,sub_state) -> 
 		let (name,left_astd,right_astd)=ASTD_astd.get_data_choice astd
-		in if side = Fst 
+		in if side = Right
 			then let (new_state,final)=(is_final left_astd sub_state env call_path)
-				in (Choice_s (Fst,new_state),final)
-			else if side = Snd
+				in (Choice_s (Right,new_state),final)
+			else if side = Left
 				then let (new_state,final)=(is_final right_astd sub_state env call_path)
-					in (Choice_s (Snd,new_state),final)
+					in (Choice_s (Left,new_state),final)
 				else let (_,final1)=(is_final left_astd (init left_astd) env call_path)
 					and(_,final2)=(is_final right_astd (init right_astd) env call_path)
 					in (state,final1||final2)
@@ -389,12 +389,12 @@ let string_of_bool a = if a then "true" else "false"
 
 
 let string_of_seq a = match a with
-  |Left -> "Left"
-  |Right -> "Right"
-
-let string_of_choice a = match a with
   |Fst -> "First"
   |Snd -> "Second"
+
+let string_of_choice a = match a with
+  |Left -> "First"
+  |Right -> "Second"
   |Undef -> "Choice not made yet"
 
 let string_of_qchoice a=match a with
@@ -415,12 +415,12 @@ let rec print state astd s env call_path = match state with
                               print_endline(s^"sub_state : "^a);
                               print c (ASTD_astd.find_subastd a (ASTD_astd.get_sub astd)) (s^"   ") env call_path
         |Sequence_s (a,b) ->print_newline();print_endline(s^"Sequence_s ,");print_endline(s^"step : "^(string_of_seq a));
-               begin if a=Left then print b (ASTD_astd.get_seq_l astd) (s^"   ")  env call_path
+               begin if a=Fst then print b (ASTD_astd.get_seq_l astd) (s^"   ")  env call_path
                                else print b (ASTD_astd.get_seq_r astd) (s^"   ") env call_path
                end
         |Choice_s (a,b) ->print_newline();print_endline(s^"Choice_s ,");print_endline(s^"step : "^(string_of_choice a));
                begin if a=Undef then print_endline (s^"No choice made")
-                                        else if a=Fst then print b (ASTD_astd.get_choice1 astd) (s^"   ") env call_path
+                                        else if a=Left then print b (ASTD_astd.get_choice1 astd) (s^"   ") env call_path
                                                       else print b (ASTD_astd.get_choice2 astd)(s^"   ") env call_path
                end
         |Kleene_s (a,b) ->print_newline();print_endline(s^"Kleene_s ,");print_endline(s^"started ? : "^(string_of_bool a)); 

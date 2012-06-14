@@ -58,14 +58,14 @@ let rec find_arrow arrow_list event current sub_state sub_astd env call_path = m
 					let (new_state,is_final)=(ASTD_state.is_final sub_astd sub_state env call_path)
 					in if is_final
 					then begin 
-						if (ASTD_arrow.evaluate_guard env pred)
+						if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 						then (ASTD_arrow.Local ( from,to_state,transition,pred,final ),new_state,true)
 						else find_arrow (a::t) event current new_state sub_astd env call_path
 						end
 					else find_arrow (a::t) event current new_state sub_astd env call_path
 					end
 				else begin 
-					if (ASTD_arrow.evaluate_guard env pred)
+					if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 					then (ASTD_arrow.Local ( from,to_state,transition,pred,final ),sub_state,true)
 					else find_arrow (a::t) event current sub_state sub_astd env call_path
 					end
@@ -79,11 +79,11 @@ let rec find_arrow arrow_list event current sub_state sub_astd env call_path = m
 						then let (new_sub_state,is_final)=(ASTD_state.is_final (ASTD_astd.find_subastd sub_from (ASTD_astd.get_sub sub_astd)) sub_state2 env call_path)
 							in let new_state = ASTD_state.Automata_s (sub_from,hist,new_sub_state)
 							in if is_final 
-							then if (ASTD_arrow.evaluate_guard env pred)
+							then if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 								then (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),new_state,true)
 								else find_arrow (a::t) event current new_state sub_astd env call_path
 							else find_arrow (a::t) event current new_state sub_astd env call_path
-						else if (ASTD_arrow.evaluate_guard env pred)
+						else if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 							then (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),sub_state,true)
 							else find_arrow (a::t) event current sub_state sub_astd env call_path
 					else find_arrow (a::t) event current sub_state sub_astd env call_path
@@ -94,11 +94,11 @@ let rec find_arrow arrow_list event current sub_state sub_astd env call_path = m
 			then if final
 				then let (new_state,is_final)= ASTD_state.is_final sub_astd sub_state env call_path
 					in if is_final
-					then if (ASTD_arrow.evaluate_guard env pred)
+					then if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 						then (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),new_state,true)
 						else find_arrow (a::t) event current new_state sub_astd env call_path
 					else find_arrow (a::t) event current new_state sub_astd env call_path
-				else if (ASTD_arrow.evaluate_guard env pred)
+				else if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 					then (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),sub_state,true)
 					else find_arrow (a::t) event current sub_state sub_astd env call_path
 			else find_arrow (a::t) event current sub_state sub_astd env call_path
@@ -110,14 +110,14 @@ let rec find_arrow arrow_list event current sub_state sub_astd env call_path = m
 					let (new_state,is_final)=(ASTD_state.is_final sub_astd sub_state env call_path)
 					in if is_final
 					then begin 
-						if (ASTD_arrow.evaluate_guard env pred)
+						if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 						then (ASTD_arrow.Local ( from,to_state,transition,pred,final ),new_state,true)
 						else (ASTD_arrow.Local ( from,to_state,transition,pred,final ),new_state,false)
 						end
 					else (ASTD_arrow.Local ( from,to_state,transition,pred,final ),new_state,false)
 					end
 				else begin 
-					if (ASTD_arrow.evaluate_guard env pred)
+					if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 					then (ASTD_arrow.Local ( from,to_state,transition,pred,final ),sub_state,true)
 					else (ASTD_arrow.Local ( from,to_state,transition,pred,final ),sub_state,false)
 					end
@@ -131,11 +131,11 @@ let rec find_arrow arrow_list event current sub_state sub_astd env call_path = m
 						then let (new_sub_state,is_final)=(ASTD_state.is_final (ASTD_astd.find_subastd sub_from (ASTD_astd.get_sub sub_astd)) sub_state2 env call_path)
 							in let new_state = ASTD_state.Automata_s (sub_from,hist,new_sub_state)
 							in if is_final 
-							then if (ASTD_arrow.evaluate_guard env pred)
+							then if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 								then (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),new_state,true)
 								else (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),new_state,false)
 							else (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),new_state,false)
-						else if (ASTD_arrow.evaluate_guard env pred)
+						else if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 							then (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),sub_state,true)
 							else (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),sub_state,false)
 					else (ASTD_arrow.From_sub ( from,to_state,through,transition,pred,final ),sub_state,false)
@@ -146,11 +146,11 @@ let rec find_arrow arrow_list event current sub_state sub_astd env call_path = m
 			then if final
 				then let (new_state,is_final)=(ASTD_state.is_final sub_astd sub_state env call_path)
 					in if is_final
-					then if (ASTD_arrow.evaluate_guard env pred)
+					then if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 						then (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),new_state,true)
 						else (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),new_state,false)
 					else (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),new_state,false)
-				else if (ASTD_arrow.evaluate_guard env pred)
+				else if (ASTD_arrow.valid_arrow event env (List.hd arrow_list))
 					then (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),sub_state,true)
 					else (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),sub_state,false)
 			else (ASTD_arrow.To_sub ( from,to_state,through,transition,pred,final ),sub_state,false)
@@ -167,38 +167,47 @@ let rec find_corresponding_params label trans_list = match trans_list with
 				else find_corresponding_params label tail
 	|[]->[]
 
-let rec find_value c_list params_list var c_list_save= match (params_list,c_list) with
+let rec find_value c_list params_list var c_list_save found_val= match (params_list,c_list) with
 	|((head_var::var_tail)::t,head_c::c_tail)->begin debug ("find_val for "^(ASTD_term.string_of var)^" vs "^(ASTD_term.string_of head_var));
 							if head_var=var 
-							then let value=ASTD_state.val_of (ASTD_term.Const head_c) 
+							then let value=ASTD_term.Const head_c
 								in begin
-									debug "value found";
-									value
+									debug ("1 value found "^(ASTD_term.string_of (ASTD_term.Const head_c)));
+									if List.mem value found_val
+										then begin debug "already had";
+											find_value c_tail (var_tail::t) var c_list_save found_val
+											end
+										else begin debug "added";
+											find_value c_tail (var_tail::t) var c_list_save (value::found_val)
+											end
 									end
-							else find_value c_tail (var_tail::t) var c_list_save
+							else begin debug "not equal";
+								if true (**(head_var "est une constante")&&("égalité de constante et valeur")*)
+								then find_value c_tail (var_tail::t) var c_list_save found_val
+								else find_value c_list_save t var c_list_save found_val
+								end
 							end
-	|([]::t,[])->find_value c_list_save t var c_list_save
-	|([],_)->ASTD_state.ChoiceNotMade
+	|([]::t,[])->find_value c_list_save t var c_list_save found_val
+	|([],_)->found_val
 	|_->failwith "event and transition have not the same number of arguments"
 
 
 
 
-let choose_value event astd2 var = debug "choose value";
+
+
+
+
+let get_values event astd2 var = debug "extract values for kappa indirect";
 	let trans_list=ASTD_astd.get_sub_transitions [] astd2
 	and (label,c_list)=ASTD_event.get_data event
-	in let param_trans=find_corresponding_params label trans_list
-	in begin debug "extracted params" ;
+	in let param_trans=find_corresponding_params label trans_list 
+	in begin debug "params extracted" ;
 		if param_trans<>[] 
-		then find_value c_list param_trans var c_list
+		then find_value c_list param_trans var c_list []
 			
-		else ASTD_state.ChoiceNotMade
+		else []
 		end
-
-
-
-
-
 
 
 
@@ -214,10 +223,10 @@ let rec find_value_indirect event astd env dep_path_list var = match dep_path_li
 	|[]-> begin debug ("try in env for "^var);
 		try ASTD_environment.find_value_of env var
 		with Not_found-> begin debug ("try to retrieve kappa indirect threw kappa direct for "^var);
-					let qchoice=(choose_value event astd (ASTD_term.Var var))
-					in if qchoice=ASTD_state.ChoiceNotMade
-						then failwith "impossible to kappa optimize indirect (find value)"
-						else begin debug "get val to apply "; let value_ext=ASTD_state.get_val qchoice in begin debug "value extracted";value_ext end end
+					let qchoice=(get_values event astd (ASTD_term.Var var))
+					in if List.length qchoice=1
+						then begin debug "get val to apply "; let value_ext=List.hd qchoice in begin debug "value extracted";value_ext end end
+						else failwith "impossible to kappa optimize indirect (find value)"
 					end
 		end
 
@@ -285,7 +294,7 @@ else match state with
   |ASTD_state.Sequence_s (step,state2) -> 
 	begin debug ("seq exec "^(ASTD_astd.get_name astd));
 	let (name,left,right)=ASTD_astd.get_data_sequence astd
-	in if step = ASTD_state.Left 
+	in if step = ASTD_state.Fst
 		then begin 
 			let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute state2 left event ((path)@([name])) env call_path
 			in if is_modified 
@@ -303,9 +312,9 @@ else match state with
 							let (delta2,sub_path2,mod_state2,to_save2,kappa2,is_modified2)=execute (ASTD_state.init right) right event ((path)@([name])) env call_path
 							in if is_modified2
 								then begin
-									(ASTD_state.Sequence_s (ASTD_state.Right,mod_state2),
+									(ASTD_state.Sequence_s (ASTD_state.Snd,mod_state2),
 									((path)@([name])),
-									ASTD_state.Sequence_s (ASTD_state.Right,mod_state2),
+									ASTD_state.Sequence_s (ASTD_state.Snd,mod_state2),
 									to_save,
 									kappa2,
 									true)
@@ -336,7 +345,7 @@ else match state with
   |ASTD_state.Choice_s (side,state2) -> 
 	begin debug ("choice exec "^(ASTD_astd.get_name astd));
 	let (name,first,second)=ASTD_astd.get_data_choice astd
-	in if side = ASTD_state.Fst
+	in if side = ASTD_state.Right
 		then begin
 			let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute state2 first event ((path)@([name])) env call_path
 			in if is_modified
@@ -344,7 +353,7 @@ else match state with
 				else (state,[],ASTD_state.Choice_s (side,mod_state),[],[],false) 
 			end
 		else begin
-			if side=ASTD_state.Snd
+			if side=ASTD_state.Left
 			then begin
 				let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute state2 second event ((path)@([name])) env call_path
 				in if is_modified
@@ -354,11 +363,11 @@ else match state with
 			else begin
 				let (_,_,mod_state,to_save1,kappa1,is_modified) = execute (ASTD_state.init first) first event ((path)@([name])) env call_path
 				in if is_modified
-					then (ASTD_state.Choice_s (ASTD_state.Fst,mod_state),((path)@([name])),ASTD_state.Choice_s (ASTD_state.Fst,mod_state),to_save1,kappa1,is_modified)
+					then (ASTD_state.Choice_s (ASTD_state.Left,mod_state),((path)@([name])),ASTD_state.Choice_s (ASTD_state.Left,mod_state),to_save1,kappa1,is_modified)
 					else begin
 						let (_,_,mod_state2,to_save2,kappa2,is_modified2) = execute (ASTD_state.init second) second event ((path)@([name])) env call_path
 						in if is_modified2
-							then (ASTD_state.Choice_s (ASTD_state.Snd,mod_state2),((path)@([name])),ASTD_state.Choice_s(ASTD_state.Snd ,mod_state2),to_save2 ,kappa2,is_modified2)
+							then (ASTD_state.Choice_s (ASTD_state.Right,mod_state2),((path)@([name])),ASTD_state.Choice_s(ASTD_state.Right ,mod_state2),to_save2 ,kappa2,is_modified2)
 							else (state,[],state,[],[],false) 
 						end
 				end
@@ -433,7 +442,7 @@ else match state with
 				in (ASTD_state.Guard_s (true,mod_state),((path)@([name])),ASTD_state.Guard_s (true,mod_state),to_save,kappa,is_modified)
 			else (state,[],state,[],[],false)
 	end
-
+(** Old school
   |ASTD_state.QChoice_s (val_used,final_dom,unknown_dom,state2) -> 
 	begin debug ("qchoice exec "^(ASTD_astd.get_name astd));
 	let (name,var,list_val,dep,astd2)=ASTD_astd.get_data_qchoice astd
@@ -478,8 +487,30 @@ else match state with
 			end
 	end 
 
+*)
+(** New Kappa*)
+  |ASTD_state.QChoice_s (val_used,final_dom,unknown_dom,state2) -> 
+	begin debug ("qchoice exec "^(ASTD_astd.get_name astd));
+	let (name,var,list_val,dep,astd2)=ASTD_astd.get_data_qchoice astd
+	in if val_used=ASTD_state.ChoiceNotMade
+		then begin debug "trying some values";
+			try_qchoice dep (ASTD_event.get_label event) state2 astd2 var event ((path)@([name])) env call_path list_val (get_values event astd2 (ASTD_term.Var var))
+			end
+					
+		else begin 
+			debug ("qchoice "^var^" choice using "^(ASTD_term.string_of(ASTD_state.get_val val_used))^" for the astd "^name);
+				let bind_env = ASTD_environment.bind var (ASTD_state.get_val val_used)
+				in let env2=(ASTD_environment.add_binding bind_env env)
+				in let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute state2 astd2 event ((path)@([name])) env2 call_path
+				in (delta,sub_path,
+					ASTD_state.QChoice_s (val_used,final_dom,unknown_dom,mod_state),
+					to_save,
+					(ASTD_optimisation.automatic_gestion_of_kappa_values env (ASTD_event.get_label event) dep (ASTD_state.get_val val_used))@kappa, 					is_modified)
+				
+			end
+	end 
 
-
+(** Old school
   |ASTD_state.QSynchronisation_s (not_fin_dom,unknown_dom,not_init_dom,init) -> 
 	begin debug ("qsynch exec "^(ASTD_astd.get_name astd));
 	let (name,var,val_list,trans_list,opt,astd2)=ASTD_astd.get_data_qsynchronisation astd
@@ -615,6 +646,88 @@ else match state with
 	end 
 	with _ -> (state,[],state,[],[],false)
 	end
+*)
+
+
+(**New Kappa*)
+  |ASTD_state.QSynchronisation_s (not_fin_dom,unknown_dom,not_init_dom,init) -> 
+	begin debug ("qsynch exec "^(ASTD_astd.get_name astd));
+	let (name,var,val_list,trans_list,opt,astd2)=ASTD_astd.get_data_qsynchronisation astd
+	in try begin
+                        let value2 = active_optimisation event astd env (ASTD_event.get_label event) var opt 
+			in if not(value2=ASTD_state.ChoiceNotMade)
+				then begin debug ("kappa indirect "^var^" "^(ASTD_term.string_of(ASTD_state.get_val value2))^" for the astd "^name);
+				if (List.mem (ASTD_event.get_label event) trans_list) || (not(ASTD_constant.is_included (ASTD_term.extract_constant_from_term (ASTD_state.get_val value2)) val_list))
+					then (state,[],state,[],[],false)
+					else begin 
+						let bind_env = ASTD_environment.bind var (ASTD_state.get_val value2)
+						in let env2=(ASTD_environment.add_binding bind_env env)
+						and value=ASTD_term.extract_constant_from_term (ASTD_state.get_val value2)
+						in let value'=ASTD_constant.value_of value
+						in let get_state=ASTD_state.get_synch_state not_init_dom init name (value) env2 call_path
+						in let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute get_state astd2 event ((path)@([name])) env2 call_path
+				(*NB : pour la mise en bdd, on peut faire (sub_path - path) pour connaitre le chemin de la modif dans le sous astd *)		
+						in begin 
+							if is_modified
+							then let (new_state,isfinal)=(ASTD_state.is_final astd2 mod_state env2 call_path)
+								in if (new_state=init)
+									then begin debug "kappa indirect !!!!!!!!!!";
+									if isfinal
+									then let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.remove value' not_fin_dom),(ASTD_constant.remove value' unknown_dom),(ASTD_constant.remove value' not_init_dom),init)
+										in (state,
+											[],
+											new_study_state,
+											((name,value,env2,call_path),new_state,false)::to_save,
+											kappa,
+ 											is_modified)
+		
+									else let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.insert value' not_fin_dom),(ASTD_constant.remove value' unknown_dom),(ASTD_constant.remove value' not_init_dom),init)
+										in (state,
+											[],
+											new_study_state,
+											((name,value,env2,call_path),new_state,false)::to_save,
+											kappa,
+											is_modified)
+									end
+									else begin debug "kappa indirect !!!!!!!!!!";
+									if isfinal
+									then let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.remove value' not_fin_dom),(ASTD_constant.remove value' unknown_dom),(ASTD_constant.insert value' not_init_dom),init)
+										in (state,
+											[],
+											new_study_state,
+											((name,value,env2,call_path),new_state,true)::to_save,
+											kappa,
+											is_modified)
+	
+									else let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.insert value' not_fin_dom),(ASTD_constant.remove value' unknown_dom),(ASTD_constant.insert value' not_init_dom),init)
+										in (state,
+											[],
+											new_study_state,
+											((name,value,env2,call_path),new_state,true)::to_save,
+											kappa,
+											is_modified)
+								end
+							else begin 
+							(state,[],state,[],[],is_modified)
+								end
+							end
+						end
+
+					end
+				else begin debug ("no optimisation in "^name^" for "^(ASTD_event.get_label event) );
+					if List.mem (ASTD_event.get_label event) trans_list
+					then let (list_modif,modif_possible)=modif_all_qsynch name astd2 event init not_init_dom val_list env call_path [] var ((path)@([name]))
+						in if modif_possible 
+							then begin 
+								apply_all_modifs name var astd2 env call_path list_modif (state,path,state,[],[],false)
+								end
+							else (state,[],state,[],[],false)
+					else try_qsynch name state astd2 var event env call_path val_list (get_values event astd2 (ASTD_term.Var var)) 
+					end		
+	end 
+
+	with _ -> (state,[],state,[],[],false)
+	end 
 
 
   |ASTD_state.Call_s (called,state2) -> 
@@ -636,9 +749,11 @@ else match state with
   |_ -> begin (state,[],state,[],[],false) end
 
 
-and try_qchoice dep label state astd var event path env call_path list_val =
-	if not (list_val = (ASTD_constant.empty_dom))
-		then begin
+and try_qchoice dep label state astd var event path env call_path list_val kappa_dir_val =
+
+if kappa_dir_val=[]
+	then if not (list_val = (ASTD_constant.empty_dom))
+		then begin debug "then trying global values";
 			let (head_val,tail)= ASTD_constant.head_tail list_val
 			in let bind_env = ASTD_environment.bind var (ASTD_term.Const head_val)
 			in let env2=(ASTD_environment.add_binding bind_env env)
@@ -652,16 +767,35 @@ and try_qchoice dep label state astd var event path env call_path list_val =
 					(ASTD_optimisation.automatic_gestion_of_kappa_values env label dep (ASTD_term.Const head_val))@kappa,
 					is_modified)
 					end
-				else try_qchoice dep label state astd var event path env call_path tail
+				else try_qchoice dep label state astd var event path env call_path tail []
 			end
 		else (state,[],state,[],[],false)
+	else begin debug "trying first kappa values";
+			let head_val=List.hd kappa_dir_val
+			in let bind_env = ASTD_environment.bind var (head_val)
+			in let env2=(ASTD_environment.add_binding bind_env env)
+			in let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute state astd event path env2 call_path
+			in if is_modified
+				then begin debug "kappa direct !!!!!!!!!!";
+					(ASTD_state.QChoice_s (ASTD_state.val_of (head_val),(ASTD_constant.empty_dom),(ASTD_constant.empty_dom),mod_state),
+					path,
+					ASTD_state.QChoice_s (ASTD_state.val_of (head_val),(ASTD_constant.empty_dom),(ASTD_constant.empty_dom),mod_state),
+					to_save,
+					(ASTD_optimisation.automatic_gestion_of_kappa_values env label dep (head_val))@kappa,
+					is_modified)
+					end
+				else try_qchoice dep label state astd var event path env call_path list_val (List.tl kappa_dir_val)
+		end
 
 
 
 
-and try_qsynch name state astd var event env call_path list_val =
-	if list_val <> (ASTD_constant.empty_dom)
-		then begin
+
+
+and try_qsynch name state astd var event env call_path list_val kappa_dir_val=
+	if kappa_dir_val=[]
+	then if list_val <> (ASTD_constant.empty_dom)
+		then begin debug "then try dom for qsynch";
 			let (head_val,tail)= ASTD_constant.head_tail list_val
 			and (not_fin_dom, unknown_dom, not_init_dom,init) = ASTD_state.get_data_from_qsynchro state
 			in let value=ASTD_constant.value_of head_val
@@ -686,9 +820,36 @@ and try_qsynch name state astd var event env call_path list_val =
 						else let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.insert value not_fin_dom),(ASTD_constant.remove value unknown_dom),(ASTD_constant.insert value not_init_dom),init)
 							in (state,[],new_study_state,((name,head_val,env2,call_path),new_state,true)::to_save,kappa,is_modified)
 						end
-				else try_qsynch name state astd var event env call_path tail
+				else try_qsynch name state astd var event env call_path tail []
 			end
 		else (state,[],state,[],[],false)
+	else begin debug " try kappa dir for qsynch ";
+			let head_val=(ASTD_term.extract_constant_from_term (List.hd kappa_dir_val))
+			and (not_fin_dom, unknown_dom, not_init_dom,init) = ASTD_state.get_data_from_qsynchro state
+			in let value=ASTD_constant.value_of (head_val)
+			in let bind_env = ASTD_environment.bind var (List.hd kappa_dir_val)
+			in let env2=(ASTD_environment.add_binding bind_env env)
+			in let sub_state=ASTD_state.get_synch_state not_init_dom init name (head_val) env2 call_path
+			in let (delta,sub_path,mod_state,to_save,kappa,is_modified) = execute sub_state astd event [] env2 call_path
+			in if is_modified
+				then let (new_state,isfinal)=(ASTD_state.is_final astd mod_state env2 call_path)
+					in if (new_state=init)
+						then begin debug "kappa direct !!!!!!!!!!";
+						if isfinal
+						then let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.remove value not_fin_dom),(ASTD_constant.remove value unknown_dom),(ASTD_constant.remove value not_init_dom),init)
+							in (state,[],new_study_state,((name,head_val,env2,call_path),new_state,false)::to_save,kappa,is_modified)
+						else let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.insert value not_fin_dom),(ASTD_constant.remove value unknown_dom),(ASTD_constant.remove value not_init_dom),init)
+							in (state,[],new_study_state,((name,head_val,env2,call_path),new_state,false)::to_save,kappa,is_modified)
+						end
+						else begin debug "kappa direct !!!!!!!!!!";
+						if isfinal
+						then let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.remove value not_fin_dom),(ASTD_constant.remove value unknown_dom),(ASTD_constant.insert value not_init_dom),init)
+							in (state,[],new_study_state,((name,head_val,env2,call_path),new_state,true)::to_save,kappa,is_modified)
+						else let new_study_state=ASTD_state.QSynchronisation_s((ASTD_constant.insert value not_fin_dom),(ASTD_constant.remove value unknown_dom),(ASTD_constant.insert value not_init_dom),init)
+							in (state,[],new_study_state,((name,head_val,env2,call_path),new_state,true)::to_save,kappa,is_modified)
+						end
+				else try_qsynch name state astd var event env call_path list_val (List.tl kappa_dir_val)
+		end
 
 
 and modif_all_qsynch name astd event init not_init_dom value_list env call_path modifs var path=
@@ -718,6 +879,12 @@ and modif_all_qsynch name astd event init not_init_dom value_list env call_path 
 
 
 
+let compteur=
+  let n= ref 0 
+      in function () -> 
+                n:=!n+1;
+                print_endline ("event number "^(string_of_int !n))
+;;
 
 let rec execute_event_list affichage state astd event_list = match event_list with
 	|event::tail-> if affichage<>1 
@@ -730,7 +897,7 @@ let rec execute_event_list affichage state astd event_list = match event_list wi
 				if is_modified 
 				then if affichage=2
 					then 
-						begin
+						begin compteur();
 						ASTD_state.save_data to_save;
 						ASTD_optimisation.apply_each_mod kappa
 						end

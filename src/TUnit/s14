@@ -29,9 +29,9 @@
                    {
                      ((local,A6,NIV1),First,{},False),
                      ((local,NIV1,A7),Fromsubgen,{},True),
-                     ((local,A7,A6),Restart,{},True),
+                     ((local,A7,A6),Restart,{},False),
                      ((from_sub,A3,A7,NIV1),Fromsub,{},False),
-                     ((to_sub,A7,H1,NIV1),Toshallowhist,{},True)
+                     ((to_sub,A7,H1,NIV1),Toshallowhist,{},False)
                    };
                    {
                      A7
@@ -46,10 +46,10 @@
          {
                      ((local,A8,NIV2),Firstbis,{},False),
                      ((local,NIV2,A9),Fromsubgenbis,{},False),
-                     ((local,A9,A8),Restartbis,{},True),
+                     ((local,A9,A8),Restartbis,{},False),
                      ((from_sub,NIV1,A9,NIV2),Fromsubbis,{},True),
-                     ((to_sub,A9,H2,NIV2),Todeephist,{},True),
-                     ((to_sub,A9,H1,NIV2),Toshallowhistbis,{},True)
+                     ((to_sub,A9,H2,NIV2),Todeephist,{},False),
+                     ((to_sub,A9,H1,NIV2),Toshallowhistbis,{},False)
          };
          {
            A9

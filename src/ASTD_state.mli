@@ -2,8 +2,8 @@
 
 
 type position = string
-type step = Left | Right
-type side = Undef | Fst | Snd
+type step = Fst| Snd
+type side = Undef | Left | Right
 type qchoice = Val of ASTD_term.t |ChoiceNotMade
 type astd_name = string
 type called_path =astd_name list
@@ -60,11 +60,11 @@ val call_s_of : bool -> t -> t
 val not_defined_state :  unit -> t
 
 val undef_choice_of : unit -> side
-val fst_choice_of : unit -> side
-val snd_choice_of : unit -> side
+val right_choice_of : unit -> side
+val left_choice_of : unit -> side
 
-val left_sequence_of : unit -> step
-val right_sequence_of : unit -> step
+val first_sequence_of : unit -> step
+val second_sequence_of : unit -> step
 
 val qchoice_notmade_of : unit -> qchoice
 

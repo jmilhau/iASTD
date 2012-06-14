@@ -48,7 +48,12 @@
 %start structure
 %start apply_event
 %type <unit> structure
+
+
+
 %type <ASTD_event.t list> apply_event
+
+
 %%
 
 structure:
@@ -479,11 +484,6 @@ term :
 
 
 
-
-
-
-
-
 apply_event:
   | event_to_apply SCOLON apply_event
      {$1::$3}
@@ -492,6 +492,7 @@ apply_event:
   | event_to_apply
      {$1::[]}
 ;
+
 
 
 

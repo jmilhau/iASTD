@@ -1,17 +1,15 @@
-
-(MEM0,<*;
-        (MEM0,<|[]|:;
+(MAIN,<*;
+        (QCH0,<|:;
                x;
-               [1,4]-{3};
-               {Emprunter};
+               [1,10]-{7};
                (AUT1 , <aut;
                         { (A1->elem),
                           (A2->elem),
                           (A3->elem)
                         };
-                        { ((local,A1,A2),Emprunter,{},False),
+                        { ((local,A1,A2),Emprunter(x),{},False),
                           ((local,A2,A3),Rendre(x),{},False),
-                          ((local,A3,A1),Reinit(x),{},True)
+                          ((local,A3,A1),Reinit(x),{},False)
                         };
                         { 
                           A3
@@ -22,21 +20,6 @@
                        >
                )
               >
-        )
-       >
-);
-
-(MAIN,<|[]|;
-        {Emprunter};
-        (CALL1,<call;
-                MEM0;
-                {}
-               >
-        );
-        (CALL2,<call;
-                MEM0;
-                {}
-               >
         )
        >
 )

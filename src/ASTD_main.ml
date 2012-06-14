@@ -37,17 +37,16 @@ let get_use_of_kappa_indirect (starting_choice_possible) =
 		else "MAIN"
 
 
-(*let get_event () = print_endline "Enter an event : " ;
-                   ASTD_parser.get_event_from_stdin () *)
+
 
 (* Main part *)
 let _ = print_endline "========================================" ;
         print_newline () ;
-	let affichage = 1
+	let affichage = 2
 	and kappa_indirect = true
 	and print_final = false
 	and starting_choice_possible = false
-	and place_to_read = "TF/TP3/"
+	and place_to_read = "TUnit/"
         in get_structure(place_to_read) ;
 	let structure=ASTD_astd.get_astd (get_use_of_kappa_indirect (starting_choice_possible))	
 	in print_endline "========================================" ;

@@ -1,0 +1,4 @@
+Emprunter(1,9);
+Emprunter(2,8);
+Rendre(1);
+Rendre(2)

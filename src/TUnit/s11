@@ -1,5 +1,5 @@
 (MAIN,<*;
-        (AUT0,<|[]|:;
+        (QSYN0,<|[]|:;
                x;
                [1,5]-{3};
                {  };
@@ -10,7 +10,7 @@
                         };
                         { ((local,A1,A2),Emprunter(x),{[isGreaterThanOne (x)]},False),
                           ((local,A2,A3),Rendre(x),{[isGreaterThanOne (x)]},False),
-                          ((local,A3,A1),Reinit,{},True)
+                          ((local,A3,A1),Reinit,{},False)
                         };
                         { 
                           A3

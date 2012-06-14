@@ -8,7 +8,7 @@
              };
              { ((local,A1,A2),Emprunter,{},False),
                ((local,A2,A3),Rendre,{},False),
-               ((local,A3,A1),Reinit,{},True)
+               ((local,A3,A1),Reinit,{},False)
              };
              { 
                A3
