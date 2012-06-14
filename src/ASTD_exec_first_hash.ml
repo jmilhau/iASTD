@@ -1055,7 +1055,7 @@ let rec execute_event_list affichage state astd event_list = match event_list wi
 				end;
 				execute_event_list affichage new_state astd tail
 			end
-	|[]->begin print_endline "================================================================";state end
+	|[]->begin state end
 
 
 

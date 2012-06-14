@@ -1,6 +1,6 @@
 
 
-    let val_debug = ref false;;
+    let val_debug = ref true;;
     let debug m = if (!val_debug) 
                             then (print_endline m )
                             else begin end;;
@@ -365,7 +365,7 @@ let rec split_all_possible missing_found = match missing_found with
 
 
 
-let rec find_user_astd astd path var_to_find =
+let rec find_user_astd astd path var_to_find = 
 	if (List.hd path)!=(ASTD_astd.get_name astd)
 	then failwith "mistake of matching in find_user_astd"
 	else let sub_path = List.tl path
@@ -402,12 +402,12 @@ let rec find_user_astd astd path var_to_find =
 				|ASTD_astd.QChoice (name,var,val_list,dep,sub) ->
 					find_user_astd sub sub_path var_to_find
 
-				|ASTD_astd.QSynchronisation (name,var,val_list,delta,opt,sub )->
+				|ASTD_astd.QSynchronisation (name,var,val_list,delta,opt,sub )-> begin 
 					if List.mem var var_to_find
-					then if var_to_find=[var]
-						then sub
-						else find_user_astd sub sub_path (remove [var] var_to_find)
-					else find_user_astd sub sub_path var_to_find
+					then if (remove [var] var_to_find)=[]
+						then begin print_endline (ASTD_astd.get_name sub);sub end
+						else begin find_user_astd sub sub_path (remove [var] var_to_find) end
+					else find_user_astd sub sub_path var_to_find end
 
 				|ASTD_astd.Call (name,called_name,vect) ->
 					find_user_astd (ASTD_astd.get_astd called_name) sub_path var_to_find

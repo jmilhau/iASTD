@@ -43,7 +43,7 @@ rule token = parse
  | "to_sub" {TO_SUB}
  | "from_sub" {FROM_SUB}
  | letters+ (letters+ | digits+ | underscore)*                    { ebs_lexer_msg "identifiant_name" ; IDENTITY_NAME    (Lexing.lexeme lexbuf) }
- | quote letters+ (letters+ | digits+ | underscore)* quote        { ebs_lexer_msg "identifiant_name" ; STRING_VALUE    (Lexing.lexeme lexbuf) }
+ | quote letters+ (letters+ | digits+ | underscore)* quote        { ebs_lexer_msg "string_name" ; STRING_VALUE    (Lexing.lexeme lexbuf) }
  | digits+ as number                                              { ebs_lexer_msg "new int value" ; INT_VALUE   (int_of_string number) } 
 
 

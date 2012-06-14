@@ -2,7 +2,7 @@ let raffichage = ref 1
 let rkappa_indirect = ref true
 let rprint_final = ref false
 let rstarting_choice_possible = ref false
-let rplace_to_read = ref "TUnit/"
+let rplace_to_read = ref "TPerf/"
 let rbdd = ref false
 let rwait = ref false
 let rdebug = ref false
@@ -100,8 +100,7 @@ let _ = Arg.parse arg_spec usage usage_msg;
 	in begin if (sFile=="") then get_structure(place_to_read) else get_structure_from_file(place_to_read^sFile) ;
 	let structure=ASTD_astd.get_astd (get_starting_name (starting_choice_possible))	
 	in print_endline "========================================" ;
-	    let event_list= if (iFile=="") then get_event_list(place_to_read) else get_event_list_from_file(place_to_read^iFile) ;    
-            in let time1=(Unix.gettimeofday())
+	    let time1=(Unix.gettimeofday())
                in print_endline "========================================" ;
                print_endline "Main structure : " ;
                ASTD_astd.print structure "" ;
@@ -127,11 +126,42 @@ let _ = Arg.parse arg_spec usage usage_msg;
                	          print_endline "Starting state";
   		 	  ASTD_exec_first_bd.print (ASTD_exec_first_bd.get_db "Main") analysed_struct "" "Main";
              		  print_endline "========================================" ;
-               	          let (new_state,registration_time,executed_events) = ASTD_exec_first_bd.execute_event_list affichage wait (State2DB.db2state "Main") analysed_struct event_list 0.
-				in begin if print_final 
+
+
+			  let opened_file = open_in (place_to_read^iFile)
+			  in let raw =ref ""
+			  in let new_state = ref (ASTD_exec_first_bd.init analysed_struct)
+			  in let reg_time = ref 0.
+			  in let executed_events = ref 0
+			  in let cpt=ref 0
+			  in begin
+                                  (try begin while true 
+						do begin 
+							raw := input_line opened_file;
+							let raw_spec=Lexing.from_string !raw
+							in let small_list= ASTD_parser_rules.apply_event ASTD_lexer_rules.token raw_spec
+							in begin 
+								 let (a,b,c) = ASTD_exec_first_bd.execute_event_list affichage wait (State2DB.db2state "Main") analysed_struct small_list 0.
+								 in begin
+									new_state:= a;
+									reg_time:= b +. !reg_time;
+									executed_events:= c + !executed_events;
+									cpt:=!cpt + 1
+								    end
+							end
+						    end 
+						done;
+						failwith "bizarre : true=false " 
+					end
+						with _ -> print_endline "no more event to execute" );
+               	           
+				close_in opened_file ;
+
+
+               	          	begin if print_final 
 					  then begin 
 						print_endline "========================================" ;
-						print_endline "Final state"; ASTD_exec_first_bd.print new_state structure "" "Main"; 
+						print_endline "Final state"; ASTD_exec_first_bd.print !new_state structure "" "Main"; 
         	        			print_endline "========================================" 
 						end
 					else begin end
@@ -144,23 +174,55 @@ let _ = Arg.parse arg_spec usage usage_msg;
 					    print_endline " seconds of Kappa indirect static analysis";
   					    print_float(exec_time);
 					    print_endline " seconds of EXECUTION";
-  					    print_endline ("for "^(string_of_int (List.length event_list))^" events");
-	   			            print_float(exec_time/.(float_of_int (List.length event_list)));
+  					    print_endline ("for "^(string_of_int (!cpt))^" events");
+	   			            print_float(exec_time/.(float_of_int (!cpt)));
 		  			    print_endline " seconds of treatement per instruction";
-						print_float(registration_time/.(float_of_int (executed_events)));
+						print_float(!reg_time/.(float_of_int (!executed_events)));
 			                	print_endline " seconds of registration per instruction";
           	   			    print_newline()
+			end
 		else
 		       let state = (ASTD_exec_first_bd.init structure) in 
 		           begin 
                         State2DB.initdb () ;
 		                ASTD_exec_first_bd.register_db "Main" None state structure ;  
         	            (*ASTD_exec_first_bd.print (ASTD_exec_first_bd.get_db "Main") structure "" "Main";*)
-                        let (new_state,registration_time,executed_events) = ASTD_exec_first_bd.execute_event_list affichage wait (State2DB.db2state "Main") structure event_list 0.
-                    	          in begin if print_final 
+
+
+			  let opened_file = open_in (place_to_read^iFile)
+			  in let raw =ref ""
+			  in let new_state = ref state
+			  in let reg_time = ref 0.
+			  in let executed_events = ref 0
+			  in let cpt = ref 0
+			  in begin
+                                  (try begin while true 
+						do begin 
+							raw := input_line opened_file;
+							let raw_spec=Lexing.from_string !raw
+							in let small_list= ASTD_parser_rules.apply_event ASTD_lexer_rules.token raw_spec
+							in begin 
+								 let (a,b,c) = ASTD_exec_first_bd.execute_event_list affichage wait (State2DB.db2state "Main") structure small_list 0.
+								 in begin
+									new_state:= a;
+									reg_time:= b +. !reg_time;
+									executed_events:= c + !executed_events;
+									cpt:=!cpt +1
+								    end
+							end
+						    end 
+						done;
+						failwith "bizarre : true=false " 
+					end
+						with _ -> print_endline "no more event to execute" );
+               	           
+				close_in opened_file ;
+
+
+                             begin if print_final 
 				            then begin 
 					            print_endline "========================================" ;
-					            print_endline "Final state"; ASTD_exec_first_bd.print new_state structure "" "Main";
+					            print_endline "Final state"; ASTD_exec_first_bd.print !new_state structure "" "Main";
                     	        		print_endline "========================================" 
 					            end 
 				            else begin end 
@@ -171,14 +233,15 @@ let _ = Arg.parse arg_spec usage usage_msg;
 			                print_endline " seconds of READING";
               			    print_float(exec_time);
 			                print_endline " seconds of EXECUTION";
-              			    print_endline ("for "^(string_of_int (List.length event_list))^" events");
-		                        print_float(exec_time/.(float_of_int (List.length event_list)));
+              			    print_endline ("for "^(string_of_int (!cpt))^" events");
+		                        print_float(exec_time/.(float_of_int (!cpt)));
 			                print_endline " seconds of treatement per instruction";
-					print_float(registration_time/.(float_of_int (executed_events)));
+					print_float(!reg_time/.(float_of_int (!executed_events)));
 			                print_endline " seconds of registration per instruction executed";
                     	  	    print_newline()
                          end
                     end
+	end
 
 
 
@@ -199,8 +262,22 @@ let _ = Arg.parse arg_spec usage usage_msg;
                	          print_endline "Starting state";
   		 	  ASTD_exec_first_hash.print state analysed_struct "" "Main";
              		  print_endline "========================================" ;
-               	          let new_state = ASTD_exec_first_hash.execute_event_list affichage state analysed_struct event_list
-				in begin if print_final 
+			  let opened_file = open_in (place_to_read^iFile)
+			  in let raw =ref ""
+			  in let cpt = ref 0
+			  in let temp_state=ref (ASTD_exec_first_hash.init analysed_struct)
+			  in let new_state = (try begin while true do begin raw := input_line opened_file;
+									let raw_spec=Lexing.from_string !raw
+									in let small_list= ASTD_parser_rules.apply_event ASTD_lexer_rules.token raw_spec
+									in begin 
+									 temp_state := ASTD_exec_first_hash.execute_event_list affichage !temp_state analysed_struct small_list;
+									cpt:=!cpt +1
+									end
+								end done; failwith "no end found" end
+						with _ -> print_endline "no more event to execute";!temp_state )
+               	           
+				in close_in opened_file ;
+				begin if print_final 
 					  then begin 
 						print_endline "========================================" ;
 						print_endline "Final state"; ASTD_exec_first_hash.print new_state structure "" "Main";
@@ -216,15 +293,31 @@ let _ = Arg.parse arg_spec usage usage_msg;
 					    print_endline " seconds of Kappa indirect static analysis";
   					    print_float(exec_time);
 					    print_endline " seconds of EXECUTION";
-  					    print_endline ("for "^(string_of_int (List.length event_list))^" events");
-	   			            print_float(exec_time/.(float_of_int (List.length event_list)));
+  					    print_endline ("for "^(string_of_int (!cpt))^" events");
+	   			            print_float(exec_time/.(float_of_int (!cpt)));
 		  			    print_endline " seconds of treatement per instruction";
           	   			    print_newline()
 		else
 		       let state = (ASTD_exec_first_hash.init structure)
         	       in ASTD_exec_first_hash.print state structure "" "Main";
-                       let new_state = ASTD_exec_first_hash.execute_event_list affichage state structure event_list 
-        	          in begin if print_final 
+
+			  let opened_file = open_in (place_to_read^iFile)
+			  in let raw =ref ""
+			  in let cpt= ref 0
+			  in let temp_state=ref (ASTD_exec_first_hash.init structure)
+			  in let new_state = (try begin while true do begin raw := input_line opened_file;
+									let raw_spec=Lexing.from_string !raw
+									in let small_list= ASTD_parser_rules.apply_event ASTD_lexer_rules.token raw_spec
+									in begin 
+									 temp_state := ASTD_exec_first_hash.execute_event_list affichage !temp_state structure small_list;
+									cpt:=!cpt +1
+									end
+								end done; failwith "no end found" end
+						with _ -> print_endline "no more event to execute";!temp_state )
+               	           
+				in close_in opened_file ;
+
+                       		begin if print_final 
 				then begin 
 					print_endline "========================================" ;
 					print_endline "Final state"; ASTD_exec_first_hash.print new_state structure "" "Main";
@@ -238,8 +331,8 @@ let _ = Arg.parse arg_spec usage usage_msg;
 			    print_endline " seconds of READING";
   			    print_float(exec_time);
 			    print_endline " seconds of EXECUTION";
-  			    print_endline ("for "^(string_of_int (List.length event_list))^" events");
-		            print_float(exec_time/.(float_of_int (List.length event_list)));
+  			    print_endline ("for "^(string_of_int (!cpt))^" events");
+		            print_float(exec_time/.(float_of_int (!cpt)));
 			    print_endline " seconds of treatement per instruction";
         	  	    print_newline()
              end     

@@ -137,9 +137,9 @@ astd_automata:
 
 list_of_labels :
     | LSET RSET
-      { [] }
+      { astd_parser_msg ("Empty label list");[] }
     | LSET list_of_labels_content RSET
-      { $2 }
+      { astd_parser_msg ("Label list");$2 }
 ;
 
 
@@ -490,6 +490,8 @@ apply_event:
   | event_to_apply apply_event
      {$1::$2}
   | event_to_apply
+     {$1::[]}
+  | event_to_apply SCOLON
      {$1::[]}
 ;
 
