@@ -75,9 +75,9 @@ let get_data_automata_s state = match state with
 
 
 
-let get_val choice =match choice with
+let get_val choice = match choice with
  |Val(a) -> a 
- |_ -> failwith "not a value"
+ |ChoiceNotMade -> failwith "not a value"
 ;;
 
 
@@ -122,19 +122,40 @@ let _ASTD_synch_table_ = Hashtbl.create 5
 (*let register_synch name value env call_path state = Hashtbl.add _ASTD_synch_table_ (name,value,env,call_path) state*) (**opt: remove state*)
 
 let rec remove_all name value env call_path = if Hashtbl.mem _ASTD_synch_table_ (name,value,env,call_path)
-			then begin
+			then begin 
 				Hashtbl.remove _ASTD_synch_table_ (name,value,env,call_path);
 				remove_all name value env call_path
 				end
 			else begin end
-let register_synch name value env call_path state = Hashtbl.add _ASTD_synch_table_ (name,value,env,call_path) state
-let get_synch name value env call_path = Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
-let get_synch_state not_init_dom init name value env call_path = if (ASTD_constant.is_included value not_init_dom)
+
+let register_synch name value env call_path state = 
+                                debug ("register state in "^name^" for val "^(ASTD_constant.string_of value)^" in env "^(ASTD_environment.string_of env));
+                                remove_all name value env call_path;
+                                Hashtbl.add _ASTD_synch_table_ (name,value,env,call_path) state
+
+
+let get_synch name value env call_path = begin 
+                                        debug ("get state in "^name^" for val "^(ASTD_constant.string_of value)^" in env "^(ASTD_environment.string_of env)); 
+                                        Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path) 
+                                         end
+                        
+let get_synch_state not_init_dom init name value env call_path =debug ("get_state from init or hash in "^name^" for val "^(ASTD_constant.string_of value)^" in env "^(ASTD_environment.string_of env));
+                                                         if (ASTD_constant.is_included value not_init_dom)
                                                          then Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
                                                          else init
 
 
-
+let rec save_data to_save = match to_save with
+        |((name,value,env,call_path),state,add)::t-> if add
+                       then begin
+                                register_synch name value env call_path state ; 
+                                save_data t
+                                end
+                       else begin debug "remove all";
+                                remove_all name value env call_path ;
+                                save_data t
+                                end
+        |[]->begin end
 
 
 
@@ -250,7 +271,7 @@ let rec is_final astd state env call_path = match state with
 			then let final= ref final_dom
 				and unknown= ref unknown_dom
 				in begin 
-					while !final=ASTD_constant.empty_dom && (!unknown)!=(ASTD_constant.empty_dom)
+					while !final=ASTD_constant.empty_dom && (!unknown)<>(ASTD_constant.empty_dom)
 					do
 						let (head_val,tail_val)=ASTD_constant.head_tail !unknown
 						in begin unknown:=tail_val;
@@ -262,7 +283,7 @@ let rec is_final astd state env call_path = match state with
 									else begin end
 					end
 				done;
-				(QChoice_s  (qchoice,!final,!unknown,NotDefined),!final !=ASTD_constant.empty_dom)
+				(QChoice_s  (qchoice,!final,!unknown,NotDefined),!final <>ASTD_constant.empty_dom)
 				end
 			else let bind_env = ASTD_environment.bind var (get_val qchoice)
 				in let env2=(ASTD_environment.add_binding bind_env env)
@@ -276,7 +297,7 @@ let rec is_final astd state env call_path = match state with
 		let (name,var,dom,synchro,dep,sub_astd)=ASTD_astd.get_data_qsynchronisation astd
 		and not_final= ref not_final_domain
 		and unknown= ref unknown_domain
-		in begin while !not_final=ASTD_constant.empty_dom && (!unknown)!=(ASTD_constant.empty_dom)
+		in begin while !not_final=ASTD_constant.empty_dom && (!unknown)<>(ASTD_constant.empty_dom)
 			do
 				let (head_val,tail_val)=ASTD_constant.head_tail !unknown
 				in begin unknown:=tail_val;
@@ -312,7 +333,7 @@ let rec is_final astd state env call_path = match state with
 
 	|Call_s (called,sub_state) ->
 		let (name,called_name,fct_vec)=ASTD_astd.get_data_call astd
-		in let sub_astd=(ASTD_astd.get_astd called_name)
+		in let sub_astd = (ASTD_astd.call_astd called_name (ASTD_environment.increase_call env fct_vec))
 		in if List.mem called_name call_path
 			then (Call_s (called,sub_state),false)
 			else if called 
@@ -409,11 +430,12 @@ let rec print state astd s env call_path = match state with
                                    print b (ASTD_astd.get_synchro_astd2 astd) (s^"   ") env call_path
         |QChoice_s (a,final_dom,unknown_dom,b) ->print_newline();print_endline(s^"QChoice_s ,");
                                       begin 
-                                      if a=ChoiceNotMade 
-                                           then begin print_endline(s^"Value Not Chosen // Possible values: "^(string_of_qchoice a ));
+					let (n,o,p,q,r)= ASTD_astd.get_data_qchoice astd
+                                        in if a=ChoiceNotMade 
+                                           then begin print_endline(s^"Value Not Chosen // Possible values: "^(ASTD_constant.print_dom p ));
                                                       print b (ASTD_astd.get_qastd astd) (s^"   ") env call_path
                                                 end
-                                           else begin print_endline(s^"chosen value : "^(string_of_qchoice a));
+                                           else begin print_endline(s^"chosen value : "^(string_of_qchoice a)^" for  qchoice "^o);
                                                       let bind_env = ASTD_environment.bind (ASTD_astd.get_qvar astd) (get_val a) 
                                                       in print b (ASTD_astd.get_qastd astd) (s^"   ") (ASTD_environment.add_binding bind_env env) call_path
                                                 end
@@ -442,7 +464,7 @@ and print_synch astd s not_init env call_path =
 		else let (value,t)=ASTD_constant.head_tail not_init
 			in begin 
 				print_newline ();
-				print_endline (s^"Value "^(ASTD_constant.string_of value));
+				print_endline (s^"Value "^(ASTD_constant.string_of value)^" for qsynch "^(ASTD_astd.get_qvar astd) );
 				let bind_env=ASTD_environment.bind (ASTD_astd.get_qvar astd) (ASTD_term.Const value) 
 				in begin 
 				print (get_synch (ASTD_astd.get_name astd) value (ASTD_environment.add_binding bind_env env) call_path)

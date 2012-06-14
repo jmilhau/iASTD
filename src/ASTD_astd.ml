@@ -16,7 +16,10 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
 ;; 
 
 
-
+    let val_debug = false;;
+    let debug m = if (val_debug) 
+                            then (print_endline m )
+                            else begin end;;
 
 
 let give_name=
@@ -227,30 +230,52 @@ let is_automata a = match a with
 ;;
 
 let rec find_subastd name astd_list = match astd_list with
-  |(a::b) ->begin 
+  |(a::tail) ->begin debug ("find in sub astd "^name^" compare with "^(get_name a));
             if (get_name a)=name
                     then a
-                    else begin (find_subastd name b )  end  
+                    else begin (find_subastd name tail )  end  
             end
-  |_-> failwith "sub-astd not_found"
+   |[]->failwith ("sub-astd not found") 
 ;;
 
 
 
-
+let rec test_var_dom env var_dom_list = match var_dom_list with
+	|(var,dom)::tail-> if (ASTD_constant.is_included (ASTD_term.extract_constant_from_term(ASTD_environment.find_value_of env var)) dom)
+				then test_var_dom env tail
+				else false
+	|[]->true
 
 
 let _ASTD_astd_table_ = Hashtbl.create 5 
 ;;
 
+
+let _ASTD_astd_call_table_ = Hashtbl.create 5 
+;;
+
+
+let _ASTD_astd_dom_table_ = Hashtbl.create 5 
+;;
+
 let register a = Hashtbl.add _ASTD_astd_table_ (get_name a) a  
 ;;
+
+let register_call_astd a b= Hashtbl.add _ASTD_astd_call_table_ (get_name a) (a,b)  
+;;
+
+
 
 let get_astd name = Hashtbl.find _ASTD_astd_table_ name 
 ;;
 
+let get_call_astd name = Hashtbl.find _ASTD_astd_call_table_ name 
 
-
+let call_astd name env= let (astd,var_dom_list)= get_call_astd name
+			in if (test_var_dom env var_dom_list )
+				then astd
+				else failwith "call impossible"
+;;
 
 
 let save_transitions name l = begin ASTD_arrow.register_transitions_from_list name l; l end 
@@ -437,7 +462,7 @@ let string_of name = name
 ;;
 
 
-let global_save_astd a = (register a)
+let global_save_astd a b = (register a);(register_call_astd a b)
 ;;
 
 

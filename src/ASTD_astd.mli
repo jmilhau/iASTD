@@ -32,7 +32,7 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list* as
     | Guard of astd_name * ASTD_predicate.t list * t
 (**The guard structure, represented by the name of the astd, a list of predicates and the sub astd *)
 
-    | Call of astd_name * astd_name * (ASTD_variable.t * ASTD_term.t) list 
+    | Call of astd_name * astd_name *  ((ASTD_variable.t *ASTD_term.t) list )
 (**The call structure, with the name of the astd, the name of the called astd and a vector containing variables and their assigned value*)
 
     | Elem of astd_name
@@ -53,7 +53,7 @@ val synchronisation_of : astd_name -> ASTD_label.t list -> t -> t -> t
 val qchoice_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain ->ASTD_optimisation.dependency list -> t -> t
 val qsynchronisation_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> ASTD_label.t list -> ASTD_optimisation.optimisation list-> t -> t
 val guard_of : astd_name -> ASTD_predicate.t list -> t -> t
-val call_of : astd_name -> astd_name -> (ASTD_variable.t *ASTD_term.t) list -> t
+val call_of : astd_name -> astd_name -> ((ASTD_variable.t *ASTD_term.t) list )-> t
 val elem_of : astd_name -> t
 
 
@@ -82,7 +82,7 @@ val get_qastd : t -> t
 val get_guard_pred : t -> ASTD_predicate.t list
 val get_guard_astd : t -> t
 val get_called_name : t -> astd_name
-val get_called_values : t -> (ASTD_variable.t *ASTD_term.t) list
+val get_called_values : t ->((ASTD_variable.t *ASTD_term.t) list )
 
 
 
@@ -96,7 +96,7 @@ val get_data_guard :t -> (astd_name * ASTD_predicate.t list * t)
 val get_data_qchoice :t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_optimisation.dependency list *t)
 val get_data_qsynchronisation :
                t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_label.t list * ASTD_optimisation.optimisation list * t )
-val get_data_call : t -> (astd_name * astd_name * ((ASTD_variable.t *ASTD_term.t) list))
+val get_data_call : t -> (astd_name * astd_name * ((ASTD_variable.t *ASTD_term.t) list ))
 
 
 (**Finds all transitions accessible from the sub_astd *)
@@ -128,14 +128,18 @@ val is_init_final : t -> astd_name list -> string
 
 val replace_sub_astd: t-> astd_name -> t list-> t list
 
+
 (** {3 Registration of astd} *)
 
 (** _ASTD_astd_table_ stores astd, using their name. *)
 
-val register : t -> unit
-val get_astd : astd_name -> t 
-val global_save_astd : t-> unit
+val get_astd : astd_name -> t  
 
+val get_call_astd : astd_name -> (t*((ASTD_variable.t * ASTD_constant.domain ) list))  
+
+val call_astd : astd_name -> ASTD_environment.t -> t 
+
+val global_save_astd : t->(ASTD_variable.t * ASTD_constant.domain ) list->unit
 
 
 

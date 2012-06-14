@@ -139,7 +139,7 @@ val register_synch : astd_name -> ASTD_constant.t ->ASTD_environment.t -> called
 val get_synch : astd_name->ASTD_constant.t ->ASTD_environment.t -> called_path-> t
 val get_synch_state : ASTD_constant.domain -> t -> astd_name -> ASTD_constant.t ->ASTD_environment.t -> called_path-> t
 
-
+val save_data : ((astd_name*ASTD_constant.t*ASTD_environment.t*called_path)*t*bool) list->unit
 
 
 

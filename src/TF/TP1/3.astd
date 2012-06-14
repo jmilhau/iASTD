@@ -1,0 +1,23 @@
+(MAIN,<*;
+
+      (AUT1,<
+             aut;
+             { (A1->elem),
+               (A2->elem)
+             };
+             { ((local,A1,A2),a,{},False),
+               ((local,A1,A2),b,{},False)
+             };
+             { 
+               A2
+             };
+             { 
+
+             };
+             A1
+           >
+      )
+
+
+    >
+)

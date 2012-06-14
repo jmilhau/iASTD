@@ -1,0 +1,87 @@
+(P,<|[]|;
+       {b};
+       (AUT3,<aut;
+              { (A7->elem),
+                (A8->elem),
+                (A9->elem)
+              };
+              { ((local,A7,A8),a,{},False),
+                ((local,A8,A9),b,{},False)
+              };
+              { 
+               A9
+              };
+              {  
+              };
+              A7
+             >
+       );
+       (AUT4,<aut;
+              { (A10->elem),
+                (A11->elem)
+              };
+              { ((local,A10,A11),d,{},False),
+                ((local,A10,A11),e,{},False)
+              };
+              { 
+               A4
+              };
+              {  
+              };
+              A1
+             >
+       )
+      >
+);
+
+
+
+
+(MAIN,<|[]|;
+       {b};
+       (AUT1,<aut;
+              { (A1->elem),
+                (A2->elem),
+                (A3->elem)
+              };
+              { ((local,A1,A2),a,{},False),
+                ((local,A1,A2),b,{},False),
+                ((local,A1,A2),c,{},False),
+                ((local,A2,A3),d,{},False)
+              };
+              { 
+               A3
+              };
+              {  
+              };
+              A1
+             >
+       );
+       (SYNC,<|[]|;
+              {};
+              (AUT2,<aut;
+                     { (A4->elem),
+                       (A5->elem),
+                       (A6->elem)
+                     };
+                     { ((local,A4,A5),a,{},False),
+                       ((local,A4,A5),b,{},False),
+                       ((local,A5,A6),e,{},False)
+                     };
+                     { 
+                      A6
+                     };
+                     {  
+                     };
+                     A4
+                    >
+              );
+              (CALLP,<call;
+                      P;
+                      {}
+                     >
+              )
+             >
+       )
+      >
+)

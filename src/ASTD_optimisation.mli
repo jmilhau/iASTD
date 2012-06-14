@@ -21,4 +21,9 @@ val get_kappa : dependency -> ASTD_term.t list -> ASTD_term.t
 
 
 
-val automatic_gestion_of_kappa_values : ASTD_environment.t ->ASTD_label.t -> dependency list-> ASTD_term.t ->unit
+val automatic_gestion_of_kappa_values : ASTD_environment.t ->ASTD_label.t -> dependency list-> ASTD_term.t ->((dependency*(ASTD_term.t list))*ASTD_term.t*bool) list
+
+
+
+val apply_each_mod : ((dependency*(ASTD_term.t list))*ASTD_term.t*bool) list->unit
+

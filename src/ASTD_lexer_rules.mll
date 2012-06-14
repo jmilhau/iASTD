@@ -7,7 +7,7 @@
                            else ignore m;;
 }
 
-let ws = ['\n''\t'' '' ']
+let ws = ['\r''\n''\t'' '' ']
 let lowerletters = ['a'-'z']
 let upperletters = ['A'-'Z']
 let letters = lowerletters | upperletters
@@ -31,7 +31,7 @@ rule token = parse
  | "||"  { PARALLEL }
  | '|'   { CHOICE }
  | "=>"  { GUARD }
- | "->"  { LINK }
+ | "->"  { ebs_lexer_msg "new LINT" ;LINK }
  | "(["  { LENV }
  | "])"  { RENV }
  | "call" { CALL }

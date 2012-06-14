@@ -7,6 +7,7 @@
                             else begin end;;
 
 
+
 let rec is_included list1 list2 = match list1 with
 	|h::t->if List.mem h list2
 		then is_included t list2
@@ -21,8 +22,8 @@ let rec intersection list1 list2 = match list1 with
 
 let rec union list1 list2 = match list1 with
 	|h::t->if List.mem h list2
-		then (intersection t list2)
-		else h::(intersection t list2)
+		then begin debug "already here"; (union t list2)end
+		else begin debug "add" ; h::(union t list2) end
 	|[]-> list2
 
 let rec remove list1 list2 = match list2 with
@@ -30,7 +31,6 @@ let rec remove list1 list2 = match list2 with
 		then (remove list1 t)
 		else h::(remove list1 t)
 	|[]-> []
-
 
 let rec epurate list1 = match list1 with
 	|h::t-> let pur= epurate t
@@ -45,7 +45,7 @@ let extract_transition_labels astd =
 	epurate (List.map (ASTD_transition.get_label) (ASTD_astd.get_sub_transitions [] astd))
 
 
-
+ 
 let rec get_non_kappa_in_arrow_list arrows var_met path= match arrows with
 	|arrow::t->let params= ASTD_transition.get_params (ASTD_arrow.get_transition arrow)
 			in if (is_included (ASTD_term.parameters_of_variables var_met) params)
@@ -54,39 +54,51 @@ let rec get_non_kappa_in_arrow_list arrows var_met path= match arrows with
 	|[]->[]
 
 
-let rec extract_non_kappa_direct var_met call_path path astd  = 
-begin
+
+let rec get_var_from_vect vect = match vect with
+	|(var,term)::tail-> var::(get_var_from_vect tail)
+	|[]->[]
+
+
+let rec mix_with vect var_met = epurate (var_met@(get_var_from_vect vect))
+
+
+let rec extract_non_kappa_direct removed var_met call_path path astd  = 
+begin debug ("extract non kappa : "^(string_of_int (List.length var_met))^" var met in"^(ASTD_astd.get_name astd));
 match astd with
 	|ASTD_astd.Automata (name,sub_astd,arrows,s_final,d_final,init) -> 
-		let sub_arrows=List.concat (List.map (extract_non_kappa_direct var_met call_path (path@[name])) sub_astd)
-		in (get_non_kappa_in_arrow_list arrows var_met (path@[name]))@sub_arrows
+		let sub_arrows=List.concat (List.map (extract_non_kappa_direct removed var_met call_path (path@[name])) sub_astd)
+		in let present =(get_non_kappa_in_arrow_list arrows var_met (path@[name]))
+		in begin debug ((string_of_int (List.length present))^" non kappa in "^name);
+			present@sub_arrows
+			end
 
 	|ASTD_astd.Sequence (name,left,right) -> 
-		(extract_non_kappa_direct var_met call_path (path@[name]) left)@(extract_non_kappa_direct var_met call_path (path@[name]) right)
+		(extract_non_kappa_direct removed var_met call_path (path@[name]) left)@(extract_non_kappa_direct removed var_met call_path (path@[name]) right)
 
 	|ASTD_astd.Choice (name,left,right) -> 
-		(extract_non_kappa_direct var_met call_path (path@[name]) left)@(extract_non_kappa_direct var_met call_path (path@[name]) right)
+		(extract_non_kappa_direct removed var_met call_path (path@[name]) left)@(extract_non_kappa_direct removed var_met call_path (path@[name]) right)
 
 	|ASTD_astd.Kleene (name,sub) -> 
-		(extract_non_kappa_direct var_met call_path (path@[name]) sub)
+		(extract_non_kappa_direct removed var_met call_path (path@[name]) sub)
 
     
 	|ASTD_astd.Synchronisation (name,delta,left,right) -> 
-		(extract_non_kappa_direct var_met call_path (path@[name]) left)@(extract_non_kappa_direct var_met call_path (path@[name]) right)
+		(extract_non_kappa_direct removed var_met call_path (path@[name]) left)@(extract_non_kappa_direct removed var_met call_path (path@[name]) right)
 
 	|ASTD_astd.Guard (name,pred,sub) ->
-		(extract_non_kappa_direct var_met call_path (path@[name]) sub)
+		(extract_non_kappa_direct removed var_met call_path (path@[name]) sub)
 
 	|ASTD_astd.QChoice (name,var,val_list,dep,sub) ->
-		(extract_non_kappa_direct var_met call_path (path@[name]) sub)
+		(extract_non_kappa_direct (var::removed) var_met call_path (path@[name]) sub)
 
 	|ASTD_astd.QSynchronisation (name,var,val_list,delta,opt,sub )-> 
-		(extract_non_kappa_direct (var::var_met) call_path (path@[name]) sub)
+		(extract_non_kappa_direct removed (var::var_met) call_path (path@[name]) sub)
 
 	|ASTD_astd.Call (name,called_name,vect) ->
 		if List.mem name call_path
 		then []
-		else (extract_non_kappa_direct var_met (name::call_path) (path@[name]) (ASTD_astd.get_astd called_name))
+		else (extract_non_kappa_direct removed (remove removed (mix_with vect var_met)) (name::call_path) (path@[name]) (ASTD_astd.get_astd called_name))
 
 	|ASTD_astd.Elem (a) ->  []
 end
@@ -94,10 +106,11 @@ end
 
 
 let rec extract_df var_met wait call_path path astd  = 
-begin debug ("extract df from "^(ASTD_astd.get_name astd));
+begin (*debug ("extract df from "^(ASTD_astd.get_name astd));*)
 match astd with
 	|ASTD_astd.Automata (name,sub_astd,arrows,s_final,d_final,init) -> 
-		List.fold_left union [] (List.map (extract_df var_met wait call_path (path@[name])) sub_astd)
+
+                List.fold_left union [] (List.map (extract_df var_met wait call_path (path@[name])) sub_astd)
 
 	|ASTD_astd.Sequence (name,left,right) -> 
 		union (extract_df var_met wait call_path (path@[name]) left) (extract_df var_met wait call_path (path@[name]) right)
@@ -109,9 +122,9 @@ match astd with
 		(extract_df var_met wait call_path (path@[name]) sub_astd)
     
 	|ASTD_astd.Synchronisation (name,delta,left,right) -> 
-		if is_included (union (extract_transition_labels left) (extract_transition_labels right)) delta
-			then union (extract_df var_met wait call_path (path@[name]) left) (extract_df var_met false call_path (path@[name]) right)
-			else []
+		if is_included (intersection (extract_transition_labels left) (extract_transition_labels right)) delta
+			then union (extract_df var_met wait call_path (path@[name]) left) (extract_df var_met wait call_path (path@[name]) right)
+			else union (extract_df var_met true call_path (path@[name]) left) (extract_df var_met true call_path (path@[name]) right)
 
 	|ASTD_astd.Guard (name,pred,sub) ->
 		extract_df var_met wait call_path (path@[name]) sub
@@ -130,7 +143,7 @@ match astd with
 	|ASTD_astd.Call (name,called_name,vect) ->
 		if List.mem name call_path
 			then []
-			else extract_df var_met wait (name::call_path) (path@[name]) (ASTD_astd.get_astd called_name)
+			else extract_df (mix_with vect var_met) wait (name::call_path) (path@[name]) (ASTD_astd.get_astd called_name)
 
 	|ASTD_astd.Elem (a) -> []
 end
@@ -195,7 +208,10 @@ let rec find_split astd path1 path2 =
 				then failwith "mistake in find_split: end of path"
 				else if (List.hd sub_path1)!=(List.hd sub_path2)
  					then if ASTD_astd.is_synchro astd 
-						then (ASTD_astd.get_trans_synchronised astd,true)
+						then begin debug ((string_of_int (List.length (ASTD_astd.get_trans_synchronised astd)))
+									^" trans in split "^(ASTD_astd.get_name astd));
+							(ASTD_astd.get_trans_synchronised astd,true) 
+							end
 						else ([],false)
 					else match astd with
 				|ASTD_astd.Automata (name,sub_astd,arrows,s_final,d_final,init) ->
@@ -358,42 +374,44 @@ let rec find_user_astd astd path var_to_find =
 			then failwith " find_user_astd : not found before end"
 			else match astd with
 				|ASTD_astd.Automata (name,sub_astd,arrows,s_final,d_final,init) ->
-					find_astd (ASTD_astd.find_subastd (List.hd(sub_path)) sub_astd) sub_path
+					find_user_astd (ASTD_astd.find_subastd (List.hd(sub_path)) sub_astd) sub_path var_to_find
 
 				|ASTD_astd.Sequence (name,left,right) ->
 					let left_name= ASTD_astd.get_name left
 					in if left_name = (List.hd sub_path)
-						then left
-						else right
+						then find_user_astd left sub_path var_to_find
+						else find_user_astd right sub_path var_to_find
 
 				|ASTD_astd.Choice (name,left,right) ->
 					let left_name= ASTD_astd.get_name left
 					in if left_name = (List.hd sub_path)
-						then left
-						else right
+						then find_user_astd left sub_path var_to_find
+						else find_user_astd right sub_path var_to_find
 
 				|ASTD_astd.Kleene (name,sub) ->
-					find_astd sub sub_path
+					find_user_astd sub sub_path var_to_find
     
 				|ASTD_astd.Synchronisation (name,delta,left,right) ->
 					let left_name= ASTD_astd.get_name left
 					in if left_name = (List.hd sub_path)
-						then left
-						else right
+						then find_user_astd left sub_path var_to_find
+						else find_user_astd right sub_path var_to_find
 
 				|ASTD_astd.Guard (name,pred,sub) ->
-					find_astd sub sub_path
+					find_user_astd sub sub_path var_to_find
 
 				|ASTD_astd.QChoice (name,var,val_list,dep,sub) ->
-					if var=var_to_find
-					then sub
-					else find_astd sub sub_path
+					find_user_astd sub sub_path var_to_find
 
 				|ASTD_astd.QSynchronisation (name,var,val_list,delta,opt,sub )->
-					find_astd sub sub_path
+					if List.mem var var_to_find
+					then if var_to_find=[var]
+						then sub
+						else find_user_astd sub sub_path (remove [var] var_to_find)
+					else find_user_astd sub sub_path var_to_find
 
 				|ASTD_astd.Call (name,called_name,vect) ->
-					find_astd (ASTD_astd.get_astd called_name) sub_path
+					find_user_astd (ASTD_astd.get_astd called_name) sub_path var_to_find
 
 				|ASTD_astd.Elem (a) ->failwith " find_user_astd: impossible to go deeper than elem"
 
@@ -613,18 +631,20 @@ let rec get_first_trans astd fst need met used trans=
 	in if (need=[init])||(need=[])
 		then (fst,met)
 		else let b=List.hd need
-		in if b=init
+		in begin debug ("first_trans_from "^b);
+			if b=init
 			then get_first_trans astd fst ((List.tl need)@[init]) met used trans
 			else let sub= epurate (List.map (ASTD_arrow.get_from) (extract_with_dest_from_list (get_from_sub init arrows) met))
 				in if sub!=[]
-					then let b_astd= (ASTD_astd.find_subastd init sub_astd)
+					then begin debug "first_trans1";
+						let b_astd= (ASTD_astd.find_subastd init sub_astd)
 						in let (_,sub_met)=get_first_trans b_astd [] sub [ASTD_astd.get_init b_astd] [] []
 						in let new_used= union (find_arrow_using_from_dest_origin_list 
 										(remove trans arrows) 
 										(union [b] sub_met) 
 										(List.map (ASTD_astd.get_name) sub_astd))
 									(find_arrow_using_from_dest_through_list 
-										(remove trans arrows) 
+										(find_from_sub (remove trans arrows)) 
 										([b]) 
 										(List.map (ASTD_astd.get_name) sub_astd))
 							in get_first_trans 
@@ -638,16 +658,18 @@ let rec get_first_trans astd fst need met used trans=
 											(List.map (ASTD_astd.get_name) sub_astd) 
 											(List.map (ASTD_arrow.get_from) (new_used))) 	
 										  (intersection 
-											(List.map (ASTD_astd.get_name) sub_astd) 												(List.map (ASTD_arrow.get_through) (new_used))))))
+											(List.map (ASTD_astd.get_name) sub_astd) 												(List.map (ASTD_arrow.get_through) (find_from_sub new_used))))))
 								(union [name] met)
 								new_used 
 								(union trans new_used)
-					else let new_used= union (find_arrow_using_from_dest_origin_list 
+							end
+					else begin debug "first_trans2";
+						let new_used= union (find_arrow_using_from_dest_origin_list 
 									(remove trans arrows) 
 									([b]) 
 									(List.map (ASTD_astd.get_name) sub_astd))
 								(find_arrow_using_from_dest_through_list 
-									(remove trans arrows) 
+									(find_from_sub (remove trans arrows)) 
 									([b]) 
 									(List.map (ASTD_astd.get_name) sub_astd))
 						in get_first_trans 
@@ -659,14 +681,17 @@ let rec get_first_trans astd fst need met used trans=
 										(List.map (ASTD_astd.get_name) sub_astd) 
 										(List.map (ASTD_arrow.get_from) (new_used))) 
 									  (intersection 
-										(List.map (ASTD_astd.get_name) sub_astd) 											(List.map (ASTD_arrow.get_through) (new_used))) )))
+										(List.map (ASTD_astd.get_name) sub_astd) 											(List.map (ASTD_arrow.get_through) (find_from_sub new_used ))) )))
 							(union [name] met)
 							new_used 
 							(union trans new_used)
+						end
+			end
 
-
-
-let rec is_produced astd prod label call_path from_sub = match astd with
+let rec is_produced astd prod label call_path from_sub = 
+begin
+debug ("is produced en cours in "^(ASTD_astd.get_name astd));
+match astd with
 	|ASTD_astd.Automata (name,sub_astd,arrows,s_final,d_final,init) -> 
 		let init_astd=(ASTD_astd.find_subastd init sub_astd)
 		and from_sub_init= get_from_sub init arrows
@@ -683,7 +708,6 @@ let rec is_produced astd prod label call_path from_sub = match astd with
 			else if List.mem label (extract_transition_labels init_astd)
 				then is_produced init_astd prod label call_path from_sub_init
 				else true
-
 	|ASTD_astd.Sequence (name,left,right) -> 
 		if List.mem label (extract_transition_labels right)
 			then if (ASTD_astd.is_init_final right [])!="false"
@@ -726,7 +750,7 @@ let rec is_produced astd prod label call_path from_sub = match astd with
 
 	|ASTD_astd.Elem (a) -> false 
 
-
+end
 
 let rec is_consummed astd = 
 	let (cons,final,consummed)=get_consummers astd [] [] [] true
@@ -758,13 +782,16 @@ let rec update_producers_cons astd dep_list opti_list = match dep_list with
 					end
 	|[]->begin debug "end of update_prod_cons"; [] end 
 
-let match_user_creator arrow var_met var prod cons_creator dep_path trans_path astd =
+let match_user_creator used_var arrow var_met var prod cons_creator dep_path trans_path astd =
 	let (delta,splitted)=find_split astd dep_path trans_path
 	and label=(ASTD_transition.get_label(ASTD_arrow.get_transition arrow))
 	in if splitted 
-		then let user_astd= find_user_astd astd trans_path var
+		then let user_astd= find_user_astd astd trans_path (var::used_var)
 			in let(cons_user,consummed_user)= is_consummed user_astd
-				in if (is_produced user_astd prod label [] [])
+				and produced=(is_produced user_astd prod label [] [])
+				in let test = (is_included cons_creator cons_user)
+				in begin (begin if test then debug "produced" else debug ("not produced "^(List.hd cons_creator)^" vs "^(List.hd cons_user)) end);
+					if produced
 					&&(List.mem label delta)
 					&&(is_included prod delta)
 					&&(is_included cons_creator cons_user)
@@ -773,21 +800,23 @@ let match_user_creator arrow var_met var prod cons_creator dep_path trans_path a
 
 					then begin debug ("valid dep with label "^label);true end
 					else begin debug ("unvalid dep with label "^label);false end
+					end
 		else begin debug "impossible to find a good split" ;false end
 
 
 
 let rec extract_dependency_path dependencies var_usable save_dep arrow astd trans_path var = match dependencies with
-	|(path,var_met,dep_var,prod,cons)::t->if (match_user_creator arrow var_met var prod cons path trans_path astd)&&(var=dep_var)
-						then let missing=remove var_usable var_met
-							in let missing_found=List.map (extract_dependency_path save_dep var_usable save_dep arrow astd trans_path) missing
-							in let (dep_dep,dep_list,possible)=split_all_possible missing_found
-							in if possible
-								then (ASTD_optimisation.Dep_path(var,(path,var_met,dep_var,prod,cons),dep_dep),(path,var_met,dep_var,prod,cons)::dep_list,true)
-								else extract_dependency_path t var_usable save_dep arrow astd trans_path var
-						else begin debug ("not_matched dependency with the label "^(ASTD_transition.get_label(ASTD_arrow.get_transition arrow))^" or var "^dep_var^" is not "^var);
-							extract_dependency_path t var_usable save_dep arrow astd trans_path var
-							end
+	|(path,var_met,dep_var,prod,cons)::t->
+		if (match_user_creator var_met arrow var_met var prod cons path trans_path astd)&&(var=dep_var)
+			then let missing=remove var_usable var_met
+				in let missing_found=List.map (extract_dependency_path save_dep var_usable save_dep arrow astd trans_path) missing
+				in let (dep_dep,dep_list,possible)=split_all_possible missing_found
+				in if possible
+					then (ASTD_optimisation.Dep_path(var,(path,var_met,dep_var,prod,cons),dep_dep),(path,var_met,dep_var,prod,cons)::dep_list,true)
+					else extract_dependency_path t var_usable save_dep arrow astd trans_path var
+			else begin debug ("not_matched dependency with the label "^(ASTD_transition.get_label(ASTD_arrow.get_transition arrow))^" or var "^dep_var^" is not "^var);
+				extract_dependency_path t var_usable save_dep arrow astd trans_path var
+				end
 	|[]->let empty=([],[],var,[],[])
 		in (ASTD_optimisation.Dep_path(var,empty,[]),[],false)
 
@@ -803,9 +832,11 @@ let rec extract_var params =match params with
 let rec find_one_opt arrow path astd dependencies opt_list var = match opt_list with
 	|(opt_label,opt_path,opt_var,dep_dep)::t-> 
 		if (path=opt_path)&&((ASTD_transition.get_label (ASTD_arrow.get_transition arrow))=opt_label)&&(var=opt_var)
-			then ([],[])
+			then begin debug ("find one opt / already optimised "^opt_label^" var "^opt_var) ;
+					([(opt_label,opt_path,opt_var,dep_dep)],[]) end
 			else find_one_opt arrow path astd dependencies t var
-	|[]->let (dep_dep,dep_list,optimizable)=extract_dependency_path 
+	|[]->begin debug ("find one opt / looking if "^(ASTD_transition.get_label (ASTD_arrow.get_transition arrow))^" is optimizable for var "^var);
+				let (dep_dep,dep_list,optimizable)=extract_dependency_path 
 								dependencies 	
 								(extract_var (ASTD_transition.get_params (ASTD_arrow.get_transition arrow))) 
 								dependencies
@@ -814,40 +845,58 @@ let rec find_one_opt arrow path astd dependencies opt_list var = match opt_list 
 								path
 								var
 				in if (optimizable)
-				then ([((ASTD_transition.get_label (ASTD_arrow.get_transition arrow)),path,var,dep_dep)],dep_list)
-				else ([],[])
+				then  begin debug ("find one opt /optimizable "^(ASTD_transition.get_label (ASTD_arrow.get_transition arrow)));
+					([((ASTD_transition.get_label (ASTD_arrow.get_transition arrow)),path,var,dep_dep)],dep_list) end
+				else begin debug ("find one opt /non optimizable "^(ASTD_transition.get_label (ASTD_arrow.get_transition arrow)));
+					([],[]) end
+				
+				end
 
 let rec filter_opt opt_dep_list opt dep = match opt_dep_list with
-	|(sub_opt,dep_opt)::tail-> filter_opt tail (union sub_opt opt) (union dep_opt dep)
+	|(sub_opt,dep_opt)::tail-> begin filter_opt tail (union sub_opt opt) (union dep_opt dep) end
 	|[]->(opt,dep)
 
 
-let rec retrieve_optimisations astd dependencies opt_list dep_list non_kappa = match non_kappa with
-	|(arrow,path,missing_var)::tail-> let (opt,dep)=(retrieve_optimisations astd dependencies opt_list dep_list tail)
-					in filter_opt (List.map (find_one_opt arrow path astd dependencies opt_list) missing_var) opt dep
+let rec retrieve_optimisations astd dependencies opt_list dep_list non_kappa opt dep = match non_kappa with
+	|(arrow,path,missing_var)::tail-> begin debug ("retrieve optimisations for "^(ASTD_transition.get_label (ASTD_arrow.get_transition arrow))^" missing : "^(string_of_int (List.length missing_var)));
+					let find=(List.map (find_one_opt arrow path astd dependencies opt_list) missing_var)
+					in let (new_opt,new_dep)=filter_opt find opt dep
+					in begin debug ("total opt :"^(string_of_int(List.length new_opt))^"/ but new :"^(string_of_int(List.length find))^"/ vs old :"^(string_of_int(List.length opt)));
+                                           	retrieve_optimisations astd dependencies opt_list dep_list tail new_opt new_dep
+						end
+					end
 							
-	|[]->(opt_list,dep_list)
+	|[]->(opt,dep)
 
 
 
 let rec static_analysis astd = 
-	let non_kappa = extract_non_kappa_direct [] [] [] astd
+	let non_kappa = extract_non_kappa_direct [] [] [] [] astd
 	in let opt_list = ref []
 	and dep_list = ref []
 	and temp = ref []
 	and wait = ref true
 	in begin
-		while (!wait)||((not !wait)&&(!opt_list != !temp))
-		do debug "static";
-		temp:=!opt_list;
+		while (!wait)||((not !wait)&&( !opt_list != !temp))
+		do 
+		debug ("%%%%%%%%%%%%%%%%static loop start length: "^(string_of_int(List.length !opt_list)));
+		temp:= !opt_list;
 		wait:=false;
-		let dependencies = (update_producers_cons astd (extract_df [] true [] [] astd) (!opt_list))
-		in let (opt,dep)= retrieve_optimisations astd dependencies !opt_list !dep_list non_kappa
-		in opt_list:=opt;
-		dep_list:=dep
+		let df=(extract_df [] true [] [] astd)
+		in begin debug ("DF extracted : "^(string_of_int (List.length df))^"/Non Kappa extracted : "^(string_of_int (List.length non_kappa)));
+			let dependencies = (update_producers_cons astd (df) (!opt_list))
+			in let (opt,dep)= retrieve_optimisations astd dependencies !opt_list !dep_list non_kappa [] []
+			in begin debug ("static loop restart "^(string_of_int(List.length (!opt_list))));
+				debug ("static loop new "^(string_of_int(List.length (opt))));
+				debug ("static loop end "^(string_of_int(List.length (union opt !opt_list))));
+				opt_list:= union opt !opt_list;
+				dep_list:= union dep !dep_list
+				end
+			end
 		done;
 		debug ("end_static: "^(string_of_int (List.length !opt_list))^" opt found");
-		(!opt_list,!dep_list)
+		((!opt_list),(!dep_list))
+		
 		end
 
 (**split                                      *)
@@ -927,8 +976,11 @@ let rec register_opt path opt astd =
 
 				|ASTD_astd.Call (name,called_name,vect) ->
 					let sub_astd=register_opt sub_path opt (ASTD_astd.get_astd called_name)
-					in begin ASTD_astd.register sub_astd;
-						ASTD_astd.Call (name,called_name,vect)
+					in begin let (astd,dom_var_link)= ASTD_astd.get_call_astd called_name
+						in begin 
+							ASTD_astd.global_save_astd sub_astd dom_var_link;
+							ASTD_astd.Call (name,called_name,vect)
+							end
 						end
 
 				|ASTD_astd.Elem (a) ->failwith "register opt: impossible to go deeper than elem"
@@ -1025,7 +1077,8 @@ let rec register_dep path dep astd =
 
 				|ASTD_astd.Call (name,called_name,vect) ->
 					let sub_astd=register_dep sub_path dep (ASTD_astd.get_astd called_name)
-					in begin ASTD_astd.register sub_astd;
+					in let (_,var_dom_link)=ASTD_astd.get_call_astd called_name
+					in begin ASTD_astd.global_save_astd sub_astd var_dom_link;
 						ASTD_astd.Call (name,called_name,vect)
 						end
 

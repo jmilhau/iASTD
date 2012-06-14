@@ -1,0 +1,285 @@
+
+(book,<
+       aut;
+       { (A1 -> elem),
+         (A2 -> <|[]|;
+                 {Take};
+                 (SYNb,<|[]|;
+                        {Take};
+                        (KLE3,<*;
+						       (MID2,<|:;
+                                      mId;
+                                      [0,100000];
+                                      (CALLbl,<call;
+                                               loan;
+                                               {bId->bId,
+                                                mId->mId
+                                               }
+                                              >
+                                       )
+                                     >
+								)	  
+									  
+                              >
+
+                        );
+                        (MID3,<|[]|:;
+                               mId;
+                               [0,100000];
+                               {};
+                               (KLE4,<*;
+                                      (CALLbr,<call;
+                                              reservation;
+                                              {bId->bId,
+                                               mId->mId
+                                              }
+                                             >
+                                      )
+                                     >
+                               )
+                              >
+                        )
+                       >
+                 );
+
+
+                 (MID4,<|[]|:;
+                        mId;
+                        [0,100000];
+                        {};
+                        (KLE5,<*;
+                               (CALLbs,<call;
+                                       sales;
+                                       {bId->bId,
+                                        mId->mId
+                                       }
+                                      >
+                               )
+                              >
+                        )
+                       >
+                 )
+                >
+         ),
+         (A3->elem)
+       };
+       { ((local,A1,A2),Acquire(bId,_),{},False),
+         ((local,A2,A3),Sell(bId),{},True),
+         ((local,A2,A3),Discard(bId),{},True)
+       };
+       { 
+         A3
+       };
+       { 
+       };
+       A1
+      >
+)
+{
+bId->[0,100000]
+}
+;
+
+
+
+
+
+
+
+
+
+
+
+(member,<
+       aut;
+       { (A4 -> elem),
+         (A5 -> <|[]|;
+                 {Take};
+                 (SYNm,<|[]|;
+                        {Take};
+                        (BID2,<|[]|:;
+                               bId;
+                               [0,100000];
+                               {};
+                               (KLE6,<*;
+                                      (CALLml,<call;
+                                              loan;
+                                              {bId->bId,
+                                               mId->mId
+                                              }
+                                             >
+                                      )
+                                     >
+                               )
+                              >
+                        );
+                        (BID3,<|[]|:;
+                               bId;
+                               [0,100000];
+                               {};
+                               (KLE7,<*;
+                                      (CALLmr,<call;
+                                              reservation;
+                                              {bId->bId,
+                                               mId->mId
+                                              }
+                                             >
+                                      )
+                                     >
+                               )
+                              >
+                        )
+                       >
+                 );
+
+
+                 (BID4,<|[]|:;
+                        bId;
+                        [0,100000];
+                        {};
+                        (KLE8,<*;
+                               (CALLms,<call;
+                                       sales;
+                                       {bId->bId,
+                                        mId->mId
+                                       }
+                                      >
+                               )
+                              >
+                        )
+                       >
+                 )
+                >
+         ),
+         (A6->elem)
+       };
+       { ((local,A4,A5),Join(mId,_),{},False),
+         ((local,A5,A6),Leave(mId,_),{},True)
+       };
+       { 
+         A6
+       };
+       { 
+       };
+       A4
+      >
+)
+{
+mId->[0,100000]
+}
+;
+
+
+
+(MAIN,<|[]|;
+       {Lend,Reserve,Take,Sale,Renew,Cancel,Return};
+       (VBID,<|[]|:;
+              bId;
+              [0,100000];
+              {};
+              (KLE1,<*;
+                     (CALLB,<call;
+                             book;
+                             {bId->bId}
+                            >
+                     )
+                    >
+              )
+             >
+       );
+       (VMID,<|[]|:;
+              mId;
+              [0,100000];
+              {};
+              (KLE2,<*;
+                     (CALLM,<call;
+                             member;
+                             {mId->mId}
+                            >
+                     )
+                    >
+              )
+             >
+       )
+      >
+);
+
+
+
+(loan,<
+             aut;
+             { (A7->elem),
+               (A8->elem),
+               (A9->elem)
+             };
+             { ((local,A7,A8),Lend(mId,bId,_),{},False),
+               ((local,A7,A8),Take(mId,bId,_),{},False),
+               ((local,A8,A8),Renew(mId,bId,_),{},False),
+               ((local,A8,A9),Return(mId,bId,_),{},False)
+             };
+             { 
+               A9
+             };
+             { 
+
+             };
+             A7
+     >
+)
+{
+mId->[0,100000],
+bId->[0,100000]
+}
+;
+
+
+(reservation,<
+             aut;
+             { (A10->elem),
+               (A11->elem),
+               (A12->elem)
+             };
+             { ((local,A10,A11),Reserve(mId,bId,_),{},False),
+               ((local,A11,A12),Take(mId,bId,_),{},False),
+               ((local,A11,A12),Cancel(mId,bId,_),{},False)
+             };
+             { 
+               A12
+             };
+             { 
+
+             };
+             A10
+           >
+)
+{
+mId->[0,100000],
+bId->[0,100000]
+}
+;
+
+
+(sales,<
+             aut;
+             { (A13->elem),
+               (A14->elem)
+             };
+             { ((local,A13,A14),Take(mId,bId,_),{},False),
+               ((local,A14,A15),Sale(mId,bId,_),{},False)
+             };
+             { 
+               A14
+             };
+             { 
+
+             };
+             A13
+           >
+)
+{
+mId->[0,100000],
+bId->[0,100000]
+}
+
+
+

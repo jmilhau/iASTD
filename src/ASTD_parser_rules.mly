@@ -47,27 +47,49 @@
 
 %start structure
 %start apply_event
-%type <ASTD_astd.t> structure
+%type <unit> structure
 %type <ASTD_event.t list> apply_event
 %%
 
 structure:
-     |structure SCOLON astd
+     |structure SCOLON astd LSET domain_list RSET
       { astd_parser_msg ("structure 1st choice");
         print_endline "========================================" ;
-        ASTD_astd.global_save_astd $3 ;
-        print_endline ("Registered: "^(ASTD_astd.get_name $3)) ;
-        $3 
+        ASTD_astd.global_save_astd $3 $5 ;
+        print_endline ("Registered: "^(ASTD_astd.get_name $3)) 
       }
-     |astd
+     |astd LSET domain_list RSET
       { astd_parser_msg ("structure 2nd choice");
         print_endline "========================================" ;
-        ASTD_astd.global_save_astd $1 ;
-        print_endline ("Registered: "^(ASTD_astd.get_name $1)) ;
-        $1
+        ASTD_astd.global_save_astd $1 $3 ;
+        print_endline ("Registered: "^(ASTD_astd.get_name $1)) 
+      }
+     |structure SCOLON astd 
+      { astd_parser_msg ("structure 1st choice");
+        print_endline "========================================" ;
+        ASTD_astd.global_save_astd $3 [] ;
+        print_endline ("Registered: "^(ASTD_astd.get_name $3)) 
+      }
+     |astd 
+      { astd_parser_msg ("structure 2nd choice");
+        print_endline "========================================" ;
+        ASTD_astd.global_save_astd $1 [] ;
+        print_endline ("Registered: "^(ASTD_astd.get_name $1)) 
       }
   ;
 
+
+domain_list:
+    |domain_link COMMA domain_list
+      { astd_parser_msg ("callable astd domain"); $1::$3 }
+    |domain_link
+      { astd_parser_msg ("callable astd domain"); [$1] }
+    ;
+
+domain_link :
+    |IDENTITY_NAME LINK complex_val_construction
+      { astd_parser_msg ("link var domain"); ($1,$3) }
+    ;
 
 astd:
     |LPAR IDENTITY_NAME COMMA type_astd RPAR
@@ -416,15 +438,42 @@ fct_vect_content :
 
 
 fct_assoc :
-    | LPAR IDENTITY_NAME LINK INT_VALUE RPAR
-      { (ASTD_variable.of_string $2,ASTD_term.Const (ASTD_constant.of_int $4)) }
+    | LPAR IDENTITY_NAME LINK term RPAR
+      { (ASTD_variable.of_string $2,$4) }
+    ;
+    | IDENTITY_NAME LINK term 
+      { (ASTD_variable.of_string $1,$3) }
     ;
 
 
 
 
+term :
+    | IDENTITY_NAME 
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Var(ASTD_variable.of_string $1))}
+    | STRING_VALUE
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Const(ASTD_constant.Symbol($1))) }
+    | INT_VALUE
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Const(ASTD_constant.of_int ($1)))}
+    | UNDERSCORE
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Const(ASTD_constant.Symbol("ANY VALUE"))) }
 
+    | LPAR term PLUS term RPAR
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Addition($2,$4))}
 
+    | LPAR term KLEENE term RPAR
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Multiplication($2,$4))}
+
+    | LPAR term REMOVE term RPAR
+      { astd_parser_msg ("term "); 
+        (ASTD_term.Substraction($2,$4))}
+    ;
 
 
 
@@ -438,6 +487,8 @@ fct_assoc :
 apply_event:
   | event_to_apply SCOLON apply_event
      {$1::$3}
+  | event_to_apply apply_event
+     {$1::$2}
   | event_to_apply
      {$1::[]}
 ;

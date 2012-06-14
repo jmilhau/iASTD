@@ -1,0 +1,79 @@
+
+(P,<
+       aut;
+       { (A1->elem),
+         (A2->elem),
+         (A3->elem),
+         (A4->elem)
+       };
+       { ((local,A1,A2),a(i),{},False),
+         ((local,A2,A3),b(i),{},False),
+         ((local,A3,A4),c(i),{},False)
+       };
+       { 
+         A4
+       };
+       { 
+       };
+       A1
+      >
+)
+{
+i->[1,100000]
+}
+;
+
+
+
+(Q,<
+       aut;
+       { (A5->elem),
+         (A6->elem),
+         (A7->elem),
+         (A8->elem)
+       };
+       { ((local,A5,A6),d(i),{},False),
+         ((local,A6,A7),b(i),{},False),
+         ((local,A7,A8),e(i),{},False)
+       };
+       { 
+         A8
+       };
+       { 
+       };
+       A5
+      >
+)
+{
+i->[1,100000]
+}
+;
+
+
+
+(MAIN,<|[]|;
+       {b};
+       (VARI,<|[]|:;
+              i;
+              [1,20000];
+              {};
+              (CALLP,<call;
+                      P;
+                      {i->i}
+                     >
+              )
+             >
+       );
+       (VARJ,<|[]|:;
+              i;
+              [1,20000];
+              {};
+              (CALLQ,<call;
+                      Q;
+                      {i->i}
+                     >
+              )
+             >
+       )
+      >
+)

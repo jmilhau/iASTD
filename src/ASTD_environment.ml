@@ -52,7 +52,8 @@ let empty = []
 
 let add_binding b e = let v = get_var b
                       and t = get_value b
-                      in (bind v (reduce e t))::e
+                      in let bind_temp=(bind v (reduce e t)) 
+			in begin bind_temp::(List.remove_assoc v e)end
 
 let of_binding b = add_binding b empty
 
@@ -69,6 +70,7 @@ let associate_vars_with_params =
     in try List.fold_left2 associate empty 
        with Invalid_argument s -> print_endline "ASTD_environment.associate_vars_with_params" ; 
                                   raise (Invalid_argument ("ASTD_term" ^ s))
+
 
 let rec increase_call env fct_list = match fct_list with
    |(a,b)::q -> let binding=bind a b in increase_call (add_binding binding env) q
@@ -130,7 +132,6 @@ let compare_term_with_const_in2 env term constant =
 let compare_params_with_consts_in2 env t_list c_list =
     try ASTD_term.for_all2 (compare_term_with_const_in2 env) t_list c_list
     with Invalid_argument _ -> false
-
 
 
 
