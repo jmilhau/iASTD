@@ -1,6 +1,6 @@
 type position = string
 type step = Left | Right
-type side = None | Fst | Snd
+type side = Undef | Fst | Snd
 type qchoice = Val of ASTD_term.t | ChoiceNotMade
 
 
@@ -37,7 +37,7 @@ let not_defined_state () = NotDefined;;
 let elem_state () =Elem;;
 
 
-let none_choice_of () = None;;
+let undef_choice_of () = Undef;;
 let fst_choice_of () = Fst;;
 let snd_choice_of () = Snd;;
 
@@ -88,7 +88,7 @@ let rec init astd = match astd with
 
    |ASTD_astd.Sequence (a,b,c) -> sequence_s_of Left (init b)
 
-   |ASTD_astd.Choice (a,b,c) -> choice_s_of (none_choice_of()) (not_defined_state())
+   |ASTD_astd.Choice (a,b,c) -> choice_s_of (undef_choice_of()) (not_defined_state())
 
    |ASTD_astd.Kleene (a,b) -> kleene_s_of false (init b)
     
@@ -169,7 +169,7 @@ let string_of_seq a = match a with
 let string_of_choice a = match a with
   |Fst -> "First"
   |Snd -> "Second"
-  |None -> "Choice not made yet"
+  |Undef -> "Choice not made yet"
 
 let string_of_qchoice a=match a with
  |Val(v) -> ASTD_term.string_of v
@@ -182,8 +182,8 @@ let string_of_qchoice a=match a with
 let rec print state s = match state with
         |Automata_s (a,b,c) ->print_newline();
                               print_endline(s^"Automata_s ,");
-                              print_endline(s^"//StartHistory");
-                              (print_h b (s^"//"));
+                              (*print_endline(s^"//StartHistory");
+                              (print_h b (s^"//"));*)
                               print_endline(s^"sub_state : "^a);
                               print c (s^"   ")
         |Sequence_s (a,b) ->print_newline();print_endline(s^"Sequence_s ,");print_endline(s^"step : "^(string_of_seq a));print b (s^"   ")

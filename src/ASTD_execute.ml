@@ -21,7 +21,8 @@ let rec apply_local astd arrow state2 state pos =
     let from=ASTD_arrow.get_from arrow
     in match (state,state2) with
 
-        |(ASTD_state.Automata_s(_,h,s),ASTD_state.Automata_s(name_next,h_new,next_state)) ->
+        |(ASTD_state.Automata_s(_,h,s),ASTD_state.Automata_s(name_next,h_new,next_state)) -> 
+
               if from=name_next
                  then let dest=ASTD_arrow.get_to arrow 
                           in begin 
@@ -40,7 +41,7 @@ let rec apply_local astd arrow state2 state pos =
                                             (apply_local (ASTD_astd.find_substate name_next (ASTD_astd.get_sub astd)) arrow next_state s pos)
                                             
 
-        |(ASTD_state.Sequence_s (ASTD_state.Left,s),ASTD_state.Sequence_s (ASTD_state.Right,next_state))-> 
+        |(ASTD_state.Sequence_s (ASTD_state.Left,s),ASTD_state.Sequence_s (ASTD_state.Right,next_state))->
                        let astd2=(ASTD_astd.get_seq_r astd)
                        in ASTD_state.sequence_s_of ASTD_state.Right (apply_local astd2 arrow next_state (ASTD_state.init astd2) pos)
 
@@ -54,35 +55,43 @@ let rec apply_local astd arrow state2 state pos =
         
 
 
-        |(ASTD_state.Choice_s (ASTD_state.None,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
+        |(ASTD_state.Choice_s (ASTD_state.Undef,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
+                       let astd2= (ASTD_astd.get_choice1 astd)
+                       in ASTD_state.choice_s_of ASTD_state.Fst (apply_local astd2 arrow next_state (ASTD_state.init astd2) pos)
+
+        |(ASTD_state.Choice_s (ASTD_state.Snd,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
                        let astd2= (ASTD_astd.get_choice1 astd)
                        in ASTD_state.choice_s_of ASTD_state.Fst (apply_local astd2 arrow next_state (ASTD_state.init astd2) pos)
 
 
-        |(ASTD_state.Choice_s (_,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) -> 
+        |(ASTD_state.Choice_s (ASTD_state.Fst,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) -> 
                        ASTD_state.choice_s_of ASTD_state.Fst (apply_local (ASTD_astd.get_choice1 astd) arrow next_state s pos)
 
-
-        |(ASTD_state.Choice_s (ASTD_state.None,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
+        |(ASTD_state.Choice_s (ASTD_state.Fst,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
                        let astd2= (ASTD_astd.get_choice2 astd);
                        in ASTD_state.choice_s_of ASTD_state.Snd (apply_local astd2 arrow next_state (ASTD_state.init astd2) pos)
 
 
-        |(ASTD_state.Choice_s (_,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) -> 
+
+        |(ASTD_state.Choice_s (ASTD_state.Undef,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
+                       let astd2= (ASTD_astd.get_choice2 astd);
+                       in ASTD_state.choice_s_of ASTD_state.Snd (apply_local astd2 arrow next_state (ASTD_state.init astd2) pos)
+
+
+        |(ASTD_state.Choice_s (ASTD_state.Snd,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) -> 
                        ASTD_state.choice_s_of ASTD_state.Snd (apply_local (ASTD_astd.get_choice2 astd) arrow next_state s pos)
 
-        |(_,ASTD_state.Choice_s (ASTD_state.None,next_state)) -> failwith "impossible choice state in execution"
+        |(_,ASTD_state.Choice_s (ASTD_state.Undef,next_state)) -> failwith "impossible choice state in execution"
 
 
 
-        |(ASTD_state.Kleene_s (_,s),ASTD_state.Kleene_s (true,next_state)) -> 
+        |(ASTD_state.Kleene_s (_,s),ASTD_state.Kleene_s (true,next_state)) ->  
                        ASTD_state.kleene_s_of true (apply_local (ASTD_astd.get_astd_kleene astd) arrow next_state s pos)
 
         |(_,ASTD_state.Kleene_s (false,next_state)) -> failwith "impossible kleene state in execution"
 
-        |(ASTD_state.Synchronisation_s (s1,s2),a) -> begin 
-                                                 if ((List.hd pos)=2) then print_endline("2") else print_endline("not2") 
-                                                     end;
+        |(ASTD_state.Synchronisation_s (s1,s2),a) ->  
+
                   if (List.hd pos)=1 
                      then ASTD_state.synchronisation_s_of 
                                            (apply_local (ASTD_astd.get_synchro_astd1 astd) arrow a s1 (List.tl pos))
@@ -93,7 +102,7 @@ let rec apply_local astd arrow state2 state pos =
                                                                
                              else failwith "impossible synchro state in execution" 
 
-        |(ASTD_state.Guard_s(_,s),ASTD_state.Guard_s(true,next_state)) -> 
+        |(ASTD_state.Guard_s(_,s),ASTD_state.Guard_s(true,next_state)) ->  
                        ASTD_state.guard_s_of true (apply_local (ASTD_astd.get_guard_astd astd) arrow next_state s pos)
 
         |(_,ASTD_state.Guard_s(false,next_state)) -> failwith "impossible guard state in execution"
@@ -103,9 +112,7 @@ let rec apply_local astd arrow state2 state pos =
         |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> 
                       ASTD_state.qchoice_s_of val_used (apply_local (ASTD_astd.get_qastd astd) arrow next_state s pos)
 
-        |(ASTD_state.QSynchronisation_s (s_list),s) ->begin 
-                                                 if ((List.hd pos)=2) then print_endline("2") else print_endline("not2") 
-                                                     end;
+        |(ASTD_state.QSynchronisation_s (s_list),s) ->
                       ASTD_state.qsynchronisation_s_of (apply_local_qsynchro_s (ASTD_astd.get_qastd astd) arrow s_list s pos ) 
 
 
@@ -145,7 +152,7 @@ let rec apply_tsub astd arrow state2 state pos =
                              then let h2=ASTD_state.modify_h h from s
                                   in if (dest !="H1") && (dest!= "H2")
                                          then (ASTD_state.automata_s_of middle
-                                                                       (ASTD_state.modify_h h2 middle next_st)
+                                                                        h2
                                                                         next_st )
                                          else (ASTD_state.automata_s_of middle
                                                                         h2
@@ -153,7 +160,7 @@ let rec apply_tsub astd arrow state2 state pos =
 
                              else  if (dest !="H1") && (dest!= "H2")
                                       then (ASTD_state.automata_s_of middle
-                                                                     (ASTD_state.modify_h h middle next_st)
+                                                                     h
                                                                      next_st )
                                       else (ASTD_state.automata_s_of middle
                                                                      h
@@ -180,22 +187,32 @@ let rec apply_tsub astd arrow state2 state pos =
                        ASTD_state.sequence_s_of ASTD_state.Left (apply_tsub (ASTD_astd.get_seq_l astd) arrow next_state s pos )
         
 
-        |(ASTD_state.Choice_s (ASTD_state.None,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
+        |(ASTD_state.Choice_s (ASTD_state.Snd,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
                        let astd2= (ASTD_astd.get_choice1 astd);
                        in ASTD_state.choice_s_of ASTD_state.Fst (apply_tsub astd2 arrow next_state (ASTD_state.init astd2) pos)
 
-        |(ASTD_state.Choice_s (_,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) -> 
+
+        |(ASTD_state.Choice_s (ASTD_state.Undef,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
+                       let astd2= (ASTD_astd.get_choice1 astd);
+                       in ASTD_state.choice_s_of ASTD_state.Fst (apply_tsub astd2 arrow next_state (ASTD_state.init astd2) pos)
+
+        |(ASTD_state.Choice_s (ASTD_state.Fst,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) -> 
                        ASTD_state.choice_s_of ASTD_state.Fst (apply_tsub (ASTD_astd.get_choice1 astd) arrow next_state s pos )
 
 
-        |(ASTD_state.Choice_s (ASTD_state.None,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
+        |(ASTD_state.Choice_s (ASTD_state.Fst,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
                        let astd2= (ASTD_astd.get_choice2 astd);
                        in ASTD_state.choice_s_of ASTD_state.Fst (apply_tsub astd2 arrow next_state (ASTD_state.init astd2) pos)
 
-        |(ASTD_state.Choice_s (_,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) -> 
+
+        |(ASTD_state.Choice_s (ASTD_state.Undef,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
+                       let astd2= (ASTD_astd.get_choice2 astd);
+                       in ASTD_state.choice_s_of ASTD_state.Fst (apply_tsub astd2 arrow next_state (ASTD_state.init astd2) pos)
+
+        |(ASTD_state.Choice_s (ASTD_state.Snd,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) -> 
                        ASTD_state.choice_s_of ASTD_state.Snd (apply_tsub (ASTD_astd.get_choice2 astd) arrow next_state s pos )
 
-        |(_,ASTD_state.Choice_s (ASTD_state.None,next_state)) -> failwith "impossible choice state in execution"
+        |(_,ASTD_state.Choice_s (ASTD_state.Undef,next_state)) -> failwith "impossible choice state in execution"
 
         |(ASTD_state.Kleene_s (_,s),ASTD_state.Kleene_s (true,next_state)) -> 
                        ASTD_state.kleene_s_of true (apply_tsub (ASTD_astd.get_astd_kleene astd) arrow next_state s pos )
@@ -255,7 +272,7 @@ let rec apply_fsub astd arrow state2 state pos =
     let middle=ASTD_arrow.get_through arrow
     in match (state,state2) with
         |(ASTD_state.Automata_s(n,h,s),ASTD_state.Automata_s(name_next,h_new,next_state)) ->
-        begin 
+        begin print_endline (middle^"    "^name_next);
               if middle=name_next
                  then begin  
                       let dest=ASTD_arrow.get_to arrow
@@ -285,21 +302,30 @@ let rec apply_fsub astd arrow state2 state pos =
         |(ASTD_state.Sequence_s (_,s),ASTD_state.Sequence_s (ASTD_state.Left,next_state)) -> 
                        ASTD_state.sequence_s_of ASTD_state.Left (apply_fsub (ASTD_astd.get_seq_l astd) arrow next_state s pos)
  
-        |(ASTD_state.Choice_s (ASTD_state.None,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
+        |(ASTD_state.Choice_s (ASTD_state.Snd,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
+                       let astd2= (ASTD_astd.get_choice1 astd);
+                       in ASTD_state.choice_s_of ASTD_state.Fst (apply_fsub astd2 arrow next_state (ASTD_state.init astd2) pos)
+
+        |(ASTD_state.Choice_s (ASTD_state.Undef,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) ->
                        let astd2= (ASTD_astd.get_choice1 astd);
                        in ASTD_state.choice_s_of ASTD_state.Fst (apply_fsub astd2 arrow next_state (ASTD_state.init astd2) pos)
        
-        |(ASTD_state.Choice_s (_,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) -> 
+        |(ASTD_state.Choice_s (ASTD_state.Fst,s),ASTD_state.Choice_s (ASTD_state.Fst,next_state)) -> 
                        ASTD_state.choice_s_of ASTD_state.Fst (apply_fsub (ASTD_astd.get_choice1 astd) arrow next_state s pos)
 
-        |(ASTD_state.Choice_s (ASTD_state.None,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
+        |(ASTD_state.Choice_s (ASTD_state.Fst,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
                        let astd2= (ASTD_astd.get_choice2 astd);
                        in ASTD_state.choice_s_of ASTD_state.Fst (apply_fsub astd2 arrow next_state (ASTD_state.init astd2) pos)
 
-        |(ASTD_state.Choice_s (_,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) -> 
+
+        |(ASTD_state.Choice_s (ASTD_state.Undef,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) ->
+                       let astd2= (ASTD_astd.get_choice2 astd);
+                       in ASTD_state.choice_s_of ASTD_state.Fst (apply_fsub astd2 arrow next_state (ASTD_state.init astd2) pos)
+
+        |(ASTD_state.Choice_s (ASTD_state.Snd,s),ASTD_state.Choice_s (ASTD_state.Snd,next_state)) -> 
                        ASTD_state.choice_s_of ASTD_state.Snd (apply_fsub (ASTD_astd.get_choice2 astd) arrow next_state s pos)
 
-        |(_,ASTD_state.Choice_s (ASTD_state.None,next_state)) -> failwith "impossible choice state in execution"
+        |(_,ASTD_state.Choice_s (ASTD_state.Undef,next_state)) -> failwith "impossible choice state in execution"
 
         |(ASTD_state.Kleene_s (_,s),ASTD_state.Kleene_s (true,next_state)) -> 
                        ASTD_state.kleene_s_of true (apply_fsub (ASTD_astd.get_astd_kleene astd) arrow next_state s pos)
@@ -322,7 +348,7 @@ let rec apply_fsub astd arrow state2 state pos =
 
         |(_,ASTD_state.QChoice_s(ASTD_state.ChoiceNotMade,next_state))-> failwith "impossible qchoice execution"
 
-        |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> 
+        |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> print_endline"coucou";
                       ASTD_state.qchoice_s_of val_used (apply_fsub (ASTD_astd.get_qastd astd) arrow next_state s pos)
 
         |(ASTD_state.QSynchronisation_s (s_list),s) ->
@@ -366,14 +392,13 @@ and apply_fsub_qsynchro_s astd arrow s_list s pos = match (pos,s_list) with
 
 
 
-
-
 let apply astd arrow state state2 l = print_endline(string_of_list l);
    match arrow with
      | ASTD_arrow.Local(_,_,_,_,_ ) -> apply_local astd arrow state2 state l
      | ASTD_arrow.From_sub (_,_,_,_,_,_ ) -> apply_fsub astd arrow state2 state l
      | ASTD_arrow.To_sub (_,_,_,_,_,_ ) -> apply_tsub astd arrow state2 state l
 ;;
+
 
 
 let rec execute_possibilities astd state list_poss path1 = match (list_poss) with
@@ -415,10 +440,11 @@ and synchronize astd state synchro_list path1 pos = match synchro_list with
 let execute astd state event  =
                let (list_poss,f)=ASTD_possibilities.possible_evolutions astd  state event []
                  in begin 
- (*                       print_endline "=========Start Possibilities" ; 
+            (*             print_endline "=========Start Possibilities" ; 
                           ASTD_possibilities.print list_poss "" ; 
-                          print_endline "=========End Possibilities" ; 
-  *)                      if (ASTD_possibilities.possible list_poss)
+                          print_endline "=========End Possibilities" ;  *)
+                          
+                        if (ASTD_possibilities.possible list_poss)
                              then execute_possibilities astd state list_poss [] 
                              else failwith "Not Possible"
                     end

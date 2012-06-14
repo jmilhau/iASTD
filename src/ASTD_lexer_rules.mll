@@ -13,7 +13,7 @@ let upperletters = ['A'-'Z']
 let letters = lowerletters | upperletters
 let digits = ['0'-'9']
 let id = "Id"
-let underscore = "_"
+
 
 rule token = parse
  | ws    { token lexbuf }
@@ -57,6 +57,7 @@ rule token = parse
  | ':'   { ebs_lexer_msg "new COLON" ; COLON }
  | ';'   { ebs_lexer_msg "new SCOLON" ; SCOLON }
  | ','   { ebs_lexer_msg "new COMMA" ; COMMA }
+ | '_'   {ebs_lexer_msg "new underscore" ; UNDERSCORE}
  | ":="  { IS }
  | '='   { EQUALS }
  | eof   { EOF }

@@ -21,6 +21,10 @@ exception ASTD_free_variable of ASTD_term.t * t
 
 let _ASTD_arrow_table_ = Hashtbl.create 5 
 
+let _ASTD_transition_table_ = Hashtbl.create 5 
+
+
+
 
 let local_arrow from_state to_state transition predicates from_final_state =           
                                     Local(from_state,to_state,transition,predicates,from_final_state)
@@ -67,15 +71,32 @@ let get_label_transition a =   ASTD_transition.get_label(get_transition a)
 
 
 
+let register_transition t = match t with
+     |ASTD_transition.Transition(label,params) ->  Hashtbl.add _ASTD_transition_table_ label params
+;;
+
+let get_transition_params label =  Hashtbl.find _ASTD_transition_table_ label
+;;
+
+
+
+
+
+
+
 
 let register = Hashtbl.add _ASTD_arrow_table_ 
 
 let register_arrow a = match a with
-     | Local ( from,to_state,transition,pred,final ) -> register (from,ASTD_transition.get_label transition,final) a
-     | From_sub ( from,to_state,through,transition,pred,final ) -> register (from,ASTD_transition.get_label transition,final) a
-     | To_sub ( from,to_state,through,transition,pred,final ) -> register (from,ASTD_transition.get_label transition,final) a
+     | Local ( from,to_state,transition,pred,final ) ->register_transition transition ;
+                                                       register (from,ASTD_transition.get_label transition,final) a
+     | From_sub ( from,to_state,through,transition,pred,final ) ->register_transition transition ;
+                                                                  register (from,ASTD_transition.get_label transition,final) a
+     | To_sub ( from,to_state,through,transition,pred,final ) -> register_transition transition ;
+                                                                 register (from,ASTD_transition.get_label transition,final) a
 
 let get from event from_final= Hashtbl.find_all _ASTD_arrow_table_ (from,(ASTD_event.get_label event),from_final)
+
 
 
 
@@ -96,13 +117,19 @@ end
 let string_of_bool a = if a then "true" else "false"
 
 let valid_arrow event env arrow = let a =(
-                                      (begin ASTD_event.compare_action_with_event env (get_transition arrow) event end)
+                                      (begin let c= (ASTD_event.compare_action_with_event2 env (get_transition arrow) event)
+                                             in begin 
+                                                      c
+                                                end 
+                                       end)
                                       && 
-                                      (begin evaluate_guard env (get_predicates arrow) end)
+                                      (begin let b= evaluate_guard env (get_predicates arrow)
+                                             in begin
+                                                      b
+                                                end 
+                                       end)
                                          )
                                   in begin 
-                                         (*ASTD_environment.print env;
-                                         print_newline ();*)
                                          a
                                      end
 

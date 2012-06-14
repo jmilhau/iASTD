@@ -1,6 +1,6 @@
 (RULE1,<|:;
         checkId;
-        [1,100];
+        [1,5000];
 	(RULE11,<|;
                  (RULE12,<|:;
                           value;
@@ -12,8 +12,8 @@
                                     { 
                                       (
                                        (local,RULE122,RULE123),
-                                       Createcheck(personId,function,organisation,checkId,value),
-                                       {[isClerk (function)],[rEgistre(checkId,value)]},
+                                       Createcheck(_,clerK,_,checkId,value),
+                                       {[rEgistre(checkId,value)]},
                                        False
                                       )
                                     };
@@ -32,7 +32,7 @@
                            (RULE131, <|;
                                       (RULE14,<|:;
                                                newvalue;
-                                               [0,100];
+                                               [0,10000];
                                                (RULE141,<aut;
                                                          { (RULE142->elem),
                                                            (RULE143->elem)
@@ -40,8 +40,8 @@
                                                          { 
                                                           (
                                                            (local,RULE142,RULE143),
-                                                           Modifycheck(personId,function,organisation,checkId,newvalue),
-                                                           {[isClerk (function)],[rEgistre(checkId,newvalue)]},
+                                                           Modifycheck(_,clerK,_,checkId,newvalue),
+                                                           {[rEgistre(checkId,newvalue)]},
                                                            False
                                                           )
                                                          };
@@ -60,14 +60,14 @@
                                                { 
                                                 (
                                                  (local,RULE152,RULE153),
-                                                 Deletecheck(personId,function,organisation,checkId,value),
-                                                 {[isClerk (function)]},
+                                                 Deletecheck(_,clerK,_,checkId),
+                                                 {[clearAll (checkId)]},
                                                  False
                                                 ),
                                                 (
                                                  (local,RULE152,RULE153),
-                                                 Register(personId,function,organisation,checkId,value),
-                                                 {[isClerk (function)]},
+                                                 Register(_,clerK,_,checkId),
+                                                 {},
                                                  False
                                                 )
                                                };
@@ -88,35 +88,145 @@
 
 
 
-(MAIN1,<*;
-        (MAIN2,<call;
-                RULE1; 
-                {}
-               >
+
+(RULE2,<|:;
+        checkId;
+        [1,5000];
+	(RULE21,<|;
+                 (RULE22,<|:;
+                          value;
+                          [0,10000]; 
+                          (RULE221,<aut;
+                                    { (RULE222->elem),
+                                      (RULE223->elem)
+                                    };
+                                    { 
+                                      (
+                                       (local,RULE222,RULE223),
+                                       Createcheck(_,directoR,_,checkId,value),
+                                       {[rEgistre(checkId,value)]},
+                                       False
+                                      )
+                                    };
+                                    { 
+                                     RULE223
+                                    };
+                                    RULE222
+                                   >
+                          )
+                         >
+                 );
+                 (RULE23, <|;
+                           (RULE24,<|:;
+                                    newvalue;
+                                    [0,10000];
+                                    (RULE241,<aut;
+                                              { (RULE242->elem),
+                                                (RULE243->elem)
+                                              };
+                                              { 
+                                               (
+                                                (local,RULE242,RULE243),
+                                                Modifycheck(_,directoR,_,checkId,newvalue),
+                                                {[rEgistre(checkId,newvalue)]},
+                                                False
+                                               )
+                                              };
+                                              { 
+                                                RULE243
+                                              };
+                                              RULE242
+                                             >
+                                    )
+                                   >
+                           );
+                           (RULE25,<|;
+                                    (RULE26,<aut;
+                                             { (RULE262->elem),
+                                               (RULE263->elem)
+                                             };
+                                             { 
+                                              (
+                                               (local,RULE262,RULE263),
+                                               Deletecheck(_,directoR,_,checkId),
+                                               {[clearAll (checkId)]},
+                                               False
+                                              ),
+                                              (
+                                               (local,RULE262,RULE263),
+                                               Register(_,directoR,_,checkId),
+                                               {},
+                                               False
+                                              )
+                                             };
+                                             { 
+                                              RULE263
+                                             };
+                                             RULE262
+                                            >
+                                    );
+                                    (RULE27,< =>;
+                                             {[isSmall(checkId)],
+                                              [isCheck(checkId)]
+                                             };
+                                             (RULE271,<aut;
+                                                      { (RULE272->elem),
+                                                        (RULE273->elem)
+                                                      };
+                                             { 
+                                              (
+                                               (local,RULE272,RULE273),
+                                               Validate(_,directoR,_,checkId),
+                                               {[clearAll (checkId)]},
+                                               False
+                                              ),
+                                              (
+                                               (local,RULE272,RULE273),
+                                               Cancel(_,directoR,_,checkId),
+                                               {[isClerk (function)]},
+                                               False
+                                              )
+                                             };
+                                             { 
+                                              RULE273
+                                             };
+                                             RULE272
+                                            >
+                                    )
+                                   >
+                           )
+                          >
+	         )
+                >
         )
        >
+)
+>
 );
 
 
 
-(INTRO1,<|:;
-         personId;
-         [1,10];
-         (INTRO2,<|:;
-                  function;
-                  {clerK,directoR,headofficE};
-                  (INTRO3,<|:;
-                           organisation;
-                           {aA,bB};
-                           (CALL0,<call;
-                                   MAIN1;
-                                   {}
-                                  >
-                           )
-                          >
-                  )
-                  
-                 >
-         )
-        >
+
+
+
+
+
+
+(MAIN1,<*;
+        (MAIN2,<|;
+                (MAIN21,<call;
+                        RULE1; 
+                        {}
+                       >
+                );
+                (MAIN22,<call;
+                        RULE2; 
+                        {}
+                       >
+                )
+               >
+        )
+       >
 )
+
+

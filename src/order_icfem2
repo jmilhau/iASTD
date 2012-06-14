@@ -36,7 +36,7 @@
  Createcheck(12,clerK,bB,36,10000);
  Createcheck(2,clerK,aA,37,10000);
  Createcheck(152,clerK,aA,38,9000);
- Createcheck(22,clerK,aA,39,10000);
+ Createcheck(152,clerK,aA,39,9000);
  Modifycheck(2,clerK,aA,1,10000);
  Modifycheck(152,clerK,aA,2,9000);
  Modifycheck(22,clerK,aA,3,10000);
@@ -75,24 +75,4 @@
  Modifycheck(12,clerK,bB,36,10000);
  Modifycheck(2,clerK,aA,37,10000);
  Modifycheck(152,clerK,aA,38,9000);
- Modifycheck(22,clerK,aA,39,10000);
- Deletecheck(2,clerK,aA,1);
- Deletecheck(152,clerK,aA,2);
- Deletecheck(22,clerK,aA,3);
- Deletecheck(89,clerK,bB,4);
- Deletecheck(78,clerK,aA,5);
- Deletecheck(12,clerK,bB,6);
- Deletecheck(2,clerK,aA,7);
- Deletecheck(152,clerK,aA,8);
- Deletecheck(22,clerK,aA,9);
- Deletecheck(89,clerK,bB,10);
- Deletecheck(13,clerK,aA,30);
- Deletecheck(2,clerK,aA,31);
- Deletecheck(152,clerK,aA,32);
- Deletecheck(22,clerK,aA,33);
- Deletecheck(89,clerK,bB,34);
- Deletecheck(78,clerK,aA,35);
- Deletecheck(12,clerK,bB,36);
- Deletecheck(2,clerK,aA,37);
- Deletecheck(152,clerK,aA,38);
- Deletecheck(22,clerK,aA,39)
+ Modifycheck(22,clerK,aA,39,10000)

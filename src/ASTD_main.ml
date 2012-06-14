@@ -40,7 +40,8 @@ let _ = print_endline "========================================" ;
                in ASTD_state.print state "";
                   print_endline "========================================" ;
                   ASTD_execute.exec_list structure state event_list;
-                  print_endline("")
+                  print_float(Sys.time());
+                  print_newline()
                         
 
     ;; 

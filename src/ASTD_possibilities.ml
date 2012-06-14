@@ -71,11 +71,26 @@ let rec find_m a b = match b with
 
 
 let rec clear_cons a b = match (a) with
+ |(Mult ((Mult [])::t) ) -> clear_cons (Mult(t)) b
  |(Mult (h::t))-> if (find_m h b) then (clear_cons (Mult t) b)
                                 else cons (Mult([h])) (clear_cons (Mult t) b)
  |(Mult ([]))-> b
  |_ -> cons a b
 ;;
+
+
+
+
+
+let rec print a s= match a with
+  |Possibility(a,b)-> print_endline (s^"POSSIBILITY");(ASTD_state.print a s);print_endline(s^"END OF POSSIBILITY")
+  |Mult([])->print_endline (s^"end of mult")
+  |Synch([])->print_endline (s^"end of synch")
+  |Mult(a::q)->print_endline(s^"Mult");(print a (s^"  "));(print (Mult q) s)
+  |Synch(a::q)->print_endline(s^"Synch");(print a (s^"  "));(print (Synch q) s)
+
+
+
 
 
 
@@ -203,8 +218,8 @@ let rec never_empty l = match l with
 
 
 let rec possible_evolutions astd state event environment = match state with
-  |ASTD_state.Automata_s (a,b,c) -> 
 
+  |ASTD_state.Automata_s (a,b,c) -> 
                          begin 
                          let (a2,b2,c2,d2,e2)=ASTD_astd.get_data_automata astd
                          in let l1=(ASTD_arrow.get a event false)
@@ -228,7 +243,7 @@ let rec possible_evolutions astd state event environment = match state with
                                                                          (ASTD_state.automata_s_of a b ASTD_state.NotDefined ) 
                                                                          (create_possibilities environment event l3)
                                                 in let list_poss_fin=clear_cons list_poss list_poss3
-                                                       in (list_poss_fin, true) 
+                                                       in (Mult[list_poss_fin], true) 
                                                 end
                                           else  begin 
                                                 if (ASTD_astd.isElem astd2)
@@ -239,11 +254,11 @@ let rec possible_evolutions astd state event environment = match state with
                                                                           (ASTD_state.automata_s_of a b ASTD_state.NotDefined ) 
                                                                           (create_possibilities environment event l3)
                                                                 in begin 
-                                                                        ((clear_cons list_poss list_poss3),false)
+                                                                        (Mult[(clear_cons list_poss list_poss3)],false)
                                                                    end
                                                                 end
                                                              end
-                                                        else  (list_poss,false) 
+                                                        else  (Mult[list_poss],false) 
                                                end
                              end     
                              end
@@ -263,12 +278,12 @@ let rec possible_evolutions astd state event environment = match state with
                                                       complete_possibilities (ASTD_state.sequence_s_of ASTD_state.Right 
                                                                              (ASTD_state.init right)) l2
                                            in let list_poss=clear_cons list_poss1 list_poss2 
-                                           in (list_poss,finalbis)
+                                           in (Mult[list_poss],finalbis)
                                            end
-                                      else  (list_poss1,false)
+                                      else  (Mult[list_poss1],false)
                            else let (l1,final_right)=possible_evolutions right state2 event environment
                                 in let list_poss1=complete_possibilities state l1
-                                in (list_poss1,final_right)
+                                in (Mult[list_poss1],final_right)
 
 
 
@@ -278,20 +293,20 @@ let rec possible_evolutions astd state event environment = match state with
              if side = ASTD_state.Fst
                 then let (l1,final_fst)=possible_evolutions first state2 event environment
                      in let list_poss1=complete_possibilities state l1
-                           in (list_poss1,final_fst)
+                           in (Mult[list_poss1],final_fst)
                    else  begin 
                          if side = ASTD_state.Snd
                            then  let (l1,final_snd)=possible_evolutions second state2 event environment
                                  in begin 
                                     let list_poss1=complete_possibilities state l1
-                                    in (list_poss1,final_snd)
+                                    in (Mult[list_poss1],final_snd)
                                     end
                            else 
                                 let (l1,final_fst)=possible_evolutions first (ASTD_state.init first) event environment
                                 in let (l2,final_snd)=possible_evolutions second (ASTD_state.init second) event environment
                                 in let list_poss1=complete_possibilities (ASTD_state.choice_s_of ASTD_state.Fst (ASTD_state.NotDefined)) l1
                                 and list_poss2=complete_possibilities (ASTD_state.choice_s_of ASTD_state.Snd (ASTD_state.NotDefined)) l2
-                                in begin (clear_cons list_poss1 list_poss2,(final_fst || final_snd)) end
+                                in begin (Mult[clear_cons list_poss1 list_poss2],(final_fst || final_snd)) end
                                 
                          end
              end
@@ -306,10 +321,10 @@ let rec possible_evolutions astd state event environment = match state with
                                      then begin
                                           let (l2,f2) = possible_evolutions astd2 (ASTD_state.init astd2) event environment
                                           in let list_poss2 = complete_possibilities (ASTD_state.kleene_s_of true state2) l2
-                                          in ((clear_cons list_poss1 list_poss2),true)
+                                          in ((Mult[clear_cons list_poss1 list_poss2]),true)
                                           end
                                      else begin
-                                          (list_poss1,false)
+                                          (Mult[list_poss1],false)
                                           end
                         end
 
@@ -321,7 +336,7 @@ let rec possible_evolutions astd state event environment = match state with
                                then if (possible la) && (possible lb)
                                         then (Mult[Synch [Mult[la];Mult[lb]]],fa && fb)
                                         else (Mult([]),fa && fb)  
-                               else (Synch [la;lb],fa && fb)
+                               else (Mult[Synch [Mult[la];Mult[lb]]],fa && fb)
                       
 
   |ASTD_state.Guard_s (started,state2) -> 
@@ -330,12 +345,18 @@ let rec possible_evolutions astd state event environment = match state with
                 if started 
                       then let (l,f)=possible_evolutions astd2 state2 event environment 
                            in let list_poss=complete_possibilities state l
-                           in (list_poss,f)
+                           in (Mult[list_poss],f)
                       else if (ASTD_arrow.evaluate_guard environment pred_list) 
-                              then let (l,f)=possible_evolutions astd2 state2 event environment 
-                                   in let list_poss=complete_possibilities (ASTD_state.guard_s_of true state2) l
-                                   in (list_poss,f)
-                              else (Mult[],false)
+                              then begin 
+                                   let (l,f)=possible_evolutions astd2 state2 event environment 
+                                   in begin 
+                                       let list_poss=complete_possibilities (ASTD_state.guard_s_of true state2) l   
+                                        in (Mult[list_poss],f) 
+                                      end 
+                                   end
+                              else begin 
+                                   (Mult[],false) 
+                                   end
                     end
 
 
@@ -343,22 +364,40 @@ let rec possible_evolutions astd state event environment = match state with
 
 
   |ASTD_state.QChoice_s (val_used,state2) ->
-                let (name,var,list_val,astd2)=ASTD_astd.get_data_qchoice astd
+(*SANS KAPPA *)   (*let (name,var,list_val,astd2)=ASTD_astd.get_data_qchoice astd
                 in begin  
                       if val_used=ASTD_state.ChoiceNotMade
-                      then let (list_poss,f)= q_poss astd2 event var [] list_val environment true
+                      then let (list_poss,f)= q_poss_c astd2 event var list_val environment 
                            in (list_poss,f)
                        else let bind_env = ASTD_environment.bind var (ASTD_state.get_val val_used)
                             in let (l,f)=
                                      possible_evolutions astd2 state2 event (ASTD_environment.add_binding bind_env environment)
                             in let list_poss = complete_possibilities state l
                                    in (list_poss,f)
-                    end
+                    end  *)
+
+
+(*Kappa indirect*)
+              let (name,var,list_val,astd2)=ASTD_astd.get_data_qchoice astd
+                in begin  
+                      if val_used=ASTD_state.ChoiceNotMade
+                      then let (label,c_list)=ASTD_event.get_data event
+                           in let params=ASTD_arrow.get_transition_params (label)
+                           in let (list_poss,f)= kappa_indirect_q_poss_c astd2 event params c_list var list_val environment 
+                           in (Mult[list_poss],f)
+                       else let bind_env = ASTD_environment.bind var (ASTD_state.get_val val_used)
+                            in let (l,f)=
+                                     possible_evolutions astd2 state2 event (ASTD_environment.add_binding bind_env environment)
+                            in let list_poss = complete_possibilities state l
+                                   in (Mult[list_poss],f)
+                    end 
+             
+
 
 
   |ASTD_state.QSynchronisation_s (state_list) -> 
                 let (name,var,val_list,trans_list,astd2)=ASTD_astd.get_data_qsynchronisation astd
-                in let (l2,f2)= q_poss astd2 event var state_list val_list environment false
+                in let (l2,f2)= q_poss_s astd2 event var state_list val_list environment
                 in if (ASTD_transition.is_included (ASTD_event.get_label event) trans_list)
                    then if (never_empty l2)
                            then let list_poss= l2
@@ -379,7 +418,7 @@ let rec possible_evolutions astd state event environment = match state with
                                                             event 
                                                             (ASTD_environment.increase_call environment fct_vec)
                           in let list_poss=complete_possibilities (ASTD_state.call_s_of called state2) l
-                          in (list_poss,final)
+                          in (Mult[list_poss],final)
                           end
                      else begin 
                           let (l,final)=possible_evolutions astd2
@@ -387,16 +426,14 @@ let rec possible_evolutions astd state event environment = match state with
                                                             event 
                                                             (ASTD_environment.increase_call environment fct_vec)
                           in let list_poss=complete_possibilities (ASTD_state.call_s_of true state2) l
-                          in (list_poss,false)
+                          in (Mult[list_poss],false)
                           end
 
   |_ -> (Mult[],false)
 
-and q_poss astd event var state_list list_val environment kind = 
-    if kind 
-       then match list_val with
+and q_poss_c astd event var list_val environment = match list_val with
             | h::t -> let bind_env=ASTD_environment.bind var h
-                      in let (a,b)= q_poss astd event var state_list t environment true
+                      in let (a,b)= q_poss_c astd event var t environment
                       in let (c,d)=possible_evolutions astd 
                                                        (ASTD_state.init astd) 
                                                        event 
@@ -406,8 +443,25 @@ and q_poss astd event var state_list list_val environment kind =
              ) 
             | []-> (Mult[],false) 
 
+and kappa_indirect_q_poss_c astd event params c_list var list_val environment = match (params,c_list) with
+         |(a::b,h::t)-> begin 
+                        if a=(ASTD_term.Var var)
+                        then let bind_env=ASTD_environment.bind var (ASTD_term.Const h)
+                             in let (c,d)=possible_evolutions astd 
+                                                               (ASTD_state.init astd) 
+                                                               event 
+                                                               (ASTD_environment.add_binding bind_env environment)
+                           in let list_poss=(ASTD_state.qchoice_s_of (ASTD_state.Val(ASTD_term.Const h)) ASTD_state.NotDefined)
+                           in (Mult[complete_possibilities list_poss c],d)
+                        else kappa_indirect_q_poss_c astd event b t var list_val environment
+          
+                        end
 
-       else match (state_list,list_val) with
+         |([],[])-> q_poss_c astd event var list_val environment
+
+         |_->failwith "kappa_c, the event has an incorrect number of parameters" 
+
+and  q_poss_s astd event var state_list list_val environment = match (state_list,list_val) with
             |((v,state)::b,(c::d))-> 
                      if v=c then begin 
                                let bind_env =ASTD_environment.bind var c 
@@ -415,23 +469,16 @@ and q_poss astd event var state_list list_val environment kind =
                                                                   state 
                                                                   event
                                                                   (ASTD_environment.add_binding bind_env environment)
-                                  and (list_poss,final)= q_poss astd event var b d environment false
+                                  and (list_poss,final)= q_poss_s astd event var b d environment
                                in (clear_cons (Synch [Mult[l2]]) (list_poss),f2 && final)
                                  end
                             else failwith "mistake"
             |([],[])-> (Synch [],true)
             |_-> failwith "mistake"
 
+
+
 ;;
  
-
-let rec print a s= match a with
-  |Possibility(a,b)-> print_endline (s^"POSSIBILITY");(ASTD_state.print a s);print_endline(s^"END OF POSSIBILITY")
-  |Mult([])->print_endline (s^"end of mult")
-  |Synch([])->print_endline (s^"end of synch")
-  |Mult(a::q)->print_endline(s^"Mult");(print a (s^"  "));(print (Mult q) s)
-  |Synch(a::q)->print_endline(s^"Synch");(print a (s^"  "));(print (Synch q) s)
-
-
 
 

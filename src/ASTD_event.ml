@@ -15,6 +15,16 @@ let compare_action_with_event env a e  =
            
 ;;
 
+let compare_action_with_event2 env a e  = 
+    match (a,e) with 
+    | (ASTD_transition.Transition(alabel, aparams), Event (elabel, econsts))  
+      -> (begin (alabel = elabel) end) && 
+              begin (let c=ASTD_environment.compare_params_with_consts_in2 env aparams econsts
+                     in begin  c end)
+              end
+           
+;;
+
 let string_of_event event = 
     match event with
     | Event (label,consts) 

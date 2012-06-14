@@ -4,7 +4,7 @@
 
 type position = string
 type step = Left | Right
-type side = None | Fst | Snd
+type side = Undef | Fst | Snd
 type qchoice = Val of ASTD_term.t |ChoiceNotMade
 type astd_name = string
 
@@ -36,7 +36,7 @@ val guard_s_of : bool -> t -> t
 val call_s_of : bool -> t -> t
 val not_defined_state :  unit -> t
 
-val none_choice_of : unit -> side
+val undef_choice_of : unit -> side
 val fst_choice_of : unit -> side
 val snd_choice_of : unit -> side
 

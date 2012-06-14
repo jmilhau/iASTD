@@ -13,6 +13,8 @@ val event : ASTD_label.t -> ASTD_constant.t list -> t
 
 val compare_action_with_event : ASTD_environment.t -> ASTD_transition.t -> t -> bool
 
+val compare_action_with_event2 : ASTD_environment.t -> ASTD_transition.t -> t -> bool
+
 (** {Printers} *)
 
 val print_event : t -> unit

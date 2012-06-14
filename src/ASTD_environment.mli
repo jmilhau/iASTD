@@ -113,3 +113,10 @@ val compare_params_with_consts_in :
     t -> ASTD_term.params -> ASTD_constant.t list -> bool
 
 
+val compare_term_with_const_in2 : 
+    t -> ASTD_term.t -> ASTD_constant.t -> bool
+
+val compare_params_with_consts_in2 : 
+    t -> ASTD_term.params -> ASTD_constant.t list -> bool
+
+

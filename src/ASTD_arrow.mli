@@ -42,7 +42,9 @@ val register_arrow : t -> unit
 
 val get : from_state -> ASTD_event.t -> from_final_state -> t list 
 
+val register_transition : ASTD_transition.t -> unit
 
+val get_transition_params : ASTD_label.t -> ASTD_term.params
 
 (** {4 Functions} *)
 

@@ -8,7 +8,7 @@ val isGreaterThanZero : ASTD_constant.t list -> bool
 
 val isGreaterThanOne : ASTD_constant.t list -> bool
 
-val isClerk : ASTD_constant.t list -> bool
+val clearAll : ASTD_constant.t list -> bool
 
 val isSmall : ASTD_constant.t list -> bool
 

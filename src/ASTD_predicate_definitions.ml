@@ -18,6 +18,20 @@ let isGreaterThanZero = function
     | _ -> failwith "isGreater : bad arity"
 
 
+
+let clearAll = function
+    |check_id::[]->begin
+                    begin 
+                    while begin Hashtbl.mem _ASTD_check_table_ check_id end 
+                      do Hashtbl.remove _ASTD_check_table_ check_id  
+                      done
+                    end;
+                    true
+                   end
+    |_-> failwith "clear bad arity"
+
+
+
 let isGreaterThanOne = function
     | n::[] -> begin 
                (n > (ASTD_constant.of_int 1))
@@ -27,7 +41,8 @@ let isGreaterThanOne = function
 
 let rEgistre = function
     |(check_id)::(value)::[] -> begin 
-                              begin print_endline "REGISTER VALUE FOR CHECK";Hashtbl.add _ASTD_check_table_ check_id value;print_endline "registered"  end; 
+                            begin print_endline "REGISTER VALUE FOR CHECK";Hashtbl.add _ASTD_check_table_ check_id value 
+                            end; 
                               true 
                                 end
     |_ -> failwith "register, bad arity"
@@ -35,19 +50,15 @@ let rEgistre = function
 
 let isSmall = function
     | check_id::[] -> begin
-                       let a = Hashtbl.find _ASTD_check_table_ check_id in (a<(ASTD_constant.of_int 10000))
+                       let a = Hashtbl.find _ASTD_check_table_ check_id in (a<=(ASTD_constant.of_int 10000))
                       end
     | _ -> failwith "isSmall : bad arity"
 
-let isClerk = function
-    | funct::[] -> begin print_endline((ASTD_constant.string_of funct));
-                  ((ASTD_constant.string_of funct)="clerK")
-                   end
-    |_ -> failwith "isClerk : bad arity"
+
 
 
 let isCheck = function
-    | check_id::[] -> Hashtbl.mem _ASTD_check_table_ check_id
+    | check_id::[] -> let a=Hashtbl.mem _ASTD_check_table_ check_id in a
     |_ ->failwith "isCheck : bad arity"
 
 let none = function
@@ -67,7 +78,7 @@ ASTD_predicate.register "isGreaterThanZero" isGreaterThanZero ;;
 ASTD_predicate.register "isGreaterThanOne" isGreaterThanOne ;;
 ASTD_predicate.register "isSmall" isSmall;;
 ASTD_predicate.register "isCheck" isCheck;;
-ASTD_predicate.register "isClerk" isClerk;;
+ASTD_predicate.register "clearAll" clearAll;;
 ASTD_predicate.register "rEgistre" rEgistre;;
 ASTD_predicate.register "none" none;;
 

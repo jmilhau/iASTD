@@ -36,6 +36,7 @@
 %token COLON SCOLON COMMA 
 %token IS EQUALS LINK
 %token REMOVE LOCAL FROM_SUB TO_SUB
+%token UNDERSCORE
 %token EOF
 
 %nonassoc QINTERLEAVE QSYNCHRO QCHOICE
@@ -126,12 +127,46 @@ list_of_transitions_content:
 
 
 transition :
-    | TRANSITION_NAME list_of_params
+    | TRANSITION_NAME list_of_params_scheme
       { astd_parser_msg ("Transition construction " ^ $1); 
-        ASTD_transition.transition (ASTD_label.of_string $1) (ASTD_term.parameters_of_variables $2) }
+        ASTD_transition.transition (ASTD_label.of_string $1) $2 }
     | TRANSITION_NAME 
       { astd_parser_msg ("Transition without params construction " ^ $1); 
-        ASTD_transition.transition (ASTD_label.of_string $1) (ASTD_term.parameters_of_variables []) }
+        ASTD_transition.transition (ASTD_label.of_string $1) [] }
+    ;
+
+
+
+list_of_params_scheme :
+  |LPAR list_of_params_scheme_content RPAR
+  {$2}
+;
+
+list_of_params_scheme_content :
+    | VAR COMMA list_of_params_scheme_content
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Var(ASTD_variable.of_string $1))::$3 }
+    | VAR
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Var(ASTD_variable.of_string $1))::[]  }
+    | VAL COMMA list_of_params_scheme_content
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Const(ASTD_constant.Symbol($1)))::$3 }
+    | VAL
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Const(ASTD_constant.Symbol($1)))::[]  }
+    | C_INT COMMA list_of_params_scheme_content
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Const(ASTD_constant.of_int ($1)))::$3 }
+    | C_INT
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Const(ASTD_constant.of_int ($1)))::[]  }
+    | UNDERSCORE COMMA list_of_params_scheme_content
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Const(ASTD_constant.Symbol("ANY VALUE")))::$3 }
+    | UNDERSCORE
+      { astd_parser_msg ("List of params "); 
+        (ASTD_term.Const(ASTD_constant.Symbol("ANY VALUE")))::[]  }
     ;
 
 

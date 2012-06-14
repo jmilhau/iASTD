@@ -116,6 +116,18 @@ let compare_params_with_consts_in env t_list c_list =
 
 
 
+let compare_term_with_const_in2 env term constant = match term with
+    |ASTD_term.Var(a) -> ASTD_term.compare_term_with_const (reduce env term) constant
+    |ASTD_term.Const(a)-> if a=ASTD_constant.Symbol("ANY VALUE")
+                                   then begin true end
+                                   else ASTD_term.compare_term_with_const term constant
+    |_->failwith "addition, multiplication, .... not implemented"
+
+
+let compare_params_with_consts_in2 env t_list c_list =
+    try ASTD_term.for_all2 (compare_term_with_const_in2 env) t_list c_list
+    with Invalid_argument _ -> false
+
 
 
 
