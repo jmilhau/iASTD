@@ -1,0 +1,40 @@
+(MEM0,<*;
+        (MEM0,<|[]|:;
+               x;
+               [1,4]-{3};
+               {Reinit};
+               (AUT1 , <aut;
+                        { (A1->elem),
+                          (A2->elem),
+                          (A3->elem)
+                        };
+                        { ((local,A1,A2),Emprunter(x),{[isGreaterThanOne (x)]},False),
+                          ((local,A2,A3),Rendre(x),{[isGreaterThanOne (x)]},True),
+                          ((local,A3,A1),Reinit,{},True)
+                        };
+                        { 
+                          A3
+                        };
+                        A1
+                       >
+               )
+              >
+        )
+       >
+);
+
+(MAIN0,<|[]|;
+        {Emprunter(x)};
+        (CALL1,<call;
+                MEM0;
+                {}
+               >
+        );
+        (CALL2,<call;
+                MEM0;
+                {}
+               >
+        )
+       >
+)
+ 

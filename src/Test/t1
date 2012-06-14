@@ -1,0 +1,5 @@
+(AUT0,<|;elem;elem>)
+;
+(AUT1,<.;elem;elem>)
+;
+(AUT2,<|[]|;{};<call;AUT0;{}>;elem>)

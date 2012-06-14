@@ -1,0 +1,17 @@
+# generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+
+#oCaml
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
