@@ -1,15 +1,18 @@
 type astd_name = string;;
 
+type path=string list
 
+type dependancy_path = Dependant of (ASTD_variable.t*(ASTD_variable.t list * ASTD_variable.t * path)*(ASTD_label.t list)*(dependancy_path list))
+		| Direct of ASTD_variable.t
 
 type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * astd_name
     | Sequence of  astd_name * t * t
     | Choice of astd_name * t * t 
     | Kleene of astd_name * t
     | Synchronisation of astd_name * ASTD_transition.t list * t * t
-    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t
-    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t * 
-                                                   ASTD_transition.t list * ASTD_transition.t list * ASTD_transition.t list
+    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t * ((ASTD_label.t list)*(ASTD_variable.t list)) list
+    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
+								* ((ASTD_label.t)*(ASTD_variable.t list)*(dependancy_path list)) list
     | Guard of astd_name * ASTD_predicate.t list * t
     | Call of astd_name * astd_name * (ASTD_variable.t *ASTD_term.t) list 
     | Elem of astd_name
@@ -37,10 +40,10 @@ let kleene_of name a = Kleene (name,a);;
 
 let synchronisation_of name transition_list a1 a2 = Synchronisation (name,transition_list,a1,a2);;
 
-let qchoice_of name var val_list a  = QChoice (name,var,val_list,a);;
+let qchoice_of name var val_list sub_astd prod_list  = QChoice (name,var,val_list,sub_astd,prod_list);;
 
-let qsynchronisation_of name var val_list transition_list a prod users consumers  = 
-                                          QSynchronisation (name,var,val_list,transition_list,a,prod,users,consumers);;
+let qsynchronisation_of name var val_list transition_list sub_astd users= 
+                                          QSynchronisation (name,var,val_list,transition_list,sub_astd,users);;
 
 let guard_of name predicate_list a = Guard(name,predicate_list,a);;
 
@@ -58,8 +61,8 @@ let get_name a = match a with
   | Choice (name,_,_) -> name
   | Kleene (name,_) -> name
   | Synchronisation (name,_,_,_) -> name
-  | QChoice (name,_,_,_) -> name
-  | QSynchronisation (name,_,_,_,_,_,_,_) -> name  
+  | QChoice (name,_,_,_,_) -> name
+  | QSynchronisation (name,_,_,_,_,_) -> name  
   | Guard (name,_,_) -> name
   | Call  (name,_,_) -> name
   | Elem (name) -> name
@@ -118,7 +121,7 @@ let get_astd_kleene a = match a with
 
 let get_trans_synchronised a = match a with
   |Synchronisation (_,trans_list,_,_) -> trans_list
-  |QSynchronisation (_,_,_,trans_list,_,_,_,_) -> trans_list
+  |QSynchronisation (_,_,_,trans_list,_,_) -> trans_list
   | _ -> failwith "unappropriate request trans_synchronised"
 ;;
 
@@ -136,26 +139,26 @@ let get_synchro_astd2 a = match a with
 
 
 let get_qvar a = match a with
-  |QChoice (_,v,_,_) -> v
-  |QSynchronisation (_,v,_,_,_,_,_,_) -> v
+  |QChoice (_,v,_,_,_) -> v
+  |QSynchronisation (_,v,_,_,_,_) -> v
   | _ -> failwith "unappropriate request get_qvar"
 ;;
 
 let get_qvalues_c a = match a with
-  |QChoice (_,_,val_list,_) -> val_list
+  |QChoice (_,_,val_list,_,_) -> val_list
   | _ -> failwith "unappropriate request get_qvalues_c"
 ;;
 
 let get_qvalues_s a = match a with
-  |QSynchronisation (_,_,val_list,_,_,_,_,_) -> val_list
+  |QSynchronisation (_,_,val_list,_,_,_) -> val_list
   | _ -> failwith "unappropriate request get_qvalues_s"
 ;;
 
 
 
 let get_qastd a = match a with
-  |QChoice (_,_,_,astd) -> astd
-  |QSynchronisation (_,_,_,_,astd,_,_,_) -> astd
+  |QChoice (_,_,_,astd,_) -> astd
+  |QSynchronisation (_,_,_,_,astd,_) -> astd
   | _ -> failwith "unappropriate request get_qastd"
 
 ;;
@@ -189,8 +192,8 @@ let rename_astd astd_to_rename namebis = match astd_to_rename with
    |Choice (a,b,c) -> Choice (namebis,b,c)
    |Kleene (a,b) -> Kleene (namebis,b)
    |Synchronisation (a,b,c,d) -> Synchronisation (namebis,b,c,d)
-   |QChoice (a,b,c,d) -> QChoice (namebis,b,c,d)
-   |QSynchronisation (a,b,c,d,e,f,g,h) -> QSynchronisation (namebis,b,c,d,e,f,g,h)
+   |QChoice (a,b,c,d,e) -> QChoice (namebis,b,c,d,e)
+   |QSynchronisation (a,b,c,d,e,f) -> QSynchronisation (namebis,b,c,d,e,f)
    |Guard (a,b,c) -> Guard (namebis,b,c)
    |Call (a,b,c) -> Call (namebis,b,c)
    |Elem(_) -> Elem(namebis)
@@ -264,9 +267,9 @@ let rec find_transitions astd = match astd with
 
    |Guard (a,b,c) -> find_transitions c
 
-   |QChoice (a,b,c,d) -> find_transitions d
+   |QChoice (a,b,c,d,e) -> find_transitions d
 
-   |QSynchronisation (a,b,c,d,e,f,g,h)-> find_transitions e
+   |QSynchronisation (a,b,c,d,e,f)-> find_transitions e
 
    |Call (a,b,c) -> (find_transitions (get_astd b)) 
 
@@ -290,13 +293,13 @@ let rec remember_transitions astd = match astd with
 
    |Guard (a,b,c) -> remember_transitions c
 
-   |QChoice (a,b,c,d) -> begin
+   |QChoice (a,b,c,d,e) -> begin
                          let l= find_transitions d in 
                          ASTD_arrow.register_transitions_from_list a l;
                          remember_transitions d 
                          end
 
-   |QSynchronisation (a,b,c,d,e,f,g,h)-> begin
+   |QSynchronisation (a,b,c,d,e,f)-> begin
                                    let l= find_transitions e in 
                                    ASTD_arrow.register_transitions_from_list a l;
                                    remember_transitions e 
@@ -342,11 +345,11 @@ let get_data_guard astd = match astd with
   |_-> failwith "not appropriate"
 
 let get_data_qchoice astd = match astd with
-  |QChoice(a,b,c,d) -> (a,b,c,d)
+  |QChoice(a,b,c,d,e) -> (a,b,c,d,e)
   |_-> failwith "not appropriate"
 
 let get_data_qsynchronisation astd = match astd with
-  |QSynchronisation(a,b,c,d,e,f,g,h) -> (a,b,c,d,e,f,g,h)
+  |QSynchronisation(a,b,c,d,e,f) -> (a,b,c,d,e,f)
   |_-> failwith "not appropriate"
 
 let get_data_call astd = match astd with
@@ -384,9 +387,9 @@ let rec print astd st = match astd with
 
    |Guard (a,b,c) -> print_endline (st^"Guard ; Name : "^a^"; Son : "^(string_of(get_name c)));print_newline();print c (st^"   ")
 
-   |QChoice (a,b,c,d) -> print_endline (st^"QChoice ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name d)));print_newline(); print d (st^"   ") 
+   |QChoice (a,b,c,d,e) -> print_endline (st^"QChoice ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name d)));print_newline(); print d (st^"   ") 
 
-   |QSynchronisation (a,b,c,d,e,f,g,h)-> print_endline (st^"QSynchronisation ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name e)));print_newline(); print e (st^"   ") 
+   |QSynchronisation (a,b,c,d,e,f)-> print_endline (st^"QSynchronisation ; Name : "^a^"; Var : "^ASTD_variable.string_of(b)^"; Son : "^(string_of(get_name e)));print_newline(); print e (st^"   ") 
 
    |Call (a,b,c) -> print_endline (st^"Call ; Name : "^(string_of a)^"; Called : "^(string_of b));print_newline()
 

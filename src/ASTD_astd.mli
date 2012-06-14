@@ -3,6 +3,11 @@
      
 type astd_name = string;;
 
+type path=string list
+
+type dependancy_path = Dependant of (ASTD_variable.t*(ASTD_variable.t list * ASTD_variable.t * path)*(ASTD_label.t list)*(dependancy_path list))
+		| Direct of ASTD_variable.t
+
 
 
 (** The type {!ASTD_astd.t} represents the structure of an ASTD. *)
@@ -21,12 +26,12 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
     | Synchronisation of astd_name * ASTD_transition.t list * t * t
 (**The synchronisation structure, represented by the name of the astd, the list of synchronized transitions and the two sub astd of the structure*)
 
-    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t 
-(**The quantified choice structure, represented by the name of the astd, the quantified variable, her domain of value and the sub astd*)
+    | QChoice of astd_name * ASTD_variable.t * ASTD_constant.domain * t * ((ASTD_label.t list)*(ASTD_variable.t list)) list
+(**The quantified choice structure, represented by the name of the astd, the quantified variable, her domain of value, the sub astd and a list obtained by static analysis containing producers for the indirect kappa optimisation*)
 
-    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t * 
-                                                   ASTD_transition.t list * ASTD_transition.t list * ASTD_transition.t list     
-(**The quantified synchronisation structure, represented by the name of the astd, the quantified variable, her domain of value, the list of synchronized transitions, the sub astd, and three lists of transitions, obtained by static analysis for the indirect kappa optimisation. The first list contains the producers, the second list contains the users and the third list contains the consumers*)
+    | QSynchronisation of astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
+									* ((ASTD_label.t)*(ASTD_variable.t list)*(dependancy_path list)) list
+(**The quantified synchronisation structure, represented by the name of the astd, the quantified variable, her domain of value, the list of synchronized transitions, the sub astd, and a list of users obtained by static analysis for the indirect kappa optimisation.*)
 
     | Guard of astd_name * ASTD_predicate.t list * t
 (**The guard structure, represented by the name of the astd, a list of predicates and the sub astd *)
@@ -49,9 +54,9 @@ val sequence_of : astd_name -> t -> t -> t
 val choice_of : astd_name -> t -> t -> t
 val kleene_of : astd_name -> t -> t
 val synchronisation_of : astd_name -> ASTD_transition.t list -> t -> t -> t
-val qchoice_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> t -> t
+val qchoice_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> t -> ((ASTD_label.t list)*(ASTD_variable.t list)) list  ->t
 val qsynchronisation_of : astd_name -> ASTD_variable.t -> ASTD_constant.domain -> ASTD_transition.t list -> t  ->
-                                            ASTD_transition.t list -> ASTD_transition.t list -> ASTD_transition.t list -> t
+                                            				((ASTD_label.t)*(ASTD_variable.t list)*(dependancy_path list)) list -> t
 val guard_of : astd_name -> ASTD_predicate.t list -> t -> t
 val call_of : astd_name -> astd_name -> (ASTD_variable.t *ASTD_term.t) list -> t
 val elem_of : astd_name -> t
@@ -93,10 +98,10 @@ val get_data_choice :t -> (astd_name * t * t )
 val get_data_kleene :t -> (astd_name * t )
 val get_data_synchronisation :t -> (astd_name * ASTD_transition.t list * t *t)
 val get_data_guard :t -> (astd_name * ASTD_predicate.t list * t)
-val get_data_qchoice :t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * t)
+val get_data_qchoice :t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * t * ((ASTD_label.t list)*(ASTD_variable.t list)) list )
 val get_data_qsynchronisation :
-               t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t * 
-                                                   ASTD_transition.t list * ASTD_transition.t list * ASTD_transition.t list)
+               t -> (astd_name * ASTD_variable.t * ASTD_constant.domain * ASTD_transition.t list * t 
+							* ((ASTD_label.t)*(ASTD_variable.t list)*(dependancy_path list)) list)
 val get_data_call : t -> (astd_name * astd_name * ((ASTD_variable.t *ASTD_term.t) list))
 
 

@@ -55,16 +55,20 @@ structure:
      |structure SCOLON astd
       { astd_parser_msg ("structure 1st choice");
         print_endline "========================================" ;
-        ASTD_astd.global_save_astd $3 ;
-        print_endline ("Registered: "^(ASTD_astd.get_name $3)) ;
-        $3 
+	let new_astd=(ASTD_kappa_indirect.static_analysis $3)
+	in begin ASTD_astd.global_save_astd new_astd ;
+        print_endline ("Registered: "^(ASTD_astd.get_name new_astd)) ;
+	new_astd
+	end
       }
      |astd
       { astd_parser_msg ("structure 2nd choice");
         print_endline "========================================" ;
-        ASTD_astd.global_save_astd $1 ;
-        print_endline ("Registered: "^(ASTD_astd.get_name $1)) ;
-        $1
+	let new_astd=(ASTD_kappa_indirect.static_analysis $1)
+        in begin ASTD_astd.global_save_astd new_astd ;
+        print_endline ("Registered: "^(ASTD_astd.get_name new_astd)) ;
+        new_astd
+	end
       }
   ;
 
@@ -313,7 +317,7 @@ astd_synchronisation :
 
 astd_qchoice :
     | BEGIN_ASTD CHOICE COLON SCOLON IDENTITY_NAME SCOLON complex_val_construction SCOLON astd END_ASTD
-      { ASTD_astd.qchoice_of (ASTD_astd.give_name ()) (ASTD_variable.of_string $5) ($7) $9  }
+      { ASTD_astd.qchoice_of (ASTD_astd.give_name ()) (ASTD_variable.of_string $5) ($7) $9 [] }
     ;
 
 
@@ -378,7 +382,7 @@ string_list_content :
 
 astd_qsynchro :
     | BEGIN_ASTD LSYNCHRO RSYNCHRO COLON SCOLON IDENTITY_NAME SCOLON complex_val_construction SCOLON list_of_transitions SCOLON astd END_ASTD
-      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 $12 [] [] []  }
+      {ASTD_astd.qsynchronisation_of (ASTD_astd.give_name ()) $6 ($8) $10 $12 []  }
     ;
 
 

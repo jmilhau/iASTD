@@ -106,6 +106,10 @@ val val_of : ASTD_term.t -> qchoice
 
 (** {3 Main Functions} *)
 
+
+(**Returns the initial state of an ASTD from a non-empty environment*)
+val init_env : ASTD_astd.t ->ASTD_environment.t-> t
+
 (**Returns the initial state of an ASTD*)
 val init : ASTD_astd.t -> t
 
@@ -125,8 +129,8 @@ val maj_arrows : ASTD_constant.domain -> ASTD_transition.t list ->
 (**Returns the list of possible transitions in an astd using the environnement*)
 val evaluate_arrows : ASTD_astd.t -> t -> ASTD_environment.t ->  called_path-> ((ASTD_transition.t list)*(bool))
 
-
-
+(**Study if a state is final*)
+val is_final: ASTD_astd.t -> t -> ASTD_environment.t -> bool
 
 
 

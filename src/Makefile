@@ -24,6 +24,7 @@ BASE = functions \
 	ASTD_arrow \
 	ASTD_astd \
 	ASTD_state \
+	ASTD_kappa_indirect \
 	ASTD_possibilities \
 	ASTD_execute
 	

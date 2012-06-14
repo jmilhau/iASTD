@@ -11,8 +11,7 @@ type t = Automata_s of position * ((astd_name * t) list) * t
         |Kleene_s of bool * t
         |Synchronisation_s of t * t
         |QChoice_s of qchoice * t
-        |QSynchronisation_s  of ((ASTD_transition.t * ASTD_constant.domain) list)* (ASTD_constant.domain)
-                                                                              *ASTD_constant.domain * t
+        |QSynchronisation_s  of ((ASTD_transition.t * ASTD_constant.domain) list)* (ASTD_constant.domain)*ASTD_constant.domain * t
         |Guard_s of bool * t
         |Call_s of bool * t
         |NotDefined
@@ -155,11 +154,20 @@ let rec get_labels arrows = match arrows with
 
 let _ASTD_synch_table_ = Hashtbl.create 5 
 
-let register_synch name value env call_path state = Hashtbl.add _ASTD_synch_table_ (name,value,env,call_path) state
+let register_synch name value env call_path state = begin (*ASTD_environment.print env;
+							print_endline ("save "^name);
+							List.iter print_endline call_path;*)
+							Hashtbl.add _ASTD_synch_table_ (name,value,env,call_path) state
+							end
 let get_synch name value env call_path = Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
 let get_synch_state not_init_dom init name value env call_path = if (ASTD_constant.is_included value not_init_dom)
-                                                         then Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
-                                                         else init
+                                                         then begin (*ASTD_environment.print env;
+									print_endline ("save "^name);
+									List.iter print_endline call_path;*)
+									Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
+								end
+                                                         else begin init
+								end
 
 
 let rec init_env astd env = match astd with
@@ -175,10 +183,10 @@ let rec init_env astd env = match astd with
 
    |ASTD_astd.Guard (a,b,c) -> guard_s_of false (init_env c env)
 
-   |ASTD_astd.QChoice (a,b,c,d) ->let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
+   |ASTD_astd.QChoice (a,b,c,d,e) ->let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                                   in qchoice_s_of ChoiceNotMade (init_env d (ASTD_environment.add_binding bind_env env)) 
 
-   |ASTD_astd.QSynchronisation (a,b,val_list,d,e,f,g,h)-> 
+   |ASTD_astd.QSynchronisation (a,b,val_list,d,e,f)-> 
                let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                in let env2=(ASTD_environment.add_binding bind_env env)
                in let next= (init_env e env2) 
@@ -247,7 +255,7 @@ and evaluate_arrows astd state env called_path = match (astd,state) with
                                                         else begin ([],false) end
                                                end
 
-   |(ASTD_astd.QChoice (a,b,c,d),QChoice_s(e,f)) -> 
+   |(ASTD_astd.QChoice (a,b,c,d,prods),QChoice_s(e,f)) -> 
                          if e=ChoiceNotMade
                             then let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                                  in evaluate_arrows d (init_env d env) (ASTD_environment.add_binding bind_env env) called_path
@@ -255,9 +263,9 @@ and evaluate_arrows astd state env called_path = match (astd,state) with
                                  in evaluate_arrows d f (ASTD_environment.add_binding bind_env env) called_path
 
 
-   |(ASTD_astd.QSynchronisation (a,b,val_list,d,e,f,g,h),QSynchronisation_s (i,j,k,l))-> 
+   |(ASTD_astd.QSynchronisation (a,b,val_list,d,e,f),QSynchronisation_s (i,j,k,l))-> 
                              begin 
-                               (get_labels i,val_list=j)
+                               (get_labels i,(ASTD_constant.empty_dom)=j)
                              end
    |(ASTD_astd.Call (a,b,c), Call_s (d,e))-> if d 
                                           then 
@@ -338,7 +346,71 @@ let string_of_qchoice a=match a with
 
 
 
+let rec is_final astd state env = match (astd,state) with
+   |(ASTD_astd.Automata (a,b,c,d,e),Automata_s(f,g,h)) -> begin 
+                                                          let next_astd=(ASTD_astd.find_subastd f b)
+                                                          in if (ASTD_astd.is_elem next_astd)
+								then ASTD_astd.is_astd_final_in_automata astd f
+								else let final_next=is_final next_astd h env
+									in final_next
+                                                          end
+      
+   |(ASTD_astd.Sequence (a,b,c),Sequence_s (d,e)) -> if d=Left 
+                                                        then let final_left= is_final b e env
+                                                             in if final_left
+                                                                   then let final_right=(is_final c (init_env c env) env )
+                                                                        in final_right
+                                                                   else false
+                                                        else (is_final c e env )
+                                                     
+   |(ASTD_astd.Choice (a,b,c),Choice_s (d,e)) -> if d= Fst
+                                                    then (is_final b e env)
+                                                    else if d= Snd 
+                                                            then (is_final c e env)
+                                                            else let final_left= (is_final b (init_env b env) env )
+                                                                 and final_right= (is_final c (init_env c env) env )
+                                                                 in (final_left||final_right)
 
+   |(ASTD_astd.Kleene (a,b),Kleene_s (c,d)) -> begin 
+                                               if c 
+						then true
+						else is_final b d env 
+                                               end
+
+   |(ASTD_astd.Synchronisation (a,b,c,d),Synchronisation_s (e,f)) -> 
+                          let final_fst = is_final c e env
+                          and final_snd = is_final d f env
+                          in final_fst && final_snd
+
+   |(ASTD_astd.Guard (a,b,c),Guard_s (d,e) ) ->begin 
+                                                   if d 
+                                                   then is_final c e env 
+                                                   else if (ASTD_arrow.estimate_guard env b) 
+                                                        then begin is_final c (init_env c env) env end
+                                                        else begin false end
+                                               end
+
+   |(ASTD_astd.QChoice (a,b,c,d,prods),QChoice_s(e,f)) -> 
+                         if e=ChoiceNotMade
+                            then let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
+                                 in is_final d (init_env d env) (ASTD_environment.add_binding bind_env env) 
+                            else let bind_env = ASTD_environment.bind b (get_val e)
+                                 in is_final d f (ASTD_environment.add_binding bind_env env) 
+
+
+   |(ASTD_astd.QSynchronisation (a,b,val_list,d,e,f),QSynchronisation_s (i,j,k,l))-> 
+                             begin 
+                               ((ASTD_constant.empty_dom)=j)
+                             end
+   |(ASTD_astd.Call (a,b,c), Call_s (d,e))-> if d 
+                                          then 
+                                            is_final (ASTD_astd.get_astd b) e (ASTD_environment.increase_call env c)
+                                          else 
+                                            let astd2= (ASTD_astd.get_astd b)
+                                            in is_final astd2 (init_env astd2 env) (ASTD_environment.increase_call env c)
+
+
+   |_ ->(false)
 
 
 let rec print state astd s env call_path = match state with
