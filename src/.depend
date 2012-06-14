@@ -1,0 +1,104 @@
+ASTD_arrow.cmi: ASTD_transition.cmi ASTD_term.cmi ASTD_predicate.cmi \
+    ASTD_label.cmi ASTD_event.cmi ASTD_environment.cmi 
+ASTD_astd.cmi: ASTD_variable.cmi ASTD_transition.cmi ASTD_term.cmi \
+    ASTD_predicate.cmi ASTD_optimisation.cmi ASTD_label.cmi \
+    ASTD_environment.cmi ASTD_constant.cmi ASTD_arrow.cmi 
+ASTD_constant.cmi: 
+ASTD_environment.cmi: ASTD_variable.cmi ASTD_term.cmi ASTD_constant.cmi 
+ASTD_event.cmi: ASTD_transition.cmi ASTD_label.cmi ASTD_environment.cmi \
+    ASTD_constant.cmi 
+ASTD_exec_first_bd.cmi: ASTD_term.cmi ASTD_state.cmi ASTD_optimisation.cmi \
+    ASTD_event.cmi ASTD_environment.cmi ASTD_constant.cmi ASTD_astd.cmi 
+ASTD_exec_first_hash.cmi: ASTD_term.cmi ASTD_state.cmi ASTD_optimisation.cmi \
+    ASTD_event.cmi ASTD_environment.cmi ASTD_constant.cmi ASTD_astd.cmi 
+ASTD_label.cmi: 
+ASTD_optimisation.cmi: ASTD_variable.cmi ASTD_term.cmi ASTD_label.cmi \
+    ASTD_environment.cmi 
+ASTD_parser.cmi: ASTD_event.cmi 
+ASTD_predicate.cmi: ASTD_term.cmi ASTD_environment.cmi ASTD_constant.cmi 
+ASTD_predicate_definitions.cmi: ASTD_constant.cmi 
+ASTD_state.cmi: ASTD_term.cmi ASTD_constant.cmi ASTD_astd.cmi 
+ASTD_static_kappa_indirect.cmi: ASTD_optimisation.cmi ASTD_astd.cmi 
+ASTD_term.cmi: ASTD_variable.cmi ASTD_constant.cmi 
+ASTD_transition.cmi: ASTD_term.cmi ASTD_label.cmi 
+ASTD_variable.cmi: ASTD_constant.cmi 
+State2DB.cmi: ASTD_state.cmi ASTD_constant.cmi ASTD_astd.cmi 
+functions.cmi: 
+ASTD_arrow.cmo: ASTD_transition.cmi ASTD_term.cmi ASTD_predicate.cmi \
+    ASTD_event.cmi ASTD_arrow.cmi 
+ASTD_arrow.cmx: ASTD_transition.cmx ASTD_term.cmx ASTD_predicate.cmx \
+    ASTD_event.cmx ASTD_arrow.cmi 
+ASTD_astd.cmo: ASTD_variable.cmi ASTD_term.cmi ASTD_predicate.cmi \
+    ASTD_optimisation.cmi ASTD_label.cmi ASTD_environment.cmi \
+    ASTD_constant.cmi ASTD_arrow.cmi ASTD_astd.cmi 
+ASTD_astd.cmx: ASTD_variable.cmx ASTD_term.cmx ASTD_predicate.cmx \
+    ASTD_optimisation.cmx ASTD_label.cmx ASTD_environment.cmx \
+    ASTD_constant.cmx ASTD_arrow.cmx ASTD_astd.cmi 
+ASTD_constant.cmo: functions.cmi ASTD_constant.cmi 
+ASTD_constant.cmx: functions.cmx ASTD_constant.cmi 
+ASTD_environment.cmo: functions.cmi ASTD_variable.cmi ASTD_term.cmi \
+    ASTD_constant.cmi ASTD_environment.cmi 
+ASTD_environment.cmx: functions.cmx ASTD_variable.cmx ASTD_term.cmx \
+    ASTD_constant.cmx ASTD_environment.cmi 
+ASTD_event.cmo: ASTD_transition.cmi ASTD_label.cmi ASTD_environment.cmi \
+    ASTD_constant.cmi ASTD_event.cmi 
+ASTD_event.cmx: ASTD_transition.cmx ASTD_label.cmx ASTD_environment.cmx \
+    ASTD_constant.cmx ASTD_event.cmi 
+ASTD_exec_first_bd.cmo: State2DB.cmi ASTD_transition.cmi ASTD_term.cmi \
+    ASTD_state.cmi ASTD_optimisation.cmi ASTD_label.cmi ASTD_event.cmi \
+    ASTD_environment.cmi ASTD_constant.cmi ASTD_astd.cmi ASTD_arrow.cmi \
+    ASTD_exec_first_bd.cmi 
+ASTD_exec_first_bd.cmx: State2DB.cmx ASTD_transition.cmx ASTD_term.cmx \
+    ASTD_state.cmx ASTD_optimisation.cmx ASTD_label.cmx ASTD_event.cmx \
+    ASTD_environment.cmx ASTD_constant.cmx ASTD_astd.cmx ASTD_arrow.cmx \
+    ASTD_exec_first_bd.cmi 
+ASTD_exec_first_hash.cmo: ASTD_transition.cmi ASTD_term.cmi ASTD_state.cmi \
+    ASTD_optimisation.cmi ASTD_label.cmi ASTD_event.cmi ASTD_environment.cmi \
+    ASTD_constant.cmi ASTD_astd.cmi ASTD_arrow.cmi ASTD_exec_first_hash.cmi 
+ASTD_exec_first_hash.cmx: ASTD_transition.cmx ASTD_term.cmx ASTD_state.cmx \
+    ASTD_optimisation.cmx ASTD_label.cmx ASTD_event.cmx ASTD_environment.cmx \
+    ASTD_constant.cmx ASTD_astd.cmx ASTD_arrow.cmx ASTD_exec_first_hash.cmi 
+ASTD_label.cmo: functions.cmi ASTD_label.cmi 
+ASTD_label.cmx: functions.cmx ASTD_label.cmi 
+ASTD_main.cmo: State2DB.cmi ASTD_static_kappa_indirect.cmi ASTD_parser.cmi \
+    ASTD_exec_first_hash.cmi ASTD_exec_first_bd.cmi ASTD_astd.cmi 
+ASTD_main.cmx: State2DB.cmx ASTD_static_kappa_indirect.cmx ASTD_parser.cmx \
+    ASTD_exec_first_hash.cmx ASTD_exec_first_bd.cmx ASTD_astd.cmx 
+ASTD_optimisation.cmo: ASTD_variable.cmi ASTD_label.cmi ASTD_environment.cmi \
+    ASTD_optimisation.cmi 
+ASTD_optimisation.cmx: ASTD_variable.cmx ASTD_label.cmx ASTD_environment.cmx \
+    ASTD_optimisation.cmi 
+ASTD_parser.cmo: ASTD_astd.cmi ASTD_parser.cmi 
+ASTD_parser.cmx: ASTD_astd.cmx ASTD_parser.cmi 
+ASTD_predicate.cmo: ASTD_term.cmi ASTD_environment.cmi ASTD_constant.cmi \
+    ASTD_predicate.cmi 
+ASTD_predicate.cmx: ASTD_term.cmx ASTD_environment.cmx ASTD_constant.cmx \
+    ASTD_predicate.cmi 
+ASTD_predicate_definitions.cmo: ASTD_predicate.cmi ASTD_constant.cmi \
+    ASTD_predicate_definitions.cmi 
+ASTD_predicate_definitions.cmx: ASTD_predicate.cmx ASTD_constant.cmx \
+    ASTD_predicate_definitions.cmi 
+ASTD_state.cmo: ASTD_transition.cmi ASTD_term.cmi ASTD_event.cmi \
+    ASTD_constant.cmi ASTD_state.cmi 
+ASTD_state.cmx: ASTD_transition.cmx ASTD_term.cmx ASTD_event.cmx \
+    ASTD_constant.cmx ASTD_state.cmi 
+ASTD_static_kappa_indirect.cmo: ASTD_transition.cmi ASTD_term.cmi \
+    ASTD_optimisation.cmi ASTD_astd.cmi ASTD_arrow.cmi \
+    ASTD_static_kappa_indirect.cmi 
+ASTD_static_kappa_indirect.cmx: ASTD_transition.cmx ASTD_term.cmx \
+    ASTD_optimisation.cmx ASTD_astd.cmx ASTD_arrow.cmx \
+    ASTD_static_kappa_indirect.cmi 
+ASTD_term.cmo: functions.cmi ASTD_variable.cmi ASTD_constant.cmi \
+    ASTD_term.cmi 
+ASTD_term.cmx: functions.cmx ASTD_variable.cmx ASTD_constant.cmx \
+    ASTD_term.cmi 
+ASTD_transition.cmo: ASTD_term.cmi ASTD_label.cmi ASTD_transition.cmi 
+ASTD_transition.cmx: ASTD_term.cmx ASTD_label.cmx ASTD_transition.cmi 
+ASTD_variable.cmo: functions.cmi ASTD_constant.cmi ASTD_variable.cmi 
+ASTD_variable.cmx: functions.cmx ASTD_constant.cmx ASTD_variable.cmi 
+State2DB.cmo: ASTD_term.cmi ASTD_state.cmi ASTD_constant.cmi ASTD_astd.cmi \
+    State2DB.cmi 
+State2DB.cmx: ASTD_term.cmx ASTD_state.cmx ASTD_constant.cmx ASTD_astd.cmx \
+    State2DB.cmi 
+functions.cmo: functions.cmi 
+functions.cmx: functions.cmi 
