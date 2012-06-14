@@ -252,7 +252,7 @@ let rec remember_transitions astd = match astd with
 
    |QSynchronisation (a,b,c,d,e)-> remember_transitions e
 
-   |Call (a,b,c) -> let astd2=(get_astd b) in (remember_transitions astd2) 
+   |Call (a,b,c) -> () 
 
    |Elem (a) -> ()
 ;;

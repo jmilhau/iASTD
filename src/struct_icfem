@@ -1,0 +1,122 @@
+(RULE1,<|:;
+        checkId;
+        [1,100];
+	(RULE11,<|;
+                 (RULE12,<|:;
+                          value;
+                          [0,10000]; 
+                          (RULE121,<aut;
+                                    { (RULE122->elem),
+                                      (RULE123->elem)
+                                    };
+                                    { 
+                                      (
+                                       (local,RULE122,RULE123),
+                                       Createcheck(personId,function,organisation,checkId,value),
+                                       {[isClerk (function)],[rEgistre(checkId,value)]},
+                                       False
+                                      )
+                                    };
+                                    { 
+                                     RULE123
+                                    };
+                                    RULE122
+                                   >
+                          )
+                         >
+                 );
+                 (RULE13,< =>;
+                           {[isSmall(checkId)],
+                            [isCheck(checkId)]
+                           };
+                           (RULE131, <|;
+                                      (RULE14,<|:;
+                                               newvalue;
+                                               [0,100];
+                                               (RULE141,<aut;
+                                                         { (RULE142->elem),
+                                                           (RULE143->elem)
+                                                         };
+                                                         { 
+                                                          (
+                                                           (local,RULE142,RULE143),
+                                                           Modifycheck(personId,function,organisation,checkId,newvalue),
+                                                           {[isClerk (function)],[rEgistre(checkId,newvalue)]},
+                                                           False
+                                                          )
+                                                         };
+                                                         { 
+                                                          RULE143
+                                                         };
+                                                         RULE142
+                                                        >
+                                               )
+                                              >
+                                      );
+                                      (RULE15,<aut;
+                                               { (RULE152->elem),
+                                                 (RULE153->elem)
+                                               };
+                                               { 
+                                                (
+                                                 (local,RULE152,RULE153),
+                                                 Deletecheck(personId,function,organisation,checkId,value),
+                                                 {[isClerk (function)]},
+                                                 False
+                                                ),
+                                                (
+                                                 (local,RULE152,RULE153),
+                                                 Register(personId,function,organisation,checkId,value),
+                                                 {[isClerk (function)]},
+                                                 False
+                                                )
+                                               };
+                                               { 
+                                                RULE153
+                                               };
+                                               RULE152
+                                              >
+                                      ) 
+                                     >
+                           )
+                          >
+	         )
+                >
+        )
+       >
+);
+
+
+
+(MAIN1,<*;
+        (MAIN2,<call;
+                RULE1; 
+                {}
+               >
+        )
+       >
+);
+
+
+
+(INTRO1,<|:;
+         personId;
+         [1,10];
+         (INTRO2,<|:;
+                  function;
+                  {clerK,directoR,headofficE};
+                  (INTRO3,<|:;
+                           organisation;
+                           {aA,bB};
+                           (CALL0,<call;
+                                   MAIN1;
+                                   {}
+                                  >
+                           )
+                          >
+                  )
+                  
+                 >
+         )
+        >
+)

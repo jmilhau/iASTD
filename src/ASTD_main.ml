@@ -39,7 +39,8 @@ let _ = print_endline "========================================" ;
                let state= (ASTD_state.init structure)
                in ASTD_state.print state "";
                   print_endline "========================================" ;
-                  ASTD_execute.exec_list structure state event_list
+                  ASTD_execute.exec_list structure state event_list;
+                  print_endline("")
                         
 
     ;; 

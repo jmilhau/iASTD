@@ -84,7 +84,9 @@ let get from event from_final= Hashtbl.find_all _ASTD_arrow_table_ (from,(ASTD_e
 let rec evaluate_guard env pred_list = 
 begin 
     match pred_list with
-    |pred::q -> ((ASTD_predicate.evaluate pred env) && (evaluate_guard env q)) 
+    |pred::q -> begin 
+                 ((evaluate_guard env q) && (ASTD_predicate.evaluate pred env)) 
+                end
     |[] -> true
 end
 
@@ -94,12 +96,14 @@ end
 let string_of_bool a = if a then "true" else "false"
 
 let valid_arrow event env arrow = let a =(
-                                      (ASTD_event.compare_action_with_event env (get_transition arrow) event)
+                                      (begin ASTD_event.compare_action_with_event env (get_transition arrow) event end)
                                       && 
-                                      (evaluate_guard env (get_predicates arrow))
+                                      (begin evaluate_guard env (get_predicates arrow) end)
                                          )
                                   in begin 
-                                          a
+                                         (*ASTD_environment.print env;
+                                         print_newline ();*)
+                                         a
                                      end
 
 ;;

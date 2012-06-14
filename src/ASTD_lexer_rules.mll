@@ -1,7 +1,7 @@
 {
     open ASTD_parser_rules ;;
  
-    let ebs_lexer_debug = false ;;
+    let ebs_lexer_debug = true ;;
     let ebs_lexer_msg m = if (ebs_lexer_debug) 
                            then print_endline m 
                            else ignore m;;
@@ -41,6 +41,7 @@ rule token = parse
  | "to_sub" {TO_SUB}
  | "from_sub" {FROM_SUB}
  | lowerletters+ id?          { ebs_lexer_msg "new VAR" ; VAR     (Lexing.lexeme lexbuf) }
+ | lowerletters* upperletters { ebs_lexer_msg "new VAL" ; VAL     (Lexing.lexeme lexbuf) }
  | digits+ as number          { ebs_lexer_msg "new C_INT" ; C_INT   (int_of_string number) } 
  | upperletters+ digits+      { ebs_lexer_msg "new ASTD_NAME" ; ASTD_NAME (Lexing.lexeme lexbuf) } 
  | upperletters lowerletters*	{ ebs_lexer_msg "new TRANSITION_NAME" ; TRANSITION_NAME (Lexing.lexeme lexbuf) }

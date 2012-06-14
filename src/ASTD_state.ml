@@ -183,7 +183,7 @@ let rec print state s = match state with
         |Automata_s (a,b,c) ->print_newline();
                               print_endline(s^"Automata_s ,");
                               print_endline(s^"//StartHistory");
-                              (print_h b ("//"^s));
+                              (print_h b (s^"//"));
                               print_endline(s^"sub_state : "^a);
                               print c (s^"   ")
         |Sequence_s (a,b) ->print_newline();print_endline(s^"Sequence_s ,");print_endline(s^"step : "^(string_of_seq a));print b (s^"   ")

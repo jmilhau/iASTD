@@ -72,7 +72,7 @@ let associate_vars_with_params =
 
 let rec increase_call env fct_list = match fct_list with
    |(a,b)::q -> let binding=bind a b in increase_call (add_binding binding env) q
-   |[] -> empty
+   |[] -> env
 
 
 
@@ -106,15 +106,15 @@ let string_of =
     create_string_of_container fold string_of_binding "([" "])" ";"
 
 let compare_term_with_const_in env term constant = 
-    ASTD_term.compare_term_with_const (reduce env term) constant
+    begin 
+       ASTD_term.compare_term_with_const (reduce env term) constant
+    end
 
 let compare_params_with_consts_in env t_list c_list =
     try ASTD_term.for_all2 (compare_term_with_const_in env) t_list c_list
     with Invalid_argument _ -> false
 
-let rec increase_call env fct_list = match fct_list with
-   |(a,b)::q -> let binding=bind a b in increase_call (add_binding binding env) q
-   |[] -> empty
+
 
 
 

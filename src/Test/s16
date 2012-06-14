@@ -44,7 +44,8 @@
                      ((local,NIV2,A9),Fromsubgenbis,{},False),
                      ((local,A9,A8),Restartbis,{},True),
                      ((from_sub,NIV1,A9,NIV2),Fromsubbis,{},True),
-                     ((to_sub,A9,H2,NIV2),Todeephist,{},True)
+                     ((to_sub,A9,H2,NIV2),Todeephist,{},True),
+                     ((to_sub,A9,H1,NIV2),Toshallowhistbis,{},True)
          };
          {
            A9

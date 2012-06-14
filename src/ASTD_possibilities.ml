@@ -205,7 +205,7 @@ let rec never_empty l = match l with
 let rec possible_evolutions astd state event environment = match state with
   |ASTD_state.Automata_s (a,b,c) -> 
 
-                         begin print_endline("Aut : Poss from "^a^" in astd "^(ASTD_astd.get_name astd)^" ?");
+                         begin 
                          let (a2,b2,c2,d2,e2)=ASTD_astd.get_data_automata astd
                          in let l1=(ASTD_arrow.get a event false)
                          in begin 
@@ -286,11 +286,13 @@ let rec possible_evolutions astd state event environment = match state with
                                     let list_poss1=complete_possibilities state l1
                                     in (list_poss1,final_snd)
                                     end
-                           else let (l1,final_fst)=possible_evolutions first (ASTD_state.init first) event environment
-                                and (l2,final_snd)=possible_evolutions second (ASTD_state.init second) event environment
+                           else 
+                                let (l1,final_fst)=possible_evolutions first (ASTD_state.init first) event environment
+                                in let (l2,final_snd)=possible_evolutions second (ASTD_state.init second) event environment
                                 in let list_poss1=complete_possibilities (ASTD_state.choice_s_of ASTD_state.Fst (ASTD_state.NotDefined)) l1
                                 and list_poss2=complete_possibilities (ASTD_state.choice_s_of ASTD_state.Snd (ASTD_state.NotDefined)) l2
-                                in (clear_cons list_poss1 list_poss2,(final_fst || final_snd))
+                                in begin (clear_cons list_poss1 list_poss2,(final_fst || final_snd)) end
+                                
                          end
              end
 
@@ -324,26 +326,17 @@ let rec possible_evolutions astd state event environment = match state with
 
   |ASTD_state.Guard_s (started,state2) -> 
                 let (name,pred_list,astd2)=ASTD_astd.get_data_guard astd
-                in let l=(ASTD_arrow.get name event false)
-                in let list_poss1=create_possibilities environment event l
-                in if started 
-                      then let (l2,f2)=possible_evolutions astd2 state2 event environment 
-                           in let list_poss2=complete_possibilities state l2
-                           in if f2 
-                                 then let l3=(ASTD_arrow.get name event true)
-                                      in let list_poss3=create_possibilities environment event l3
-                                      in (clear_cons (clear_cons list_poss1 list_poss2) list_poss3,true)
-                                 else (clear_cons list_poss1 list_poss2,false)
+                in begin  
+                if started 
+                      then let (l,f)=possible_evolutions astd2 state2 event environment 
+                           in let list_poss=complete_possibilities state l
+                           in (list_poss,f)
                       else if (ASTD_arrow.evaluate_guard environment pred_list) 
-                              then let (l2,f2)=possible_evolutions astd2 state2 event environment 
-                                   in let list_poss2=complete_possibilities (ASTD_state.guard_s_of true state2) l2
-                                   in if f2 
-                                         then let l3=(ASTD_arrow.get name event true)
-                                              in let list_poss3=create_possibilities environment event l3
-                                                 in (clear_cons (clear_cons list_poss1 list_poss2) list_poss3,true)
-                                         else (clear_cons list_poss1 list_poss2,false)
-                              else (list_poss1,false)
-
+                              then let (l,f)=possible_evolutions astd2 state2 event environment 
+                                   in let list_poss=complete_possibilities (ASTD_state.guard_s_of true state2) l
+                                   in (list_poss,f)
+                              else (Mult[],false)
+                    end
 
 
 
@@ -351,7 +344,8 @@ let rec possible_evolutions astd state event environment = match state with
 
   |ASTD_state.QChoice_s (val_used,state2) ->
                 let (name,var,list_val,astd2)=ASTD_astd.get_data_qchoice astd
-                in if val_used=ASTD_state.ChoiceNotMade
+                in begin  
+                      if val_used=ASTD_state.ChoiceNotMade
                       then let (list_poss,f)= q_poss astd2 event var [] list_val environment true
                            in (list_poss,f)
                        else let bind_env = ASTD_environment.bind var (ASTD_state.get_val val_used)
@@ -359,7 +353,7 @@ let rec possible_evolutions astd state event environment = match state with
                                      possible_evolutions astd2 state2 event (ASTD_environment.add_binding bind_env environment)
                             in let list_poss = complete_possibilities state l
                                    in (list_poss,f)
-
+                    end
 
 
   |ASTD_state.QSynchronisation_s (state_list) -> 
@@ -378,29 +372,23 @@ let rec possible_evolutions astd state event environment = match state with
   |ASTD_state.Call_s (called,state2) -> 
                let (name,called_name,fct_vec)=ASTD_astd.get_data_call astd
                in let astd2=(ASTD_astd.get_astd called_name)
-               in let l=(ASTD_arrow.get name event false)
-               in let list_poss1=create_possibilities environment event l
                in if called 
-                     then let (l2,final)=possible_evolutions astd2
+                     then begin 
+                          let (l,final)=possible_evolutions astd2
                                                             state2 
                                                             event 
                                                             (ASTD_environment.increase_call environment fct_vec)
-                          in let list_poss2=complete_possibilities (ASTD_state.call_s_of called state2) l2
-                          in if final then let l3=(ASTD_arrow.get name event false)
-                                           in let list_poss3=create_possibilities environment event l3
-                                           in let list_poss = clear_cons (clear_cons list_poss1 list_poss2) list_poss3
-                                              in (list_poss,true)
-                                      else (clear_cons list_poss1 list_poss2,false)
-                     else let (l2,final)=possible_evolutions astd2
+                          in let list_poss=complete_possibilities (ASTD_state.call_s_of called state2) l
+                          in (list_poss,final)
+                          end
+                     else begin 
+                          let (l,final)=possible_evolutions astd2
                                                             (ASTD_state.init astd2) 
                                                             event 
                                                             (ASTD_environment.increase_call environment fct_vec)
-                          in let list_poss2=complete_possibilities (ASTD_state.call_s_of true state2) l2
-                          in if final then let l3=ASTD_arrow.get name event false
-                                           in let list_poss3=create_possibilities environment event l3
-                                           in let list_poss=clear_cons (clear_cons list_poss1 list_poss2) list_poss3
-                                              in (list_poss,final)
-                                  else (clear_cons list_poss1 list_poss2,false)
+                          in let list_poss=complete_possibilities (ASTD_state.call_s_of true state2) l
+                          in (list_poss,false)
+                          end
 
   |_ -> (Mult[],false)
 
@@ -409,8 +397,13 @@ and q_poss astd event var state_list list_val environment kind =
        then match list_val with
             | h::t -> let bind_env=ASTD_environment.bind var h
                       in let (a,b)= q_poss astd event var state_list t environment true
-                         and (c,d)=possible_evolutions astd (ASTD_state.init astd) event (ASTD_environment.add_binding bind_env environment)
-                      in (clear_cons (complete_possibilities (ASTD_state.qchoice_s_of (ASTD_state.Val h) ASTD_state.NotDefined) c) a,b||d) 
+                      in let (c,d)=possible_evolutions astd 
+                                                       (ASTD_state.init astd) 
+                                                       event 
+                                                       (ASTD_environment.add_binding bind_env environment)
+          in (  clear_cons (complete_possibilities (ASTD_state.qchoice_s_of (ASTD_state.Val(h)) ASTD_state.NotDefined) c) a,
+                b||d
+             ) 
             | []-> (Mult[],false) 
 
 
@@ -418,7 +411,10 @@ and q_poss astd event var state_list list_val environment kind =
             |((v,state)::b,(c::d))-> 
                      if v=c then begin 
                                let bind_env =ASTD_environment.bind var c 
-                               in let (l2,f2)=(possible_evolutions astd state event (ASTD_environment.add_binding bind_env environment))
+                               in let (l2,f2)=possible_evolutions astd 
+                                                                  state 
+                                                                  event
+                                                                  (ASTD_environment.add_binding bind_env environment)
                                   and (list_poss,final)= q_poss astd event var b d environment false
                                in (clear_cons (Synch [Mult[l2]]) (list_poss),f2 && final)
                                  end

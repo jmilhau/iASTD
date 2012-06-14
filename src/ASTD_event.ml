@@ -10,8 +10,9 @@ let event label consts = Event (label,consts)
 let compare_action_with_event env a e  = 
     match (a,e) with 
     | (ASTD_transition.Transition(alabel, aparams), Event (elabel, econsts))  
-      -> (alabel = elabel) && 
-         (ASTD_environment.compare_params_with_consts_in env aparams econsts)
+      -> (begin (alabel = elabel) end) && 
+              begin (ASTD_environment.compare_params_with_consts_in env aparams econsts) end
+           
 ;;
 
 let string_of_event event = 

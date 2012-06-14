@@ -13,7 +13,7 @@
 	open ASTD_arrow;;
 	open ASTD_astd;; 
 
-    let astd_parser_debug = false ;;
+    let astd_parser_debug = true ;;
     let astd_parser_msg m = if (astd_parser_debug) 
                             then (print_endline m )
                             else (ignore m);;
@@ -24,6 +24,7 @@
 %token <string> ASTD_NAME
 %token <string> TRANSITION_NAME
 %token <string> VAR
+%token <string> VAL
 %token <int>    C_INT
 %token <string> PREDICATE_NAME
 %token LAMBDA AUTOMATA ELEM BEGIN_ASTD END_ASTD CALL TRUE FALSE
@@ -71,7 +72,7 @@ structure:
 
 astd:
     |LPAR ASTD_NAME COMMA type_astd RPAR
-      { astd_parser_msg ("astd 1st choice "); let astd2 = ASTD_astd.rename_astd $4 $2 in begin astd2 end }
+      { astd_parser_msg ("astd 1st choice "^$2); let astd2 = ASTD_astd.rename_astd $4 $2 in begin astd2 end }
     |type_astd
       { astd_parser_msg ("astd 2nd choice");
         $1 }
@@ -80,7 +81,7 @@ astd:
 
 type_astd:
     | astd_automata
-      { $1 }
+      { astd_parser_msg ("type_astd automata "); $1 }
     | astd_choice
       { astd_parser_msg ("type_astd choix "); $1 }
     | astd_sequence
@@ -244,7 +245,7 @@ list_of_params :
 ;
 
 list_of_params_content :
-    | VAR COMMA list_of_params
+    | VAR COMMA list_of_params_content
       { astd_parser_msg ("List of params "); 
         (ASTD_variable.of_string $1)::$3 }
     | VAR
@@ -322,7 +323,13 @@ list_of_value_content :
       { (ASTD_constant.of_int $1)::$3 }
     | C_INT 
       { (ASTD_constant.of_int $1)::[] }
+    | VAL COMMA list_of_value_content
+      { (ASTD_constant.Symbol ($1))::$3 }
+    | VAL
+      { (ASTD_constant.Symbol ($1))::[] }
     ;
+
+
 
 
 astd_qsynchro :
