@@ -114,10 +114,10 @@ doc/index.html : $(GENDOC).cmo $(TARGET)
              -t OCamlPAI -d doc/ $(DOCMLI) 
 
 modules_dependencies.dot : $(TARGET)
-	ocamldoc -dot -dot-include-all EBS*.ml -o modules_dependencies.dot
+	ocamldoc -dot -dot-include-all ASTD*.ml -o modules_dependencies.dot
 
 types_dependencies.dot : $(TARGET)
-	ocamldoc -dot -dot-include-all -dot-types EBS*.ml -o types_dependencies.dot
+	ocamldoc -dot -dot-include-all -dot-types ASTD*.ml -o types_dependencies.dot
 
 # DEPENDENCIES
 .depend:

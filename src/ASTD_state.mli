@@ -16,7 +16,7 @@ type t = Automata_s of position * ((astd_name * t) list) * t
 (**The sequence state contains an indication of which side of the sequence is currently studied, and the current sub state*)
 
         |Choice_s of side * t
-(**The choice state contains an indication of which one of the two sub astd is currently studied, and the current sub state. If the choice hasn't been made yet, the choice indication is {!Undef} and the state is {!NotDefined}*)
+(**The choice state contains an indication of which one of the two sub astd is currently studied, and the current sub state. If the choice hasn't been made yet, the choice indication is Undef and the state is NotDefined*)
 
         |Kleene_s of bool * t
 (**The kleene closure state precise if the execution of the sub astd has started, and contains the current sub state *)
@@ -25,7 +25,7 @@ type t = Automata_s of position * ((astd_name * t) list) * t
 (**The synchronisation state contains the two sub states*)
 
         |QChoice_s of qchoice * t
-(**The quantified choice state contains the chosen value and the sub state. If the choice hasn't been made yet, the value is {!ChoiceNotMade} and the sub state is {!NotDefined}*)
+(**The quantified choice state contains the chosen value and the sub state. If the choice hasn't been made yet, the value is ChoiceNotMade and the sub state is NotDefined*)
 
         |QSynchronisation_s  of ((ASTD_transition.t * ASTD_constant.domain) list)* (ASTD_constant.domain)
                                                                               *ASTD_constant.domain * t
@@ -35,18 +35,18 @@ type t = Automata_s of position * ((astd_name * t) list) * t
 (**The guard state precise if the execution has been accepted once, and contains the sub state*)
 
         |Call_s of bool * t
-(**The call state precise if the call has been made. If not, the sub state is {!NotDefined}*)
+(**The call state precise if the call has been made. If not, the sub state is NotDefined*)
 
         |NotDefined
 (**Not defined state*)
 
         |Elem
 (**Elementary state*)
-;;
 
 
 
-(** {1 Constructors} *)
+
+(** {3 Constructors} *)
 
 val automata_s_of : position -> ((astd_name * t) list) -> t -> t
 val sequence_s_of : step -> t -> t
@@ -71,7 +71,7 @@ val qchoice_notmade_of : unit -> qchoice
 
 
 
-(** {2 Accessors} *)
+(** {3 Accessors} *)
 
 val get_pos : t -> astd_name
 val get_data_from_qsynchro : t -> (((ASTD_transition.t * ASTD_constant.domain) list)* (ASTD_constant.domain)
@@ -103,7 +103,7 @@ val val_of : ASTD_term.t -> qchoice
 
 
 
-(** {4 Main Functions} *)
+(** {3 Main Functions} *)
 
 (**Returns the initial state of an ASTD*)
 val init : ASTD_astd.t -> t
@@ -129,7 +129,7 @@ val evaluate_arrows : ASTD_astd.t -> t -> ASTD_environment.t -> ((ASTD_transitio
 
 
 
-(** {5 Conversion in string} *)
+(** {3 Conversion in string} *)
 
 val string_of_qchoice : qchoice -> string
 val string_of_seq : step -> string
@@ -140,9 +140,9 @@ val string_of_bool : bool -> string
 
 
 
-(** {5 Registration of states from a quantified synchronisation} *)
+(** {3 Registration of states from a quantified synchronisation} *)
 
-(** {!_ASTD_synch_table_} stores states, using the name of the quantified synchronisation and the chosen value. *)
+(** _ASTD_synch_table_ stores states, using the name of the quantified synchronisation and the chosen value. *)
 
 val register_synch : astd_name -> ASTD_constant.t -> t -> unit
 val get_synch : astd_name->ASTD_constant.t ->t
@@ -152,7 +152,7 @@ val get_synch_state : ASTD_constant.domain -> t -> astd_name -> ASTD_constant.t 
 
 
 
-(** {6 Printers} *)
+(** {3 Printers} *)
 
 val print : t -> ASTD_astd.t -> string -> unit
 val print_h : ((astd_name * t) list) -> ASTD_astd.t -> string -> unit

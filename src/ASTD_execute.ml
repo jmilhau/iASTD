@@ -1,9 +1,11 @@
 type path = (ASTD_term.t) list
 
+type chosen_possibility =ASTD_state.t
+type state_to_modify=ASTD_state.t
+type modified_state=ASTD_state.t
 
-
-let rec string_of_list a = match a with
-  |h::t-> (ASTD_term.string_of h)^(string_of_list t)
+let rec string_of_path a = match a with
+  |h::t-> (ASTD_term.string_of h)^(string_of_path t)
   |[]->""
 ;;
 
@@ -114,7 +116,7 @@ let rec apply_local astd arrow state2 state pos env =
                let (name,b,c,d,e,f,g,h)=ASTD_astd.get_data_qsynchronisation astd 
                in let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                in let env2=(ASTD_environment.add_binding bind_env env)
-               in let a=(ASTD_term.to_const (List.hd pos))
+               in let a=(ASTD_term.extract_constant_from_term (List.hd pos))
                in let v=ASTD_constant.value_of a
                in begin 
                   let new_s=apply_local e arrow s (ASTD_state.get_synch_state not_init_dom init name a) (List.tl pos) env2
@@ -272,7 +274,7 @@ let rec apply_tsub astd arrow state2 state pos env =
                let (name,b,c,d,e,f,g,h)=ASTD_astd.get_data_qsynchronisation astd 
                in let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                in let env2=(ASTD_environment.add_binding bind_env env)
-               in let a=(ASTD_term.to_const (List.hd pos))
+               in let a=(ASTD_term.extract_constant_from_term (List.hd pos))
                in let v=ASTD_constant.value_of a
                in begin 
                   let new_s=apply_tsub e arrow s (ASTD_state.get_synch_state not_init_dom init name a) (List.tl pos) env2
@@ -403,7 +405,7 @@ let rec apply_fsub astd arrow state2 state pos env =
 
         |(_,ASTD_state.QChoice_s(ASTD_state.ChoiceNotMade,next_state))-> failwith "impossible qchoice execution"
 
-        |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> print_endline"coucou";
+        |(ASTD_state.QChoice_s(_,s),ASTD_state.QChoice_s(val_used,next_state)) -> 
                let (a,b,c,d)=ASTD_astd.get_data_qchoice astd 
                in let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                in let env2=(ASTD_environment.add_binding bind_env env)
@@ -414,7 +416,7 @@ let rec apply_fsub astd arrow state2 state pos env =
                let (name,b,c,d,e,f,g,h)=ASTD_astd.get_data_qsynchronisation astd 
                in let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                in let env2=(ASTD_environment.add_binding bind_env env)
-               in let a=(ASTD_term.to_const (List.hd pos))
+               in let a=(ASTD_term.extract_constant_from_term(List.hd pos))
                in let v=ASTD_constant.value_of a
                in begin 
                   let new_s=apply_fsub e arrow s (ASTD_state.get_synch_state not_init_dom init name a) (List.tl pos) env2
@@ -445,19 +447,19 @@ let rec apply_fsub astd arrow state2 state pos env =
 
 
 
-        |(a,ASTD_state.NotDefined)->if (a=ASTD_state.NotDefined) 
-                                    then failwith "impossible execution: notDef notDef" 
+        |(something_else,ASTD_state.NotDefined)->if (something_else=ASTD_state.NotDefined) 
+                                    then failwith "impossible execution: notDef" 
                                     else begin 
-                                         if (a=ASTD_state.Elem)
-                                         then failwith "impossible execution: notDef elem"
-                                         else apply_fsub astd arrow a a pos env
+                                         if (something_else=ASTD_state.Elem)
+                                         then failwith "impossible execution: elem"
+                                         else apply_fsub astd arrow something_else something_else pos env
                                          end
-        |(a,ASTD_state.Elem)->if (a=ASTD_state.NotDefined) 
+        |(something_else,ASTD_state.Elem)->if (something_else=ASTD_state.NotDefined) 
                                     then failwith "impossible execution: elem notDef" 
                                     else begin 
-                                         if (a=ASTD_state.Elem)
+                                         if (something_else=ASTD_state.Elem)
                                          then failwith "impossible execution: elem elem"
-                                         else apply_fsub astd arrow a a pos env
+                                         else apply_fsub astd arrow something_else something_else pos env
                                          end
         |_-> failwith "impossible execution"
 
@@ -517,8 +519,8 @@ and synchronize astd state synchro_list path1 = match synchro_list with
 let execute astd state event  =
                let (list_poss,f)=ASTD_possibilities.possible_evolutions astd  state event []
                  in begin 
-                          (*print_endline "=========Start Possibilities" ; 
-                          ASTD_possibilities.print list_poss astd "" ; 
+                        (*  print_endline "=========Start Possibilities" ; 
+                          ASTD_possibilities.print list_poss astd "" [] ; 
                           print_endline "=========End Possibilities" ;  *)
                           
                         if (ASTD_possibilities.possible list_poss)

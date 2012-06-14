@@ -76,17 +76,3 @@ let print_params = create_print_list print
 
 
 
-(**                               *)
-let to_const a = match a with
-|Const a -> a
-|_-> failwith "not appropriate use of to_const"
-;;
-
-
-let rec remove_from params var = match params with
-  |h::t->if h=var then t else h::(remove_from t var)
-  |[]->[]
-;;
-
-
-

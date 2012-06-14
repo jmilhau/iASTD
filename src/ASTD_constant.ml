@@ -90,29 +90,7 @@ let string_of_set = create_string_of_set fold_set string_of
 
 
 
-
-
-let rec remove_elem_from elem l = match l with
-|a::q -> if a=elem then q
-                   else a::(remove_elem_from elem q)
-|[] -> []
-
-
-let rec remove_list_from l1 l2 = match l2 with
- |a::q-> remove_elem_from a (remove_list_from l1 q)
- |[] -> l1
-
-let rec const_list_of_range min max = 
-           if ( min < max ) then (Integer(min)::(const_list_of_range (min+1) max))
-                            else if min = max then [Integer(min)]
-                                              else failwith "min should be inferior to max"
-
-
-let rec add_list_to l1 l2 = match l2 with
- |a::q-> a::(remove_elem_from a (add_list_to l1 q))
- |[] -> l1
-
-(**                                                                                      *)
+(**                    Value type                                                                  *)
 type value = | Range of (int * int)
              | Val of t
              | FreeVal
@@ -185,7 +163,7 @@ let rec contain_free l =match l with
 |[]->false
 
 
-(**                                                                *)
+(**                         Domain type                                       *)
 
 
 

@@ -37,10 +37,10 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
     | Elem of astd_name
 (**The base elem ASTD*)
 
-;; 
 
 
-(** {1 Constructor} *)
+
+(** {3 Constructor} *)
 
 
 val give_name : unit -> astd_name
@@ -58,7 +58,7 @@ val elem_of : astd_name -> t
 
 
 
-(** {2 Accessors} *)
+(** {3 Accessors} *)
 
 
 
@@ -108,12 +108,13 @@ val get_data_call : t -> (astd_name * astd_name * ((ASTD_variable.t *ASTD_term.t
 val rename_astd: t -> astd_name -> t
 val is_astd_final_in_automata : t -> astd_name -> bool
 val is_elem : t-> bool
+val is_synchro : t ->bool
+val is_qsynchro : t ->bool
 
 
 
 
-
-(** {4 Main Functions} *)
+(** {3 Main Functions} *)
 
 (**Finds the right sub astd from a list using his name *)
 val find_subastd : astd_name -> t list -> t 
@@ -126,9 +127,9 @@ val remember_transitions : t -> unit
 
 
 
-(** {5 Registration of astd} *)
+(** {3 Registration of astd} *)
 
-(** {!_ASTD_astd_table_} stores astd, using their name. *)
+(** _ASTD_astd_table_ stores astd, using their name. *)
 
 val register : t -> unit
 val get_astd : astd_name -> t 
@@ -137,7 +138,7 @@ val global_save_astd : t-> unit
 
 
 
-(** {6 Printer} *)
+(** {3 Printer} *)
 
 val print : t->string-> unit
 

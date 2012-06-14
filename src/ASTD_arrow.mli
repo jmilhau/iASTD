@@ -18,7 +18,7 @@ type t = Local of from_state * to_state * ASTD_transition.t * ASTD_predicate.t l
 
 
 
-(** {1 Constructor} *)
+(** {3 Constructor} *)
 
 val local_arrow :from_state -> to_state-> ASTD_transition.t -> ASTD_predicate.t list -> from_final_state -> t
 val fsub_arrow :from_state -> to_state -> through_state -> ASTD_transition.t -> ASTD_predicate.t list -> from_final_state ->  t
@@ -26,7 +26,7 @@ val tsub_arrow :from_state -> to_state -> through_state -> ASTD_transition.t -> 
 
 
 
-(** {2 Accessors} *)
+(** {3 Accessors} *)
 
 val get_from : t -> from_state
 val get_to : t -> to_state
@@ -42,7 +42,7 @@ val get_label_transition : t -> ASTD_label.t
 
 
 
-(** {!_ASTD_arrow_table_} stores arrows from structure, using the name of the beginning of the arrow, the label of transition and a boolean indicating if the first state should be final or not. *)
+(** _ASTD_arrow_table_ stores arrows from structure, using the name of the beginning of the arrow, the label of transition and a boolean indicating if the first state should be final or not. *)
 
 val register : (from_state * ASTD_label.t * from_final_state ) -> t -> unit
 val register_arrow : t -> unit
@@ -50,7 +50,7 @@ val get : from_state -> ASTD_event.t -> from_final_state -> t list
 
 
 
-(** {!_ASTD_transition_table_} stores the parameters of possible transitions from structure for quantified astd, using the name of the quantified astd and the label of those transitions.*)
+(** _ASTD_transition_table_ stores the parameters of possible transitions from structure for quantified astd, using the name of the quantified astd and the label of those transitions.*)
 
 val register_transition : string->ASTD_transition.t -> unit
 val register_transitions_from_list : string->ASTD_transition.t list -> unit
@@ -58,12 +58,12 @@ val get_transition_params : string->ASTD_label.t -> ASTD_term.params list
 
 
 
-(** {4 Functions} *)
+(** {3 Main Functions} *)
 
 (** Evaluate the guard precisely using the {!ASTD_environment.t}. *)
 val evaluate_guard : ASTD_environment.t -> ASTD_predicate.t list -> bool
 
-(** Evaluate the guard. If the value used for a variable is {!ASTD_constant.FreeConst}, the predicate is estimated at true. *)
+(** Evaluate the guard. If the value used for a variable is ASTD_constant.FreeConst, the predicate is estimated at true. *)
 val estimate_guard : ASTD_environment.t -> ASTD_predicate.t list -> bool
 
 (** Evaluate the predicates on the arrow and compare the event with the transition. *)

@@ -1,14 +1,15 @@
 
-(** ASTD constant module 
-rajout de const_list_of_range et de remove_list_from remove_elem_from add_list_to  *)
+(** ASTD constant module *)
 
+(**The {!ASTD_constant.t} type allows us to use both integers and strings as constants, and FreeConst is a special constant allowing us to use any value *)
 type t = Integer of int | Symbol of string | FreeConst (* HIDDEN *)
 type set_name = string
+
 
 module Set_of : Set.S with type elt = t
 type set = Set_of.t
 
-
+(**The {!ASTD_constant.value} type is a way to represent domains of values*)
 type value = | Range of (int * int)
              | Val of t
              | FreeVal
@@ -17,8 +18,9 @@ type value = | Range of (int * int)
 
 
 module Domain : Set.S with type elt = value
-type domain=Domain.t
 
+(**The {!ASTD_constant.value} type is a Set, containing {!ASTD_constant.value}, that is to say a set representing all the possible domains of value *)
+type domain=Domain.t
 
 
 
@@ -26,6 +28,10 @@ type domain=Domain.t
 (** {3 Constructor of constant} *)
 
 val of_int : int -> t
+
+(** {3 Accessors}*)
+
+val kind_of_val : t -> bool
 
 (** {3 Printers} *)
 
@@ -36,6 +42,13 @@ val print_list : t list -> unit
 
 val string_of : t -> string
 val string_of_list : t list -> string
+val int_of : t -> int
+
+
+
+
+
+
 
 (** {2 Set of constant} *)
 
@@ -44,9 +57,7 @@ val string_of_list : t list -> string
 val empty_set : set
 val constant_set_from_list : t list -> set
 val constant_set_from_range : min:int -> max:int -> set
-val const_list_of_range : int -> int -> t list  
-
-
+ 
 
 (** {3 Iterator over set of constant} *)
 
@@ -64,9 +75,9 @@ val member : t -> set -> bool
 val union : set -> set -> set
 val is_empty : set -> bool
 
-val add_list_to : t list -> t list -> t list
-val remove_list_from : t list -> t list -> t list
-val remove_elem_from : t -> t list -> t list
+val contain_free : t list -> bool
+
+
 (** {3 Printers} *)
 
 val print_set_name : set_name -> unit
@@ -82,14 +93,14 @@ val string_of_set : set -> string
 
 
 
-(**                                                                             *)
+
+(** {2 Value } *)
+(** {3 Constructors} *)
 
 val range_of : int -> int -> value 
-
-val int_of : t -> int
-val string_of : t -> string
-
 val value_of : t -> value
+
+(** {3 Accessors} *)
 
 val int_of_val : value ->int
 val string_of_val : value ->string
@@ -97,19 +108,22 @@ val string_of_val : value ->string
 
 
 
-val kind_of_val : t -> bool
 
 
 
-val contain_free : t list -> bool
+(** {2 Domain = Set of values} *)
+(** {3 Constructors} *)
 
-(**                                                                             *)
+val empty_dom : domain
+val create_dom_from_val : value -> domain 
+
+(** {3 Accessors} *)
 
 val head_tail : domain -> (t*domain)
-
 val is_included : t -> domain -> bool
+val is_empty_dom : domain->bool
 
-val print_dom : domain -> string
+(** {3 Domain manipulation}*)
 
 val remove_domain_from : domain -> domain -> domain
 
@@ -119,11 +133,17 @@ val insert : value -> domain -> domain
 
 val remove : value -> domain -> domain
 
-val empty_dom : domain
 
-val is_empty_dom : domain->bool
+(** {3 Conversion in string} *)
 
-val create_dom_from_val : value -> domain 
+val print_dom : domain -> string
+
+
+
+
+
+
+
 
 
 

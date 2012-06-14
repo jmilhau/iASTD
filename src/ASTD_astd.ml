@@ -183,9 +183,6 @@ let get_called_values a = match a with
 
 
 
-
-
-
 let rename_astd astd_to_rename namebis = match astd_to_rename with
    |Automata (a,b,c,d,e) -> Automata (namebis,b,c,d,e)
    |Sequence (a,b,c) -> Sequence (namebis,b,c)
@@ -213,14 +210,22 @@ let is_elem a = match a with
   | _ -> false
 ;;
 
-
+let is_synchro a = match a with
+  | Synchronisation(_) -> true
+  | _ -> false
+;;
+let is_qsynchro a = match a with
+  | QSynchronisation(_) ->true
+  | _ -> false
+;;
 
 
 let rec find_subastd name astd_list = match astd_list with
-  |(a::b) ->
+  |(a::b) ->begin 
             if (get_name a)=name
                     then a
                     else (find_subastd name b )   
+            end
   |_-> failwith "sub-astd not_found"
 ;;
 

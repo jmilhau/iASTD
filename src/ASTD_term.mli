@@ -81,12 +81,3 @@ val print_params : params -> unit
 val string_of_params : params -> string
 
 
-
-
-(**                                *)
-
-val to_const : t -> ASTD_constant.t
-
-val remove_from : params -> t -> params
-
-

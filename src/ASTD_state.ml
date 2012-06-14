@@ -345,14 +345,14 @@ let string_of_qchoice a=match a with
 
 let rec print state astd s = match state with
         |Automata_s (a,b,c) ->print_newline();
-                              print_endline(s^"Automata_s ,");
+                              print_endline(s^"Automata_s ,"^(ASTD_astd.get_name astd));
                               (*print_endline(s^"//StartHistory");
                               (print_h astd b (s^"//"));*)
                               print_endline(s^"sub_state : "^a);
                               print c (ASTD_astd.find_subastd a (ASTD_astd.get_sub astd)) (s^"   ")
         |Sequence_s (a,b) ->print_newline();print_endline(s^"Sequence_s ,");print_endline(s^"step : "^(string_of_seq a));
                begin if a=Left then print b (ASTD_astd.get_seq_l astd) (s^"   ") 
-                               else print b (ASTD_astd.get_seq_l astd) (s^"   ") 
+                               else print b (ASTD_astd.get_seq_r astd) (s^"   ") 
                end
         |Choice_s (a,b) ->print_newline();print_endline(s^"Choice_s ,");print_endline(s^"step : "^(string_of_choice a));
                begin if a=Undef then print_endline (s^"No choice made")
