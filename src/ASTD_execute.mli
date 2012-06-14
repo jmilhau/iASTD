@@ -7,17 +7,18 @@ type chosen_possibility =ASTD_state.t
 type state_to_modify=ASTD_state.t
 type modified_state=ASTD_state.t
 
-
+type astd_name = string
+type called_path = astd_name list
 
 
 (** {3 Manipulation Functions} *)
 
 val synchronize : ASTD_astd.t -> ASTD_state.t -> ASTD_possibilities.t -> path -> ASTD_state.t
-val apply_local : ASTD_astd.t -> ASTD_arrow.t -> chosen_possibility -> state_to_modify -> path -> ASTD_environment.t 
+val apply_local : ASTD_astd.t -> ASTD_arrow.t -> chosen_possibility -> state_to_modify -> path -> ASTD_environment.t -> called_path
                                                                                                         -> modified_state
-val apply_tsub : ASTD_astd.t -> ASTD_arrow.t -> chosen_possibility -> state_to_modify -> path -> ASTD_environment.t 
+val apply_tsub : ASTD_astd.t -> ASTD_arrow.t -> chosen_possibility -> state_to_modify -> path -> ASTD_environment.t -> called_path
                                                                                                         -> modified_state
-val apply_fsub : ASTD_astd.t -> ASTD_arrow.t -> chosen_possibility -> state_to_modify -> path -> ASTD_environment.t 
+val apply_fsub : ASTD_astd.t -> ASTD_arrow.t -> chosen_possibility -> state_to_modify -> path -> ASTD_environment.t -> called_path
                                                                                                         -> modified_state
 
 

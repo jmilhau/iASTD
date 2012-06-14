@@ -2,10 +2,8 @@ type position = string
 type step = Left | Right
 type side = Undef | Fst | Snd
 type qchoice = Val of ASTD_term.t | ChoiceNotMade
-
-
-
 type astd_name = string
+type called_path =astd_name list
 
 type t = Automata_s of position * ((astd_name * t) list) * t
         |Sequence_s of step * t
@@ -157,10 +155,10 @@ let rec get_labels arrows = match arrows with
 
 let _ASTD_synch_table_ = Hashtbl.create 5 
 
-let register_synch name value state = Hashtbl.add _ASTD_synch_table_ (name,value) state
-let get_synch name value = Hashtbl.find _ASTD_synch_table_ (name,value)
-let get_synch_state not_init_dom init name c = if (ASTD_constant.is_included c not_init_dom)
-                                                         then Hashtbl.find _ASTD_synch_table_ (name,c)
+let register_synch name value env call_path state = Hashtbl.add _ASTD_synch_table_ (name,value,env,call_path) state
+let get_synch name value env call_path = Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
+let get_synch_state not_init_dom init name value env call_path = if (ASTD_constant.is_included value not_init_dom)
+                                                         then Hashtbl.find _ASTD_synch_table_ (name,value,env,call_path)
                                                          else init
 
 
@@ -184,7 +182,7 @@ let rec init_env astd env = match astd with
                let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
                in let env2=(ASTD_environment.add_binding bind_env env)
                in let next= (init_env e env2) 
-               in let (x,y)=evaluate_arrows e next env2
+               in let (x,y)=evaluate_arrows e next env2 []
                in if y 
    then qsynchronisation_s_of (create_arrow_val_list val_list x) (ASTD_constant.empty_dom) (ASTD_constant.empty_dom) next
    else qsynchronisation_s_of (create_arrow_val_list val_list x) val_list (ASTD_constant.empty_dom) next
@@ -203,58 +201,58 @@ and init_history astd_list env = match astd_list with
     |[]-> []
 
 
-and evaluate_arrows astd state env = match (astd,state) with
+and evaluate_arrows astd state env called_path = match (astd,state) with
    |(ASTD_astd.Automata (a,b,c,d,e),Automata_s(f,g,h)) -> begin 
-                                                          let l=evaluate_arrows_automata f c env
+                                                          let l=evaluate_arrows_automata f c env called_path
                                                           and next_astd=(ASTD_astd.find_subastd f b)
-                                                          in let (x,y)=evaluate_arrows next_astd h env
+                                                          in let (x,y)=evaluate_arrows next_astd h env called_path
                                                           in if (ASTD_astd.is_elem next_astd)
                                                                then (l,ASTD_astd.is_astd_final_in_automata astd f)
                                                                else (l @ x,y)
                                                           end
       
    |(ASTD_astd.Sequence (a,b,c),Sequence_s (d,e)) -> if d=Left 
-                                                        then let (x,y)= (evaluate_arrows b e env) 
+                                                        then let (x,y)= (evaluate_arrows b e env called_path) 
                                                              in if y
-                                                                   then let (v,w)=(evaluate_arrows c (init_env c env) env)
+                                                                   then let (v,w)=(evaluate_arrows c (init_env c env) env called_path)
                                                                         in (fusion_arrows x v ,y && w)
                                                                    else (x,false)
-                                                        else (evaluate_arrows c e env)
+                                                        else (evaluate_arrows c e env called_path)
                                                      
    |(ASTD_astd.Choice (a,b,c),Choice_s (d,e)) -> if d= Fst
-                                                    then (evaluate_arrows b e env)
+                                                    then (evaluate_arrows b e env called_path)
                                                     else if d= Snd 
-                                                            then (evaluate_arrows c e env)
-                                                            else let (x,y)= (evaluate_arrows b (init_env b env) env)
-                                                                 and (v,w)= (evaluate_arrows c (init_env c env) env)
+                                                            then (evaluate_arrows c e env called_path)
+                                                            else let (x,y)= (evaluate_arrows b (init_env b env) env called_path)
+                                                                 and (v,w)= (evaluate_arrows c (init_env c env) env called_path)
                                                                  in (fusion_arrows x v , y || w)
 
    |(ASTD_astd.Kleene (a,b),Kleene_s (c,d)) -> begin 
-                                               let (x,y) = (evaluate_arrows b d env)
-                                               in if y then let (v,w)=(evaluate_arrows b (init_env b env) env)
+                                               let (x,y) = (evaluate_arrows b d env called_path)
+                                               in if y then let (v,w)=(evaluate_arrows b (init_env b env) env called_path)
                                                             in (fusion_arrows x v , true)
                                                        else (x,not c)
                                                end
 
    |(ASTD_astd.Synchronisation (a,b,c,d),Synchronisation_s (e,f)) -> 
-                          let (x,y) = evaluate_arrows c e env 
-                          and (v,w) = evaluate_arrows d f env 
+                          let (x,y) = evaluate_arrows c e env called_path
+                          and (v,w) = evaluate_arrows d f env called_path
                           in (fusion_arrows_synch x v b, y && w)
 
    |(ASTD_astd.Guard (a,b,c),Guard_s (d,e) ) ->begin 
                                                    if d 
-                                                   then evaluate_arrows c e env
+                                                   then evaluate_arrows c e env called_path
                                                    else if (ASTD_arrow.estimate_guard env b) 
-                                                        then begin evaluate_arrows c e env end
+                                                        then begin evaluate_arrows c e env called_path end
                                                         else begin ([],false) end
                                                end
 
    |(ASTD_astd.QChoice (a,b,c,d),QChoice_s(e,f)) -> 
                          if e=ChoiceNotMade
                             then let bind_env = ASTD_environment.bind b (ASTD_term.Const(ASTD_constant.FreeConst))
-                                 in evaluate_arrows d (init_env d env) (ASTD_environment.add_binding bind_env env)
+                                 in evaluate_arrows d (init_env d env) (ASTD_environment.add_binding bind_env env) called_path
                             else let bind_env = ASTD_environment.bind b (get_val e)
-                                 in evaluate_arrows d f (ASTD_environment.add_binding bind_env env)
+                                 in evaluate_arrows d f (ASTD_environment.add_binding bind_env env) called_path
 
 
    |(ASTD_astd.QSynchronisation (a,b,val_list,d,e,f,g,h),QSynchronisation_s (i,j,k,l))-> 
@@ -263,17 +261,17 @@ and evaluate_arrows astd state env = match (astd,state) with
                              end
    |(ASTD_astd.Call (a,b,c), Call_s (d,e))-> if d 
                                           then 
-                                            evaluate_arrows (ASTD_astd.get_astd b) e (ASTD_environment.increase_call env c)
+                                            evaluate_arrows (ASTD_astd.get_astd b) e (ASTD_environment.increase_call env c) (a::called_path)
                                           else 
                                             let astd2= (ASTD_astd.get_astd b)
-                                            in evaluate_arrows astd2 (init_env astd2 env) (ASTD_environment.increase_call env c)
+                                            in evaluate_arrows astd2 (init_env astd2 env) (ASTD_environment.increase_call env c) (a::called_path)
 
 
    |_ ->([],false)
 
-and evaluate_arrows_automata current arrows env = match arrows with
-  |h::t-> if (ASTD_arrow.get_from h)=current then (ASTD_arrow.get_transition h)::(evaluate_arrows_automata current t env)
-                                             else (evaluate_arrows_automata current t env)
+and evaluate_arrows_automata current arrows env called_path = match arrows with
+  |h::t-> if (ASTD_arrow.get_from h)=current then (ASTD_arrow.get_transition h)::(evaluate_arrows_automata current t env called_path)
+                                             else (evaluate_arrows_automata current t env called_path)
   |[]->[]
 ;;
 
@@ -343,58 +341,69 @@ let string_of_qchoice a=match a with
 
 
 
-let rec print state astd s = match state with
+let rec print state astd s env call_path = match state with
         |Automata_s (a,b,c) ->print_newline();
                               print_endline(s^"Automata_s ,"^(ASTD_astd.get_name astd));
                               (*print_endline(s^"//StartHistory");
-                              (print_h astd b (s^"//"));*)
+                              (print_h astd b (s^"//")) env call_path;*)
                               print_endline(s^"sub_state : "^a);
-                              print c (ASTD_astd.find_subastd a (ASTD_astd.get_sub astd)) (s^"   ")
+                              print c (ASTD_astd.find_subastd a (ASTD_astd.get_sub astd)) (s^"   ") env call_path
         |Sequence_s (a,b) ->print_newline();print_endline(s^"Sequence_s ,");print_endline(s^"step : "^(string_of_seq a));
-               begin if a=Left then print b (ASTD_astd.get_seq_l astd) (s^"   ") 
-                               else print b (ASTD_astd.get_seq_r astd) (s^"   ") 
+               begin if a=Left then print b (ASTD_astd.get_seq_l astd) (s^"   ")  env call_path
+                               else print b (ASTD_astd.get_seq_r astd) (s^"   ") env call_path
                end
         |Choice_s (a,b) ->print_newline();print_endline(s^"Choice_s ,");print_endline(s^"step : "^(string_of_choice a));
                begin if a=Undef then print_endline (s^"No choice made")
-                                        else if a=Fst then print b (ASTD_astd.get_choice1 astd) (s^"   ")
-                                                      else print b (ASTD_astd.get_choice2 astd)(s^"   ")
+                                        else if a=Fst then print b (ASTD_astd.get_choice1 astd) (s^"   ") env call_path
+                                                      else print b (ASTD_astd.get_choice2 astd)(s^"   ") env call_path
                end
         |Kleene_s (a,b) ->print_newline();print_endline(s^"Kleene_s ,");print_endline(s^"started ? : "^(string_of_bool a)); 
-                          print b (ASTD_astd.get_astd_kleene astd) (s^"   ") 
+                          print b (ASTD_astd.get_astd_kleene astd) (s^"   ") env call_path
         |Synchronisation_s (a,b) ->print_newline();print_endline(s^"Synchronisation_s ,");
-                                   print a (ASTD_astd.get_synchro_astd1 astd) (s^"   ");
-                                   print b (ASTD_astd.get_synchro_astd2 astd) (s^"   ")
+                                   print a (ASTD_astd.get_synchro_astd1 astd) (s^"   ") env call_path ;
+                                   print b (ASTD_astd.get_synchro_astd2 astd) (s^"   ") env call_path
         |QChoice_s (a,b) ->print_newline();print_endline(s^"QChoice_s ,");
                                       begin 
                                       if a=ChoiceNotMade 
-                                           then print_endline(s^"Value Not Chosen // Possible values: "^(string_of_qchoice a ))
-                                           else print_endline(s^"chosen value : "^(string_of_qchoice a))
-                                      end;print b (ASTD_astd.get_qastd astd) (s^"   ")
-        |QSynchronisation_s (x,y,z,t) -> print_newline();print_endline(s^"QSynchronisation_s ,not initial values:  "^(ASTD_constant.print_dom z));(print_synch astd (s^"   ") z)
+                                           then begin print_endline(s^"Value Not Chosen // Possible values: "^(string_of_qchoice a ));
+                                                      print b (ASTD_astd.get_qastd astd) (s^"   ") env call_path
+                                                end
+                                           else begin print_endline(s^"chosen value : "^(string_of_qchoice a));
+                                                      let bind_env = ASTD_environment.bind (ASTD_astd.get_qvar astd) (get_val a) 
+                                                      in print b (ASTD_astd.get_qastd astd) (s^"   ") (ASTD_environment.add_binding bind_env env) call_path
+                                                end
+                                      end;
+        |QSynchronisation_s (x,y,z,t) -> print_newline();print_endline(s^"QSynchronisation_s ,not initial values:  "^(ASTD_constant.print_dom z));
+                                           (print_synch astd (s^"   ") z env call_path)
         |Guard_s (a,b) ->print_newline();print_endline(s^"Guard_s ,");print_endline(s^"started ? : "^(string_of_bool a));
-                         print b (ASTD_astd.get_guard_astd astd) (s^"   ")
+                         print b (ASTD_astd.get_guard_astd astd) (s^"   ") env call_path
         |Call_s (a,b) ->print_newline();print_endline(s^"Call_s ,");print_endline(s^"started ? : "^(string_of_bool a));
-                        print b (ASTD_astd.get_astd (ASTD_astd.get_called_name astd)) (s^"   ")
+                        print b (ASTD_astd.get_astd (ASTD_astd.get_called_name astd)) (s^"   ") env ((ASTD_astd.get_name astd)::call_path)
         |NotDefined ->print_endline (s^"End of the state")
         |Elem -> print_endline(s^"Elem")
 
 
 
-and print_h hist astd s = match hist with
+and print_h hist astd s env call_path = match hist with
   |(n1,h)::t ->print_endline(s^"n1");
-               print h (ASTD_astd.find_subastd n1 (ASTD_astd.get_sub astd)) (s);
-               print_h t astd s
+               print h (ASTD_astd.find_subastd n1 (ASTD_astd.get_sub astd)) (s) env call_path;
+               print_h t astd s env call_path
   |[]->print_endline(s^"EndHistory")
 
 
-and print_synch astd s not_init =if ASTD_constant.is_empty_dom not_init 
+and print_synch astd s not_init env call_path =if ASTD_constant.is_empty_dom not_init 
                                     then print_newline ()
                                     else let (value,t)=ASTD_constant.head_tail not_init
                                          in begin 
                                             print_newline ();
                                             print_endline (s^"Value "^(ASTD_constant.string_of value));
-                                            print (get_synch (ASTD_astd.get_name astd) value) (ASTD_astd.get_qastd astd) s;
-                                            print_synch astd s t
+                                            begin
+                                            let bind_env=ASTD_environment.bind (ASTD_astd.get_qvar astd) (ASTD_term.Const value) 
+                                            in print (get_synch (ASTD_astd.get_name astd) value (ASTD_environment.add_binding bind_env env) call_path) 
+                                                     (ASTD_astd.get_qastd astd) s (ASTD_environment.add_binding bind_env env) call_path
+                                            end;
+                                            print_endline (s^"end");
+                                            print_synch astd s t env call_path
                                             end
 ;;
 

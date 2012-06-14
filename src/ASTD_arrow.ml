@@ -78,7 +78,7 @@ let rec register_transitions_from_list name transition_list = match transition_l
                                                       Hashtbl.add _ASTD_transition_table_ (name,label) params;
                                                       register_transitions_from_list name t
                                                       end
-     |_->print_endline ("transitions registered for "^name)
+     |[]->()
 
 let get_transition_params name label =  Hashtbl.find_all _ASTD_transition_table_ (name,label)
 

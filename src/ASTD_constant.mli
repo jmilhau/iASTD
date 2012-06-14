@@ -16,7 +16,9 @@ type value = | Range of (int * int)
 
 
 
-
+(** A set needs a total ordering so this is the one I use : val(a)<val(b) if a<b \
+                                                            Range(a,b)<Range(c,d)  if a<c or if a=c and b<d \
+                                                            Val(a)<Range(b,c) if a<=b*)
 module Domain : Set.S with type elt = value
 
 (**The {!ASTD_constant.value} type is a Set, containing {!ASTD_constant.value}, that is to say a set representing all the possible domains of value *)
@@ -104,7 +106,7 @@ val value_of : t -> value
 
 val int_of_val : value ->int
 val string_of_val : value ->string
-
+val val_to_const : value ->t
 
 
 

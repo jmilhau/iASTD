@@ -37,7 +37,7 @@ let _ = print_endline "========================================" ;
                print_newline () ;
                print_endline "========================================" ;
                let state= (ASTD_state.init structure)
-               in ASTD_state.print state structure "";
+               in ASTD_state.print state structure "" [] [];
                   print_endline "========================================" ;
                   ASTD_execute.exec_sequence structure state event_list;
                   print_float(Sys.time());

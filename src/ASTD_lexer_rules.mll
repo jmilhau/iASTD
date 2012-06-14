@@ -13,6 +13,8 @@ let upperletters = ['A'-'Z']
 let letters = lowerletters | upperletters
 let digits = ['0'-'9']
 let id = "Id"
+let underscore='_'
+let quote='"'
 
 
 rule token = parse
@@ -40,12 +42,12 @@ rule token = parse
  | "local"  {LOCAL}
  | "to_sub" {TO_SUB}
  | "from_sub" {FROM_SUB}
- | lowerletters+ id?          { ebs_lexer_msg "new VAR" ; VAR     (Lexing.lexeme lexbuf) }
- | lowerletters* upperletters { ebs_lexer_msg "new VAL" ; VAL     (Lexing.lexeme lexbuf) }
- | digits+ as number          { ebs_lexer_msg "new C_INT" ; C_INT   (int_of_string number) } 
- | upperletters+ digits+      { ebs_lexer_msg "new ASTD_NAME" ; ASTD_NAME (Lexing.lexeme lexbuf) } 
- | upperletters lowerletters*	{ ebs_lexer_msg "new TRANSITION_NAME" ; TRANSITION_NAME (Lexing.lexeme lexbuf) }
- | letters+ 		      { ebs_lexer_msg "new PREDICATE_NAME" ; PREDICATE_NAME (Lexing.lexeme lexbuf) }
+ | letters+ (letters+ | digits+ | underscore)*                    { ebs_lexer_msg "identifiant_name" ; IDENTITY_NAME    (Lexing.lexeme lexbuf) }
+ | quote letters+ (letters+ | digits+ | underscore)* quote        { ebs_lexer_msg "identifiant_name" ; STRING_VALUE    (Lexing.lexeme lexbuf) }
+ | digits+ as number                                              { ebs_lexer_msg "new int value" ; INT_VALUE   (int_of_string number) } 
+
+
+ | underscore                 {ebs_lexer_msg "new underscore" ; UNDERSCORE}
  | '<'   { BEGIN_ASTD }
  | '>'   { END_ASTD } 
  | '['   { ebs_lexer_msg "new LINT" ; LINT }
@@ -57,7 +59,6 @@ rule token = parse
  | ':'   { ebs_lexer_msg "new COLON" ; COLON }
  | ';'   { ebs_lexer_msg "new SCOLON" ; SCOLON }
  | ','   { ebs_lexer_msg "new COMMA" ; COMMA }
- | '_'   {ebs_lexer_msg "new underscore" ; UNDERSCORE}
  | ":="  { IS }
  | '='   { EQUALS }
  | eof   { EOF }

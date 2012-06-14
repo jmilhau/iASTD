@@ -224,7 +224,7 @@ let rec find_subastd name astd_list = match astd_list with
   |(a::b) ->begin 
             if (get_name a)=name
                     then a
-                    else (find_subastd name b )   
+                    else begin (find_subastd name b )  end  
             end
   |_-> failwith "sub-astd not_found"
 ;;

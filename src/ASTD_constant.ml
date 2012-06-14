@@ -103,7 +103,8 @@ let compare_val c1 c2 = match (c1,c2) with
                                        else compare a c
     | (Val(Integer n1), Range(a,b))->if n1=a then compare n1 (a+1)
                                              else compare n1 a
-    | (Range(a,b),Val(Integer n1))->compare a n1
+    | (Range(a,b),Val(Integer n1))->if n1=a then compare (a+1) n1
+                                             else compare a n1
     | _ -> -1
 
 module Domain = Set.Make( struct type t = value
@@ -137,7 +138,9 @@ let value_of a= match a with
 
 
 
-
+let val_to_const a=match a with
+|Val(a)->a
+|_->failwith "not appropriate use of val_to_const"
 
 
 

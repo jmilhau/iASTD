@@ -1,0 +1,91 @@
+
+
+
+(QB,<|[]|:;
+     y;
+     [1,10000];
+     {  };
+     (body_choice, <|:;
+                    c;
+                    [1,10];
+                    (body_kleene,<*;
+                   		  (body_automata,<aut;
+        	   		                  { (fils1->elem),
+        	   		                    (fils2->elem)
+                   		                  };
+        	   		                  { ((local,fils1,fils2),b(x,y,c),{},False)
+        	                		  };
+        			                  { 
+        			                    fils2
+        			                  };
+        			                  fils1
+        	                                 >
+                                   )
+                                  >
+                    )
+
+                   >
+     )
+    >
+)
+        	                           
+;
+
+
+
+(MAIN,<|[]|;
+       {cn};
+
+	(boucle1,<*;
+        	 (entrelacement1,<|[]|:;
+        	                  x;
+        	                  [1,10000];
+        	                  {  };
+        	                  (astd1 , <aut;
+        	                            { (A11->elem),
+        	                              (A12-> <call;
+        	                                      QB;
+ 		                                      {}
+        	                                     >),
+        	                              (A13->elem)
+        	                            };
+        	                            { ((local,A11,A12),a1(x),{},False),
+        	                              ((local,A12,A13),cn(x),{},False)
+        	                            };
+        	                            { 
+        	                             A13
+        	                            };
+        	                            A11
+        	                           >
+        	                  )
+        	                 >
+        	 )
+        	>
+	);		
+	(boucle2,<*;
+	         (entrelacement2,<|[]|:;
+	                          x;
+	                          [1,10000];
+	                          { };
+	                          (astd2 , <aut;
+	                                    { (A21->elem),
+	                                      (A22-> <call;
+	                                              QB;
+	 	                                      {}
+	                                             >),
+	                                      (A23->elem)
+	                                    };
+	                                    { ((local,A21,A22),a2(x),{},False),
+	                                      ((local,A22,A23),cn(x),{},False)
+	                                    };
+	                                    { 
+	                                     A23
+	                                    };
+	                                    A21
+	                                   >
+	                          )
+	                         >
+	         )
+	        >
+	)
+     >)	

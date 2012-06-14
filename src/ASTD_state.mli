@@ -6,6 +6,7 @@ type step = Left | Right
 type side = Undef | Fst | Snd
 type qchoice = Val of ASTD_term.t |ChoiceNotMade
 type astd_name = string
+type called_path =astd_name list
 
 
 (** The type {!ASTD_state.t} represents the current state of an ASTD. *)
@@ -122,7 +123,7 @@ val maj_arrows : ASTD_constant.domain -> ASTD_transition.t list ->
                          ((ASTD_transition.t * ASTD_constant.domain) list)->  ((ASTD_transition.t * ASTD_constant.domain) list)
 
 (**Returns the list of possible transitions in an astd using the environnement*)
-val evaluate_arrows : ASTD_astd.t -> t -> ASTD_environment.t -> ((ASTD_transition.t list)*(bool))
+val evaluate_arrows : ASTD_astd.t -> t -> ASTD_environment.t ->  called_path-> ((ASTD_transition.t list)*(bool))
 
 
 
@@ -142,11 +143,11 @@ val string_of_bool : bool -> string
 
 (** {3 Registration of states from a quantified synchronisation} *)
 
-(** _ASTD_synch_table_ stores states, using the name of the quantified synchronisation and the chosen value. *)
+(** _ASTD_synch_table_ stores states, using the name of the quantified synchronisation, the environment, the list of calls it have been through and the chosen value. *)
 
-val register_synch : astd_name -> ASTD_constant.t -> t -> unit
-val get_synch : astd_name->ASTD_constant.t ->t
-val get_synch_state : ASTD_constant.domain -> t -> astd_name -> ASTD_constant.t -> t
+val register_synch : astd_name -> ASTD_constant.t ->ASTD_environment.t -> called_path-> t -> unit
+val get_synch : astd_name->ASTD_constant.t ->ASTD_environment.t -> called_path-> t
+val get_synch_state : ASTD_constant.domain -> t -> astd_name -> ASTD_constant.t ->ASTD_environment.t -> called_path-> t
 
 
 
@@ -154,7 +155,7 @@ val get_synch_state : ASTD_constant.domain -> t -> astd_name -> ASTD_constant.t 
 
 (** {3 Printers} *)
 
-val print : t -> ASTD_astd.t -> string -> unit
-val print_h : ((astd_name * t) list) -> ASTD_astd.t -> string -> unit
+val print : t -> ASTD_astd.t -> string -> ASTD_environment.t -> called_path-> unit
+val print_h : ((astd_name * t) list) -> ASTD_astd.t -> string -> ASTD_environment.t -> called_path-> unit
 
 

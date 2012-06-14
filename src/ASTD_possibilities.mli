@@ -11,8 +11,9 @@ type t = Possibility of (ASTD_state.t * ASTD_arrow.t)
 (**Every token of the Synch list should be executed, one after another*)
 
 
-
-
+type astd_name = string
+type called_path = astd_name list
+(**List of the calls the state has been through*)
 
 
 
@@ -57,7 +58,7 @@ val choose_next : 'a list -> 'a
 val complete_possibilities : ASTD_state.t -> t -> t
 (**From a state and a list of executable possibilities from the sub state, it returns the list of possibilities executable from this state*)
 
-val possible_evolutions : ASTD_astd.t -> ASTD_state.t -> ASTD_event.t -> ASTD_environment.t -> (t * bool) 
+val possible_evolutions : ASTD_astd.t -> ASTD_state.t -> ASTD_event.t -> ASTD_environment.t -> called_path ->(t * bool) 
 (**Returns a couple with the possibilities and a boolean indicating if the current state is final *)
 
 val clear_concat : t -> t -> t
