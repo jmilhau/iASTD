@@ -27,7 +27,7 @@
 );
 
 (MAIN,<|[]|;
-        {Emprunter};
+        {Emprunter,Rendre};
         (CALL1,<call;
                 MEM0;
                 {}

@@ -9,7 +9,7 @@ type dep_path = Dep_path of (ASTD_variable.t * dependency * dep_path list)
 type optimisation = (ASTD_label.t * path * ASTD_variable.t *dep_path)
 
 
-
+val debug_on : unit -> unit
 
 
 val register_kappa : dependency -> ASTD_term.t list -> ASTD_term.t ->unit 

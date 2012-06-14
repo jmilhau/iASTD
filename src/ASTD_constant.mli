@@ -124,6 +124,8 @@ val create_dom_from_val : value -> domain
 val head_tail : domain -> (t*domain)
 val is_included : t -> domain -> bool
 val is_empty_dom : domain->bool
+val map_dom : (value -> 'a) -> domain -> 'a list
+
 
 (** {3 Domain manipulation}*)
 

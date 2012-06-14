@@ -8,6 +8,7 @@ type qchoice = Val of ASTD_term.t |ChoiceNotMade
 type astd_name = string
 type called_path =astd_name list
 
+val debug_on : unit -> unit
 
 (** The type {!ASTD_state.t} represents the current state of an ASTD. *)
 type t = Automata_s of position * ((astd_name * t) list) * t
@@ -74,8 +75,6 @@ val qchoice_notmade_of : unit -> qchoice
 
 val get_pos : t -> astd_name
 val get_data_from_qsynchro : t -> ((ASTD_constant.domain) *(ASTD_constant.domain)*(ASTD_constant.domain) * t)
-val get_deep : ((astd_name * t) list) -> astd_name -> t
-val get_shallow : ((astd_name * t) list) -> astd_name -> astd_name
 val get_val : qchoice -> ASTD_term.t
 val get_data_automata_s : t-> (position * ((astd_name * t) list) * t)
 
@@ -94,23 +93,6 @@ val val_of : ASTD_term.t -> qchoice
 
 
 
-
-
-
-(** {3 Main Functions} *)
-
-(**Returns the initial state of an ASTD*)
-val init : ASTD_astd.t -> t
-
-(**Returns true if the state is final*)
-val is_final : ASTD_astd.t -> t -> ASTD_environment.t->astd_name list -> ( t*bool)
-
-
-(**With an astd, his history and a name of ASTD, it returns the right state as a result of transition. If the name is H1, it returns the shallow history, if it is H2, it returns the the deep history*)
-val goto_automata : ASTD_astd.t -> astd_name -> ((astd_name * t) list) -> t
-
-(**Modify the saved state of an astd in the history*)
-val modify_h : ((astd_name * t) list) -> astd_name -> t -> ((astd_name * t) list)
 
 
 
@@ -134,18 +116,14 @@ val string_of_bool : bool -> string
 (** _ASTD_synch_table_ stores states, using the name of the quantified synchronisation, the environment, the list of calls it have been through and the chosen value. *)
 
 
-val remove_all : astd_name -> ASTD_constant.t ->ASTD_environment.t -> called_path-> unit
-val register_synch : astd_name -> ASTD_constant.t ->ASTD_environment.t -> called_path-> t -> unit
-val get_synch : astd_name->ASTD_constant.t ->ASTD_environment.t -> called_path-> t
-val get_synch_state : ASTD_constant.domain -> t -> astd_name -> ASTD_constant.t ->ASTD_environment.t -> called_path-> t
+val remove_all : string -> ASTD_constant.t option ->ASTD_astd.t -> unit
+val register_synch : string -> ASTD_constant.t option-> t ->ASTD_astd.t -> unit
+val get_synch : string->ASTD_constant.t option->ASTD_astd.t -> t
+val get_synch_state : ASTD_constant.domain -> t -> string -> ASTD_constant.t option->ASTD_astd.t ->t
 
-val save_data : ((astd_name*ASTD_constant.t*ASTD_environment.t*called_path)*t*bool) list->unit
+val save_data : ((string*ASTD_constant.t option)*ASTD_astd.t*t*bool) list->unit
 
 
 
-(** {3 Printers} *)
-
-val print : t -> ASTD_astd.t -> string -> ASTD_environment.t -> called_path-> unit
-val print_h : ((astd_name * t) list) -> ASTD_astd.t -> string -> ASTD_environment.t -> called_path-> unit
 
 

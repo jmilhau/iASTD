@@ -41,13 +41,13 @@
  	         >)
         };
         { 
-          ((local,AUT1,AUT2),Ext,{},True),
+          ((local,CALL1,AUT2),Ext,{},True),
           ((local,AUT2,CALL1),Extbis,{},False)
         };
         { 
         };
         { 
         };
-	AUT1
+	CALL1
       >)
 

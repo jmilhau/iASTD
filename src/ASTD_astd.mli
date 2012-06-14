@@ -3,7 +3,7 @@ type astd_name = string;;
 
 type path = astd_name list
 
-
+val debug_on : unit -> unit
 
 
 

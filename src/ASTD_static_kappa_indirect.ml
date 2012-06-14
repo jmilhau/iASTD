@@ -1,11 +1,10 @@
 
 
-
-    let val_debug = false ;;
-    let debug m = if (val_debug) 
+    let val_debug = ref false;;
+    let debug m = if (!val_debug) 
                             then (print_endline m )
                             else begin end;;
-
+    let debug_on () = (val_debug := true);;
 
 
 let rec is_included list1 list2 = match list1 with

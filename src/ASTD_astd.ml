@@ -16,10 +16,12 @@ type t = Automata of astd_name * t list * ASTD_arrow.t list * astd_name list * a
 ;; 
 
 
-    let val_debug = false;;
-    let debug m = if (val_debug) 
+    let val_debug = ref false;;
+    let debug m = if (!val_debug) 
                             then (print_endline m )
                             else begin end;;
+    let debug_on () = (val_debug := true);;
+
 
 
 let give_name=
@@ -161,10 +163,11 @@ let get_qvalues_s a = match a with
 
 
 
-let get_qastd a = match a with
+let get_qastd a = begin debug (" get sub qastd "^(get_name a));
+ match a with
   |QChoice (_,_,_,_,astd) -> astd
   |QSynchronisation (_,_,_,_,_,astd) -> astd
-  | _ -> failwith "unappropriate request get_qastd"
+  | _ -> failwith "unappropriate request get_qastd" end
 
 ;;
 
@@ -235,7 +238,7 @@ let rec find_subastd name astd_list = match astd_list with
                     then a
                     else begin (find_subastd name tail )  end  
             end
-   |[]->failwith ("sub-astd not found") 
+   |[]->failwith ("sub-astd : not found "^name) 
 ;;
 
 
@@ -431,7 +434,7 @@ let get_data_choice astd = match astd with
   |Choice(a,b,c) -> (a,b,c)
   |_-> failwith "not appropriate data choice"
 
-let get_data_kleene astd = match astd with
+let get_data_kleene astd = debug ("get_data_kleene : "^get_name astd) ; match astd with
   |Kleene(a,b) -> (a,b)
   |_-> failwith "not appropriate data kleene"
 

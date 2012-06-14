@@ -379,6 +379,11 @@ let insert elem dom =
              fusion ( create_dom_from_val elem ) dom;;
 
 
+let rec map_dom funct dom=
+           if Domain.is_empty dom then [] else
+           let head=Domain.min_elt dom
+           in let tail =Domain.remove head dom
+           	in (funct(head))::(map_dom funct tail)
 
 
 let head_tail d =if (is_empty_dom d)

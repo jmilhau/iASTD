@@ -1,12 +1,15 @@
 YACC=ocamlyacc
 LEX=ocamllex
+OCAMLFIND = ocamlfind
+SQLITEOPTION = -package sqlite3 -linkpkg
+WITHUNIX =unix.cma -cclib -lunix
 OCAMLOPT = ocamlopt
 OCAMLC = ocamlc 
 OCAMLDEP = ocamldep
 MKTOPLEVEL = ocamlmktop
 INCLUDES = -g 
-OCAMLOPTFLAGS = $(INCLUDES)
-OCAMLFLAGS = $(INCLUDES)
+OCAMLOPTFLAGS = $(INCLUDES) 
+OCAMLFLAGS = $(INCLUDES) 
 OCAMLDEPFLAGS =
 
 OCAMLTOPLEVEL = ocaml_ASTD
@@ -26,8 +29,9 @@ BASE = functions \
 	ASTD_astd \
 	ASTD_state \
 	ASTD_static_kappa_indirect \
-	ASTD_kappa_indirect \
-	ASTD_exec_first
+	State2DB  \
+	ASTD_exec_first_hash \
+	ASTD_exec_first_bd
 	
 
 PARSER = ASTD_parser
@@ -49,12 +53,12 @@ GENDOC = gen_ocamldoc/gen_ocamlpai
 all : $(TARGET)
 
 $(OCAMLTOPLEVEL) : $(OBJCMO)
-	$(MKTOPLEVEL) $(OCAMLFLAGS) $^ -o $@
+	$(OCAMLFIND) $(MKTOPLEVEL) $(SQLITEOPTION) $(OCAMLFLAGS) unix.cma $^ -o $@
 
 $(INTERPRETER) : $(OBJCMX) ASTD_main.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) $^ -o $@
+	$(OCAMLFIND) $(OCAMLOPT) $(SQLITEOPTION) $(OCAMLOPTFLAGS) unix.cmxa $^ -o $@
 
-# SPECIAL RULES FOR PARSER
+# SPECIAL RULES FOR PARSER 
 
 ASTD_lexer_rules.ml: ASTD_lexer_rules.mll ASTD_parser_rules.cmi
 	$(LEX) ASTD_lexer_rules.mll
@@ -69,6 +73,32 @@ ASTD_lexer_rules.cmx: ASTD_lexer_rules.ml
 
 ASTD_lexer_rules.cmo: ASTD_lexer_rules.ml
 	$(OCAMLC) $(OCAMLFLAGS) -c $<
+
+# STATE2DB
+
+State2DB.cmo: State2DB.ml State2DB.cmi 
+	$(OCAMLFIND) $(OCAMLC) $(SQLITEOPTION) $(OCAMLFLAGS) -c $<
+
+State2DB.cmx: State2DB.ml State2DB.cmi 
+	$(OCAMLFIND) $(OCAMLOPT) $(SQLITEOPTION) $(OCAMLOPTFLAGS) -c $<
+
+State2DB.cmi: State2DB.mli
+	$(OCAMLFIND) $(OCAMLC) $(SQLITEOPTION) $(OCAMLFLAGS) -c $<
+
+
+
+# EXEC_FIRST_BD
+
+ASTD_exec_first_bd.cmo: ASTD_exec_first_bd.ml ASTD_exec_first_bd.cmi 
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c $<
+
+ASTD_exec_first_bd.cmx: ASTD_exec_first_bd.ml ASTD_exec_first_bd.cmi 
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
+
+ASTD_exec_first_bd.cmi: ASTD_exec_first_bd.mli
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c $<
+
+
 
 # GENERIC RULES
 
