@@ -39,7 +39,7 @@ Return(6,3,"UdS");
 Return(7,2,"UdS");
 Return(8,1,"UdS");
 Return(9,0,"UdS");
-Lend(9,0,"UdS");
 Lend(1,1,"UdS");
 Lend(2,1,"Uds");
-Lend(1,2,"UdS")
+Lend(1,2,"UdS");
+Lend(9,0,"UdS")

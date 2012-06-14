@@ -191,6 +191,7 @@ let choose_value event astd2 var = debug "choose value";
 	in begin debug "extracted params" ;
 		if param_trans<>[] 
 		then find_value c_list param_trans var c_list
+			
 		else ASTD_state.ChoiceNotMade
 		end
 
@@ -231,7 +232,7 @@ let rec find_value_indirect event astd env dep_path_list var = match dep_path_li
 let rec active_optimisation event astd env label var opt_list = match opt_list with
 	|(label2,path,variable,dep_path)::tail->if label=label2 
 							then begin debug ("found_label "^label^" in active opt");
-								ASTD_state.Val(find_value_indirect event astd env [dep_path] var)
+ 								ASTD_state.Val(find_value_indirect event astd env [dep_path] var)
 								end
 							else begin
 								active_optimisation event astd env label var tail
@@ -440,7 +441,7 @@ else match state with
 	in if val_used=ASTD_state.ChoiceNotMade
 		then begin 
 			if qchoice=ASTD_state.ChoiceNotMade
-				then begin
+				then begin debug "qchoice not made or opt found";
 					try_qchoice dep (ASTD_event.get_label event) state2 astd2 var event ((path)@([name])) env call_path list_val
 					end
 				else begin 
@@ -540,7 +541,8 @@ else match state with
 					
 				end
 			end)
-		else let value2 = active_optimisation event astd env (ASTD_event.get_label event) var opt 
+		else try begin
+                        let value2 = active_optimisation event astd env (ASTD_event.get_label event) var opt 
 			in if not(value2=ASTD_state.ChoiceNotMade)
 				then begin debug ("kappa indirect "^var^" "^(ASTD_term.string_of(ASTD_state.get_val value2))^" for the astd "^name);
 				if (List.mem (ASTD_event.get_label event) trans_list) || (not(ASTD_constant.is_included (ASTD_term.extract_constant_from_term (ASTD_state.get_val value2)) val_list))
@@ -610,6 +612,8 @@ else match state with
 							else (state,[],state,[],[],false)
 					else try_qsynch name state astd2 var event env call_path val_list
 					end		
+	end 
+	with _ -> (state,[],state,[],[],false)
 	end
 
 
@@ -737,7 +741,6 @@ let rec execute_event_list affichage state astd event_list = match event_list wi
 						ASTD_state.print new_state astd "" [] []
 						end
 				else begin
-					print_endline "======================================================";
 					print_endline ("Execution of : "^(ASTD_label.string_of(ASTD_event.get_label event))^" not possible")
 					end
 				end;
@@ -763,7 +766,7 @@ let rec execute_event_list affichage state astd event_list = match event_list wi
 				end;
 				execute_event_list affichage new_state astd tail
 			end
-	|[]->state
+	|[]->begin print_endline "================================================================";state end
 
 
 
