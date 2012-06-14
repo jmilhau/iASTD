@@ -77,7 +77,7 @@ let get_event_list_from_file (place) = try let events=ASTD_parser.get_event_list
 ;;
 
 
-let get_use_of_kappa_indirect (starting_choice_possible) =
+let get_starting_name (starting_choice_possible) =
 	if starting_choice_possible
 		then begin
 			print_endline "Enter main ASTD's name" ; 
@@ -98,7 +98,7 @@ let _ = Arg.parse arg_spec usage usage_msg;
 	in let (affichage,kappa_indirect,print_final, starting_choice_possible, place_to_read, bdd, wait, debug, sFile, iFile) 
     	= (!raffichage,!rkappa_indirect,!rprint_final,!rstarting_choice_possible,!rplace_to_read,!rbdd,!rwait,!rdebug,!rsFile,!riFile) 
 	in begin if (sFile=="") then get_structure(place_to_read) else get_structure_from_file(place_to_read^sFile) ;
-	let structure=ASTD_astd.get_astd (get_use_of_kappa_indirect (starting_choice_possible))	
+	let structure=ASTD_astd.get_astd (get_starting_name (starting_choice_possible))	
 	in print_endline "========================================" ;
 	    let event_list= if (iFile=="") then get_event_list(place_to_read) else get_event_list_from_file(place_to_read^iFile) ;    
             in let time1=(Unix.gettimeofday())

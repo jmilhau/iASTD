@@ -1,7 +1,7 @@
 (MAIN,<*;
         (AUT0,<|[]|:;
                x;
-               [2,10];
+               [1,10];
                {Emprunter,Empruntern,Rendre,Rendren,Reinit,Reinitn};
                (AUT1 , <aut;
                         { (A1->elem),

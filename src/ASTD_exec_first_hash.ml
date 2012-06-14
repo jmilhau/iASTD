@@ -16,7 +16,7 @@ type called_path = astd_name list
 let get_bdd key opt_const astd = ASTD_state.get_synch key opt_const astd
 
 
-let register_bdd key opt_const state astd = ASTD_state.register_synch key opt_const state astd
+let register_bdd key opt_const state astd =  ASTD_state.register_synch key opt_const state astd
 
 let remove_bdd key opt_const astd= ASTD_state.remove_all key opt_const astd
 
@@ -739,7 +739,7 @@ else match state with
 											current_key,
 											astd,
 											new_study_state,
-											((key,Some value),astd2,new_state,true)::to_save,
+											((current_key,Some value),astd2,new_state,true)::to_save,
 											kappa,
 											is_modified)
 	
@@ -748,7 +748,7 @@ else match state with
 											current_key,
 											astd,
 											new_study_state,
-											((key,Some value),astd2,new_state,true)::to_save,
+											((current_key,Some value),astd2,new_state,true)::to_save,
 											kappa,
 											is_modified)
 								end
